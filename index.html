@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Repzo — by THUGFIT</title>
+<style>
+:root{--bg:#0b0b0c;--card:#141417;--card2:#1b1b20;--line:#2a2a30;--text:#f4f4f5;--muted:#9a9aa3;--red:#e5322d;--red2:#ff8a80;--green:#3ddc84}
+*{box-sizing:border-box}
+html,body{margin:0;background:#050505;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Arabic",Tahoma,sans-serif}
+#app{max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg);padding:18px 18px 110px;position:relative}
+body.admin #app{max-width:1100px}
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:2px;font-size:15px}
+.brand img{height:30px;filter:invert(1)}
+.lang button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12px}
+.lang button.on{color:var(--text);border-color:var(--red)}
+h1{font-size:26px;margin:6px 0 8px;letter-spacing:-.3px}
+h2{font-size:12px;margin:18px 0 8px;color:var(--red);text-transform:uppercase;letter-spacing:1.2px}
+h3{margin:0 0 6px;font-size:17px}
+p{color:var(--muted);line-height:1.55;margin:6px 0;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.card.hot{border-color:var(--red);background:linear-gradient(160deg,#1f0f0f,#141417)}
+.btn{display:block;width:100%;background:var(--red);color:#fff;border:0;border-radius:12px;padding:15px;font-weight:800;font-size:16px;cursor:pointer;margin-top:12px;letter-spacing:.2px}
+.btn:active{transform:scale(.99)}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--text)}
+.btn.sm{display:inline-block;width:auto;padding:9px 14px;font-size:13px;margin-top:0;border-radius:10px}
+.btn.dark{background:var(--card2);border:1px solid var(--line);color:var(--text)}
+.btn.danger{background:none;border:1px solid var(--red);color:var(--red)}
+label{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.6px}
+input,select,textarea{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:#0d0d10;color:var(--text);font-size:16px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--red)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card);cursor:pointer;display:flex;flex-direction:column;gap:6px;min-height:76px}
+.opt.on{border-color:var(--red);background:#1d1012}
+.opt b{font-size:15px}
+.opt small{color:var(--muted);font-size:12px;line-height:1.4}
+.opt img{width:100%;border-radius:10px;background:#fff;aspect-ratio:2/1;object-fit:contain;margin-bottom:6px}
+.step{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.bar{height:4px;background:var(--line);border-radius:4px;margin:10px 0 18px;overflow:hidden}
+.bar div{height:100%;background:var(--red);border-radius:4px;transition:width .3s}
+.pill{display:inline-block;font-size:11px;border-radius:20px;padding:3px 9px;border:1px solid var(--line);color:var(--muted);letter-spacing:.3px}
+.pill.red{border-color:var(--red);color:var(--red2)}
+.pill.green{border-color:var(--green);color:var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font-size:11px;background:#23232a;color:var(--text);border-radius:20px;padding:4px 10px}
+.muted{color:var(--muted)}
+.err{color:var(--red2);font-size:13px;margin:10px 0 0;background:#1d0f0f;border:1px solid #4a1a1a;border-radius:10px;padding:10px}
+.ok{color:var(--green);font-size:13px;margin:10px 0 0;background:#0f1d15;border:1px solid #1d4a30;border-radius:10px;padding:10px}
+.code{font-size:30px;font-weight:900;letter-spacing:8px;color:var(--red);text-align:center;padding:14px;background:#120a0a;border:1px dashed var(--red);border-radius:14px;margin:12px 0}
+.chk{display:flex;gap:10px;align-items:flex-start;margin-top:12px;color:var(--text);font-size:13px;line-height:1.5}
+.chk input{width:auto;margin-top:3px;accent-color:var(--red)}
+.link{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;margin-top:12px;font-size:13px;padding:0}
+.back{background:none;border:0;color:var(--muted);cursor:pointer;font-size:14px;padding:0;margin-bottom:6px}
+.ex{display:flex;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.ex:last-child{border-bottom:0}
+.ex .thumb{width:64px;height:48px;border-radius:10px;background:#fff;object-fit:contain;flex:none}
+.ph{width:64px;height:48px;border-radius:10px;background:#1b1b20;border:1px dashed #3a3a42;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);text-align:center;flex:none;line-height:1.2}
+.ex .main{flex:1;min-width:0}
+.ex .title{font-weight:700;font-size:15px}
+.ex .plan{font-size:12px;color:var(--muted);margin-top:2px}
+.ex .sugg{font-size:13px;color:var(--text);margin-top:4px}
+.ex .sugg b{color:var(--red2)}
+.ex .tip{font-size:11px;color:var(--muted);margin-top:2px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.acts .btn{margin-top:0}
+.sets{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.sets td{padding:5px 4px}
+.sets input{padding:8px;font-size:14px}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;background:rgba(10,10,11,.96);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px);backdrop-filter:blur(8px);z-index:5}
+.nav button{flex:1;background:none;border:0;color:var(--muted);padding:12px 4px 14px;cursor:pointer;font-size:11px;letter-spacing:.4px;text-transform:uppercase}
+.nav button.on{color:var(--red);font-weight:800}
+.nav .dot{display:block;width:5px;height:5px;border-radius:50%;background:transparent;margin:0 auto 4px}
+.nav button.on .dot{background:var(--red)}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#0f0f12;border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;width:100%;max-width:460px;max-height:88vh;overflow:auto;padding:20px 18px 28px}
+.sheet .x{float:right;background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer}
+.imgs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.imgs img{width:100%;background:#fff;border-radius:12px;aspect-ratio:2/1;object-fit:contain}
+.chart{width:100%;height:auto;display:block;margin-top:8px}
+.stat{background:var(--card2);border-radius:14px;padding:12px}
+.stat b{display:block;font-size:22px;margin-top:4px}
+.stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.photos figure{margin:0;background:var(--card2);border-radius:14px;padding:8px;border:1px solid var(--line)}
+.photos img{width:100%;border-radius:10px;aspect-ratio:3/4;object-fit:cover;display:block}
+.photos figcaption{font-size:11px;color:var(--muted);margin-top:6px;display:flex;justify-content:space-between;gap:6px;align-items:center}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th,table.t td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
+table.t th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+table.t tr:hover td{background:#17171c;cursor:pointer}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;font-size:13px}
+.kv div span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.kv div b{font-size:14px}
+.hero{display:flex;justify-content:center;margin:8px 0 4px}
+.hero img{height:120px;filter:invert(1);opacity:.95}
+.sessionrow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.sessionrow:last-child{border-bottom:0}
+.pagebar{position:sticky;bottom:72px;background:rgba(11,11,12,.96);border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:4}
+.opt img[src*="bodytype"]{aspect-ratio:3/4;object-fit:contain;background:#fff}
+.opt img[src*="onboard/"]{aspect-ratio:3/4;object-fit:contain;background:#fff}
+.opt img[src*="onboard_gym"],.opt img[src*="onboard_home"]{aspect-ratio:16/9;object-fit:cover}
+.ph{display:flex}
+.map-wrap{position:relative;max-width:300px;margin:0 auto}
+.map-wrap img{width:100%;display:block;border-radius:14px;background:#fff}
+.hot-spot{position:absolute;border:none;background:transparent;border-radius:45%;cursor:pointer;padding:0}
+.hot-spot.on{background:rgba(229,50,45,.78);border:1px solid #ff8a80;box-shadow:0 0 18px rgba(229,50,45,.55)}
+.chips-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.chip-btn{background:#17171c;border:1px solid var(--line);color:var(--text);border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer}
+.chip-btn.on{border-color:var(--red);background:#2a0f0f;color:#fff}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* =====================================================================
+   STORAGE (prototype: browser localStorage. Production: server + database)
+   ===================================================================== */
+const KEY='thugfit_app_v1';
+let DB=null;
+try{DB=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){DB=null;}
+if(!DB||!Array.isArray(DB.users)) DB={users:[],sess:null};
+function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){alert(tx('Storage is full. Delete some progress photos.','التخزين ممتلئ. احذف بعض صور التقدم.'));}}
+
+/* =====================================================================
+   UI STATE + HELPERS
+   ===================================================================== */
+const UI={lang:'en',screen:'welcome',f:{},err:'',ok:'',ob:0,sheet:null,editing:null,pendingId:null,demoCode:'',cmpA:'',cmpB:'',adminOk:false,selClient:null};
+const tx=(e,a)=>UI.lang==='ar'?a:e;
+const L=o=>o[UI.lang];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const me=()=>DB.users.find(u=>u.id===DB.sess)||null;
+const uid=()=>'u'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const todayStr=()=>new Date().toISOString().slice(0,10);
+const daysAgo=d=>Math.floor((Date.now()-new Date(d+'T00:00:00').getTime())/86400000);
+const fdate=d=>new Date(d+'T00:00:00').toLocaleDateString(UI.lang==='ar'?'ar-AE':'en-GB',{day:'numeric',month:'short',year:'numeric'});
+const r25=x=>Math.max(2.5,Math.round(x/2.5)*2.5);
+const genCode=()=>String(Math.floor(100000+Math.random()*900000));
+const rangeOf=s=>{const n=(String(s).match(/\d+/g)||[]).map(Number);return [n[0]||0,n[1]||n[0]||0];};
+function save(){document.querySelectorAll('[data-k]').forEach(el=>{UI.f[el.dataset.k]=el.type==='checkbox'?el.checked:el.value;});return UI.f;}
+function go(screen,keep){UI.screen=screen;if(!keep){UI.err='';UI.ok='';}UI.sheet=null;render();window.scrollTo(0,0);}
+function fail(m){UI.err=m;render();}
+function setLang(l){save();UI.lang=l;document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';render();}
+
+async function hashPw(pw,salt){
+  const data=salt+':'+pw;
+  if(window.crypto&&crypto.subtle){
+    const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(data));
+    return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }
+  let h=5381;for(let i=0;i<data.length;i++)h=((h<<5)+h)+data.charCodeAt(i);
+  return 'fb'+(h>>>0).toString(16);
+}
+const newSalt=()=>Math.random().toString(36).slice(2,12)+Date.now().toString(36);
+
+/* =====================================================================
+   CONTENT
+   ===================================================================== */
+const COUNTRIES=[
+  ['AE',{en:'United Arab Emirates',ar:'الإمارات العربية المتحدة'}],
+  ['SA',{en:'Saudi Arabia',ar:'السعودية'}],['QA',{en:'Qatar',ar:'قطر'}],['BH',{en:'Bahrain',ar:'البحرين'}],
+  ['OM',{en:'Oman',ar:'عُمان'}],['KW',{en:'Kuwait',ar:'الكويت'}],['IN',{en:'India',ar:'الهند'}],
+  ['EG',{en:'Egypt',ar:'مصر'}],['JO',{en:'Jordan',ar:'الأردن'}],['LB',{en:'Lebanon',ar:'لبنان'}],['PK',{en:'Pakistan',ar:'باكستان'}],
+  ['GB',{en:'United Kingdom',ar:'المملكة المتحدة'}],['US',{en:'United States',ar:'الولايات المتحدة'}],['CA',{en:'Canada',ar:'كندا'}],['AU',{en:'Australia',ar:'أستراليا'}],
+  ['OTHER',{en:'Other country',ar:'دولة أخرى'}]
+];
+const EMIRATES=[
+  {en:'Abu Dhabi',ar:'أبوظبي'},{en:'Dubai',ar:'دبي'},{en:'Sharjah',ar:'الشارقة'},{en:'Ajman',ar:'عجمان'},
+  {en:'Umm Al Quwain',ar:'أم القيوين'},{en:'Ras Al Khaimah',ar:'رأس الخيمة'},{en:'Fujairah',ar:'الفجيرة'}
+];
+const countryName=c=>{const x=COUNTRIES.find(k=>k[0]===c);return x?L(x[1]):c;};
+
+/* Exercise library. eq: 0 bodyweight, 1 light equipment (dumbbells/bands), 2 gym.
+   f: starting-weight factor per kg of body weight (per dumbbell for light equipment).
+   photo: a photo set exists for this exercise (male/female). */
+const EX_LIB=[
+  {id:'bench',n:{en:'Barbell bench press',ar:'ضغط البار على المقعد'},g:{en:'Chest · triceps',ar:'الصدر · الترايسبس'},hl:['chest','triceps'],cat:'push',eq:2,f:0.75,up:1,cue:{en:'Feet flat, shoulder blades pulled back',ar:'القدمان ثابتتان والكتفان للخلف'}},
+  {id:'ohp',n:{en:'Overhead press',ar:'الضغط فوق الرأس'},g:{en:'Shoulders · triceps',ar:'الكتفان · الترايسبس'},hl:['shoulders','triceps'],cat:'push',eq:2,f:0.45,up:1,cue:{en:'Brace your core, bar straight up',ar:'شد البطن ومسار البار مستقيم للأعلى'}},
+  {id:'pushdown',n:{en:'Triceps pushdown',ar:'تمديد الترايسبس بالكابل'},g:{en:'Triceps',ar:'الترايسبس'},hl:['triceps'],cat:'push',eq:2,f:0.3,up:1,cue:{en:'Elbows pinned to your sides',ar:'المرفقان ملتصقان بالجانبين'}},
+  {id:'latpull',n:{en:'Lat pulldown',ar:'السحب العلوي'},g:{en:'Back · biceps',ar:'الظهر · البايسبس'},hl:['back','biceps'],cat:'pull',eq:2,f:0.6,up:1,cue:{en:'Pull elbows down toward your pockets',ar:'اسحب المرفقين نحو الجيبين'}},
+  {id:'row',n:{en:'Seated cable row',ar:'تجديف الكابل جالساً'},g:{en:'Back',ar:'الظهر'},hl:['back'],cat:'pull',eq:2,f:0.6,up:1,cue:{en:'Chest up, squeeze shoulder blades',ar:'الصدر مرفوع واضغط لوحي الكتف'}},
+  {id:'curl',n:{en:'Barbell curl',ar:'تمرين البايسبس بالبار'},g:{en:'Biceps',ar:'البايسبس'},hl:['biceps'],cat:'pull',eq:2,f:0.35,up:1,cue:{en:'Elbows still, no swinging',ar:'المرفقان ثابتان بدون تأرجح'}},
+  {id:'squat',n:{en:'Back squat',ar:'القرفصاء بالبار'},g:{en:'Quads · glutes',ar:'الفخذ الأمامي · الأرداف'},hl:['quads','glutes'],cat:'legs',eq:2,f:0.9,low:1,cue:{en:'Brace, sit back and down, drive through the whole foot',ar:'اشدد البطن واجلس للخلف وادفع بكامل القدم'}},
+  {id:'rdl',n:{en:'Romanian deadlift',ar:'الرفعة الرومانية'},g:{en:'Hamstrings · glutes',ar:'الفخذ الخلفي · الأرداف'},hl:['hamstrings','glutes'],cat:'legs',eq:2,f:0.9,low:1,cue:{en:'Hinge at the hips, bar close to your legs',ar:'انحنِ من الوركين والبار قريب من ساقيك'}},
+  {id:'legpress',n:{en:'Leg press',ar:'ضغط الأرجل'},g:{en:'Quads',ar:'الفخذ الأمامي'},hl:['quads'],cat:'legs',eq:2,f:1.6,low:1,cue:{en:'Knees track over toes, do not lock out hard',ar:'الركبتان فوق أصابع القدم ولا تقفل الركبة بقوة'}},
+  {id:'calfgym',n:{en:'Standing calf raise',ar:'رفع الكاحل واقفاً'},g:{en:'Calves',ar:'الربلة'},hl:['calves'],cat:'legs',eq:2,f:1.0,low:1,cue:{en:'Full stretch at the bottom, pause at the top',ar:'تمدد كامل في الأسفل وتوقف في الأعلى'}},
+  {id:'hangleg',n:{en:'Hanging leg raise',ar:'رفع الساقين معلقاً'},g:{en:'Core',ar:'البطن'},hl:['core'],cat:'core',eq:2,f:0,cue:{en:'Control the swing, lift with lower abs',ar:'تحكم في الأرجحة وارفع بعضلات البطن السفلية'}},
+  {id:'pushup',n:{en:'Push-up',ar:'ضغط الصدر'},g:{en:'Chest · triceps · shoulders',ar:'الصدر · الترايسبس · الكتفان'},hl:['chest','triceps','shoulders'],cat:'push',eq:0,up:1,photo:1,cue:{en:'Body in one straight line, elbows at about 45°',ar:'الجسم في خط مستقيم والمرفقان بزاوية 45°'}},
+  {id:'pike',n:{en:'Pike push-up',ar:'ضغط الكتف المنحني'},g:{en:'Shoulders · triceps',ar:'الكتفان · الترايسبس'},hl:['shoulders','triceps'],cat:'push',eq:0,up:1,cue:{en:'Hips high, head moves toward the floor',ar:'الوركان مرتفعان والرأس نحو الأرض'}},
+  {id:'dip',n:{en:'Chair dip',ar:'الغطس على الكرسي'},g:{en:'Triceps',ar:'الترايسبس'},hl:['triceps'],cat:'push',eq:0,up:1,cue:{en:'Elbows point back, do not go below 90°',ar:'المرفقان للخلف ولا تنزل أكثر من 90°'}},
+  {id:'irow',n:{en:'Inverted row (sturdy table)',ar:'السحب تحت الطاولة (طاولة متينة)'},g:{en:'Back · biceps',ar:'الظهر · البايسبس'},hl:['back','biceps'],cat:'pull',eq:0,up:1,cue:{en:'Body straight, pull your chest to the table',ar:'الجسم مستقيم واسحب الصدر نحو الطاولة'}},
+  {id:'superman',n:{en:'Superman back extension',ar:'تمرين السوبرمان لأسفل الظهر'},g:{en:'Lower back · back',ar:'أسفل الظهر · الظهر'},hl:['back'],cat:'pull',eq:0,cue:{en:'Lift chest and arms slightly, hold briefly, keep neck neutral',ar:'ارفع الصدر والذراعين قليلاً وثبّت ثم انتبه لرقبتك'}},
+  {id:'bsquat',n:{en:'Bodyweight squat',ar:'القرفصاء بوزن الجسم'},g:{en:'Quads · glutes',ar:'الفخذ الأمامي · الأرداف'},hl:['quads','glutes'],cat:'legs',eq:0,low:1,cue:{en:'Sit back, knees over toes',ar:'اجلس للخلف والركبتان فوق أصابع القدم'}},
+  {id:'lunge',n:{en:'Reverse lunge',ar:'الطعنة الخلفية'},g:{en:'Quads · glutes',ar:'الفخذ الأمامي · الأرداف'},hl:['quads','glutes'],cat:'legs',eq:0,low:1,cue:{en:'Step back, lower the back knee toward the floor',ar:'تراجع خطوة وأنزل الركبة الخلفية نحو الأرض'}},
+  {id:'bridge',n:{en:'Glute bridge',ar:'رفع الأرداف'},g:{en:'Glutes · hamstrings',ar:'الأرداف · الفخذ الخلفي'},hl:['glutes','hamstrings'],cat:'legs',eq:0,low:1,cue:{en:'Squeeze glutes at the top',ar:'اشدد الأرداف في الأعلى'}},
+  {id:'calf0',n:{en:'Single-leg calf raise',ar:'رفع الكاحل على رجل واحدة'},g:{en:'Calves',ar:'الربلة'},hl:['calves'],cat:'legs',eq:0,low:1,cue:{en:'Hold a wall for balance',ar:'امسك الحائط للتوازن'}},
+  {id:'plank',n:{en:'Plank',ar:'البلانك'},g:{en:'Core',ar:'البطن'},hl:['core'],cat:'core',eq:0,time:1,cue:{en:'Straight line from head to heels',ar:'خط مستقيم من الرأس للكعبين'}},
+  {id:'deadbug',n:{en:'Dead bug',ar:'الحشرة الميتة'},g:{en:'Core',ar:'البطن'},hl:['core'],cat:'core',eq:0,cue:{en:'Lower back stays on the floor',ar:'أسفل الظهر ملامس للأرض'}},
+  {id:'dbfloor',n:{en:'Dumbbell floor press',ar:'ضغط الأرض بالدمبل'},g:{en:'Chest · triceps',ar:'الصدر · الترايسبس'},hl:['chest','triceps'],cat:'push',eq:1,f:0.2,up:1,cue:{en:'Elbows touch the floor, then press up',ar:'المرفقان يلمسان الأرض ثم ادفع للأعلى'}},
+  {id:'dbshoulder',n:{en:'Dumbbell shoulder press',ar:'ضغط الكتف بالدمبل'},g:{en:'Shoulders',ar:'الكتفان'},hl:['shoulders','triceps'],cat:'push',eq:1,f:0.18,up:1,cue:{en:'Brace core, do not arch your lower back',ar:'شد البطن ولا تقوس أسفل الظهر'}},
+  {id:'dbrow',n:{en:'Dumbbell row',ar:'تجديف بالدمبل'},g:{en:'Back',ar:'الظهر'},hl:['back','biceps'],cat:'pull',eq:1,f:0.2,up:1,cue:{en:'Flat back, elbow close to your body',ar:'ظهر مستقيم والمرفق قريب من الجسم'}},
+  {id:'dbcurl',n:{en:'Dumbbell curl',ar:'تمرين البايسبس بالدمبل'},g:{en:'Biceps',ar:'البايسبس'},hl:['biceps'],cat:'pull',eq:1,f:0.12,up:1,cue:{en:'Elbows still, control the way down',ar:'المرفقان ثابتان والنزول بتحكم'}},
+  {id:'goblet',n:{en:'Goblet squat',ar:'القرفصاء بالدمبل'},g:{en:'Quads · glutes',ar:'الفخذ الأمامي · الأرداف'},hl:['quads','glutes'],cat:'legs',eq:1,f:0.25,low:1,cue:{en:'Chest up, elbows inside the knees',ar:'الصدر مرفوع والمرفقان داخل الركبتين'}},
+  {id:'dbrdl',n:{en:'Dumbbell Romanian deadlift',ar:'الرفعة الرومانية بالدمبل'},g:{en:'Hamstrings · glutes',ar:'الفخذ الخلفي · الأرداف'},hl:['hamstrings','glutes'],cat:'legs',eq:1,f:0.2,low:1,cue:{en:'Hinge at the hips, flat back',ar:'انحنِ من الوركين والظهر مستقيم'}},
+  {id:'dblunge',n:{en:'Dumbbell reverse lunge',ar:'الطعنة الخلفية بالدمبل'},g:{en:'Quads · glutes',ar:'الفخذ الأمامي · الأرداف'},hl:['quads','glutes'],cat:'legs',eq:1,f:0.15,low:1,cue:{en:'Keep your torso upright',ar:'حافظ على استقامة الجذع'}},
+  {id:'band',n:{en:'Resistance band pull-apart',ar:'سحب الحزام المطاطي'},g:{en:'Upper back · shoulders',ar:'أعلى الظهر · الكتفان'},hl:['back','shoulders'],cat:'pull',eq:1,f:0,up:1,cue:{en:'Arms straight, squeeze shoulder blades',ar:'الذراعان مستقيمتان واضغط لوحي الكتف'}}
+];
+const PROGRAM_DATA={"version": "1.0", "status": "draft for coach review. Do not publish until a certified trainer and a dietitian have approved it.", "notes": ["Weekly structure: 4 training days by default. 3-day and 5-day schedules are generated from the rules in schedule_rules.", "Body-type goals are described as outcomes and training, never as spot reduction (no exercise is claimed to reduce fat in one area).", "Pilates is included as a short core block (Pilates-style control work), not as a separate session.", "Cardio minutes are set by body type in cardio_by_type.", "Pain rule: mild muscle soreness is normal. Sharp, joint, or unusual pain stops the exercise and the app suggests an easier option or a doctor check."], "progression": {"phases": [{"weeks": "1-2", "name": "Foundation", "strength_sets": 2, "effort": "about 5-6 out of 10", "rest": "60 s", "goal": "Learn form, build consistency"}, {"weeks": "3-4", "name": "Build", "strength_sets": "2-3", "effort": "about 6-7 out of 10", "rest": "60 s", "goal": "Add reps or sets. Week 4 is a deload: cut sets by about 40%"}, {"weeks": "5-6", "name": "Progress", "strength_sets": 3, "effort": "about 7 out of 10", "rest": "60-90 s", "goal": "Add load or reps. Extend cardio slightly"}, {"weeks": "7-8", "name": "Consolidate", "strength_sets": 3, "effort": "about 7-8 out of 10", "rest": "60-90 s", "goal": "Hold technique, progress gradually. Week 8 is a deload and a reassessment"}], "double_progression": "Pick a rep range. Stay at the same weight until every set reaches the top of the range with good form, then add a small amount of weight (about 2-2.5 kg for upper body, 5 kg for lower body). If the client falls below the bottom of the range, keep or reduce the weight.", "adjust_on": ["missed sessions", "reported difficulty", "recovery and sleep", "reported discomfort"], "never": "Do not add intensity every week by default."}, "schedule_rules": {"default_days": 4, "3_days": "Drop the cardio day (Slim) or one core block (Toned/Strong). Keep the strength days.", "5_days": "Add an easy walk or mobility session (15-20 min). Do not add a third lower-body day for beginners.", "session_length": "30-40 min for Slim & Lean. 45-60 min for Toned & Sculpted and Strong & Curvy when gym-based.", "warm_up": "5 min light cardio plus 1-2 light warm-up sets for the first exercise of each lift."}, "cardio_by_type": {"slim_lean": {"sessions_per_week": "2-3", "minutes_per_session": "25-30", "weekly_minutes": "75-90", "type": "Incline walk, interval walk, light cycling. Conversational pace.", "note": "Beginners build up gradually toward the general adult guideline of about 150 min of moderate activity a week."}, "toned_sculpted": {"sessions_per_week": "2", "minutes_per_session": "20-30", "weekly_minutes": "40-60", "type": "Intervals, incline walk, rowing machine.", "note": "Keep intervals short and controlled. Stop if dizzy."}, "strong_curvy": {"sessions_per_week": "1-2", "minutes_per_session": "15-20", "weekly_minutes": "30-40", "type": "Short incline walks, cycling, or walking on rest days.", "note": "Strength is the main driver. Cardio supports recovery and heart health."}}, "pilates_core_blocks": {"slim_lean": {"minutes": 10, "per_week": 3, "moves": ["dead_bug", "bird_dog", "side_plank", "glute_bridge", "clamshell"], "format": "2 rounds of each, 30-40 s per move or 8-10 controlled reps"}, "toned_sculpted": {"minutes": 10, "per_week": 2, "moves": ["dead_bug", "pallof_press", "leg_lowers", "bird_dog", "side_plank"], "format": "2-3 rounds of each"}, "strong_curvy": {"minutes": "5-10", "per_week": 2, "moves": ["side_plank", "dead_bug", "pallof_press", "bird_dog"], "format": "2 rounds of each"}}, "exercises": {"goblet_squat": {"name": "Goblet squat", "equipment": ["dumbbell"], "muscles": ["quads", "glutes"], "cue": "Chest up, elbows inside the knees, sit down between the hips.", "easier": "chair_squat", "harder": "tempo_goblet_squat"}, "tempo_goblet_squat": {"name": "Goblet squat (3-second lowering)", "equipment": ["dumbbell"], "muscles": ["quads", "glutes"], "cue": "Lower over 3 seconds, stand up with control.", "easier": "goblet_squat", "harder": null}, "bodyweight_squat": {"name": "Bodyweight squat", "equipment": ["bodyweight"], "muscles": ["quads", "glutes"], "cue": "Hips back and down, knees track over toes, whole foot on the floor.", "easier": "chair_squat", "harder": "goblet_squat"}, "chair_squat": {"name": "Chair squat", "equipment": ["bodyweight"], "muscles": ["quads", "glutes"], "cue": "Sit back to a chair, touch lightly, stand up with control.", "easier": null, "harder": "bodyweight_squat"}, "incline_pushup": {"name": "Incline push-up", "equipment": ["bodyweight"], "muscles": ["chest", "triceps", "shoulders"], "cue": "Hands on a bench or counter, body in one straight line.", "easier": "wall_pushup", "harder": "pushup"}, "wall_pushup": {"name": "Wall push-up", "equipment": ["bodyweight"], "muscles": ["chest", "triceps"], "cue": "Hands on a wall at shoulder height. Lean in, then push away.", "easier": null, "harder": "incline_pushup"}, "pushup": {"name": "Push-up", "equipment": ["bodyweight"], "muscles": ["chest", "triceps", "shoulders"], "cue": "Hands under shoulders, body straight, elbows about 45 degrees from the body.", "easier": "incline_pushup", "harder": null}, "dumbbell_rdl": {"name": "Dumbbell Romanian deadlift", "equipment": ["dumbbell"], "muscles": ["hamstrings", "glutes"], "cue": "Soft knees, hips back, dumbbells close to the legs, flat back.", "easier": "glute_bridge", "harder": null}, "glute_bridge": {"name": "Glute bridge", "equipment": ["bodyweight"], "muscles": ["glutes", "hamstrings"], "cue": "Press through heels, squeeze glutes at the top, ribs down.", "easier": null, "harder": "single_leg_glute_bridge"}, "single_leg_glute_bridge": {"name": "Single-leg glute bridge", "equipment": ["bodyweight"], "muscles": ["glutes", "hamstrings"], "cue": "Keep hips level, drive through the heel of the working leg.", "easier": "glute_bridge", "harder": null}, "hip_thrust": {"name": "Barbell hip thrust", "equipment": ["gym"], "muscles": ["glutes"], "cue": "Upper back on bench, chin tucked, drive hips up, pause at the top.", "easier": "glute_bridge", "harder": null}, "home_hip_thrust": {"name": "Loaded glute bridge (backpack)", "equipment": ["bodyweight"], "muscles": ["glutes"], "cue": "Backpack on the hips, shoulders on a sofa or bed, pause at the top.", "easier": "glute_bridge", "harder": null}, "bulgarian_split_squat": {"name": "Bulgarian split squat", "equipment": ["bodyweight", "dumbbell"], "muscles": ["quads", "glutes"], "cue": "Rear foot on a chair, front knee over the middle of the foot, torso upright.", "easier": "split_squat", "harder": null}, "split_squat": {"name": "Split squat", "equipment": ["bodyweight"], "muscles": ["quads", "glutes"], "cue": "Stay tall, lower straight down, use a wall for balance if needed.", "easier": null, "harder": "bulgarian_split_squat"}, "step_up": {"name": "Step-up", "equipment": ["bodyweight"], "muscles": ["quads", "glutes"], "cue": "Whole foot on a step or bench, drive up through the front heel.", "easier": "low_step_up", "harder": null}, "low_step_up": {"name": "Low step-up", "equipment": ["bodyweight"], "muscles": ["quads", "glutes"], "cue": "Use a low step. Push up with the front leg.", "easier": null, "harder": "step_up"}, "leg_press": {"name": "Leg press", "equipment": ["gym"], "muscles": ["quads", "glutes"], "cue": "Feet shoulder width, knees track over toes, do not lock the knees hard.", "easier": "goblet_squat", "harder": null}, "hamstring_curl": {"name": "Seated or lying hamstring curl", "equipment": ["gym"], "muscles": ["hamstrings"], "cue": "Control the lowering. Keep hips down.", "easier": "glute_bridge", "harder": null}, "cable_kickback": {"name": "Cable glute kickback", "equipment": ["gym"], "muscles": ["glutes"], "cue": "Keep the torso still, kick back with the glute, do not arch the lower back.", "easier": "donkey_kick", "harder": null}, "donkey_kick": {"name": "Donkey kick", "equipment": ["bodyweight"], "muscles": ["glutes"], "cue": "Hands under shoulders, knee bent, lift heel toward the ceiling without arching.", "easier": null, "harder": "cable_kickback"}, "fire_hydrant": {"name": "Fire hydrant", "equipment": ["bodyweight"], "muscles": ["glutes"], "cue": "Keep hips level, lift the knee out to the side.", "easier": null, "harder": "banded_side_walk"}, "banded_side_walk": {"name": "Banded side walk", "equipment": ["band"], "muscles": ["glutes"], "cue": "Band above the knees, small steps, stay low, keep toes forward.", "easier": "fire_hydrant", "harder": null}, "calf_raise": {"name": "Standing calf raise", "equipment": ["bodyweight"], "muscles": ["calves"], "cue": "Full range, pause at the top, control the way down.", "easier": null, "harder": null}, "dumbbell_row": {"name": "Dumbbell row", "equipment": ["dumbbell"], "muscles": ["back", "biceps"], "cue": "Flat back, elbow close to the body, pull to the hip.", "easier": "band_row", "harder": null}, "one_arm_dumbbell_row": {"name": "One-arm dumbbell row", "equipment": ["dumbbell"], "muscles": ["back", "biceps"], "cue": "Hand and knee on a bench, pull toward the hip, no twisting.", "easier": "dumbbell_row", "harder": null}, "band_row": {"name": "Band row", "equipment": ["band"], "muscles": ["back", "biceps"], "cue": "Anchor the band, pull to the ribs, squeeze shoulder blades.", "easier": null, "harder": "dumbbell_row"}, "seated_cable_row": {"name": "Seated cable row", "equipment": ["gym"], "muscles": ["back", "biceps"], "cue": "Chest up, pull to the lower ribs, squeeze shoulder blades.", "easier": "band_row", "harder": null}, "lat_pulldown": {"name": "Lat pulldown", "equipment": ["gym"], "muscles": ["back", "biceps"], "cue": "Pull elbows down toward the pockets, chest up, no leaning back.", "easier": "band_pulldown", "harder": null}, "band_pulldown": {"name": "Band pulldown", "equipment": ["band"], "muscles": ["back", "biceps"], "cue": "Anchor the band above the head, pull elbows down to the sides.", "easier": null, "harder": "lat_pulldown"}, "dumbbell_chest_press": {"name": "Dumbbell chest press", "equipment": ["dumbbell"], "muscles": ["chest", "triceps"], "cue": "Shoulder blades pinned, control down, press up without locking hard.", "easier": "incline_pushup", "harder": null}, "incline_dumbbell_press": {"name": "Incline dumbbell press", "equipment": ["dumbbell"], "muscles": ["chest", "shoulders", "triceps"], "cue": "Bench at about 30 degrees, control the lowering.", "easier": "dumbbell_chest_press", "harder": null}, "dumbbell_shoulder_press": {"name": "Dumbbell shoulder press", "equipment": ["dumbbell"], "muscles": ["shoulders", "triceps"], "cue": "Ribs down, do not arch the lower back, press straight up.", "easier": "band_pull_apart", "harder": null}, "lateral_raise": {"name": "Lateral raise", "equipment": ["dumbbell"], "muscles": ["shoulders"], "cue": "Light weight, lead with the elbows, stop at shoulder height.", "easier": "band_pull_apart", "harder": null}, "band_pull_apart": {"name": "Band pull-apart", "equipment": ["band"], "muscles": ["shoulders", "back"], "cue": "Arms straight, squeeze shoulder blades together.", "easier": null, "harder": "lateral_raise"}, "face_pull": {"name": "Face pull", "equipment": ["gym", "band"], "muscles": ["shoulders", "back"], "cue": "Pull toward the face, elbows high, rotate the hands out at the end.", "easier": "band_pull_apart", "harder": null}, "hammer_curl": {"name": "Hammer curl", "equipment": ["dumbbell"], "muscles": ["biceps"], "cue": "Thumbs up, elbows still, control the way down.", "easier": null, "harder": null}, "triceps_pushdown": {"name": "Triceps pushdown", "equipment": ["gym"], "muscles": ["triceps"], "cue": "Elbows pinned to the sides, extend fully without moving the shoulders.", "easier": "overhead_triceps_extension", "harder": null}, "overhead_triceps_extension": {"name": "Overhead triceps extension", "equipment": ["dumbbell"], "muscles": ["triceps"], "cue": "Elbows pointing up, lower behind the head, extend.", "easier": null, "harder": "triceps_pushdown"}, "dead_bug": {"name": "Dead bug", "equipment": ["bodyweight"], "muscles": ["core"], "cue": "Low back stays on the floor. Exhale as you extend the opposite arm and leg.", "easier": null, "harder": "leg_lowers"}, "bird_dog": {"name": "Bird dog", "equipment": ["bodyweight"], "muscles": ["core", "back", "glutes"], "cue": "Extend the opposite arm and leg, keep hips level, hold briefly.", "easier": null, "harder": null}, "side_plank": {"name": "Side plank", "equipment": ["bodyweight"], "muscles": ["core", "obliques"], "cue": "Stack hips and shoulders. Knees down if needed.", "easier": "side_plank_knees", "harder": null}, "side_plank_knees": {"name": "Side plank (knees bent)", "equipment": ["bodyweight"], "muscles": ["core", "obliques"], "cue": "Knee on the floor, hips lifted, body in a line.", "easier": null, "harder": "side_plank"}, "clamshell": {"name": "Clamshell", "equipment": ["bodyweight"], "muscles": ["glutes"], "cue": "Hips stacked, open the top knee slowly, do not roll the hips back.", "easier": null, "harder": "banded_clamshell"}, "banded_clamshell": {"name": "Banded clamshell", "equipment": ["band"], "muscles": ["glutes"], "cue": "Band above the knees, move slowly.", "easier": "clamshell", "harder": null}, "leg_lowers": {"name": "Leg lowers", "equipment": ["bodyweight"], "muscles": ["core"], "cue": "Lower back pressed into the floor. Stop before the back arches.", "easier": "dead_bug", "harder": null}, "pallof_press": {"name": "Pallof press", "equipment": ["band", "gym"], "muscles": ["core"], "cue": "Stand side-on, press the handle straight out and back, resist the rotation.", "easier": null, "harder": null}}, "cardio_moves": ["Incline walk", "Interval walk (1 min faster, 2 min easy)", "Light cycling", "Rowing machine (easy pace)", "Walking on rest days"], "programs": {"slim_lean": {"label": "Slim & Lean", "goal": "Build a fitter, leaner body: full-body strength, posture, endurance, and light definition.", "default_days": 4, "session_minutes": "30-40", "days": [{"day": 1, "name": "Full body A", "type": "strength", "strength": [{"exercise": "goblet_squat", "sets": "2-3", "reps": "12-15", "rest": "60 s"}, {"exercise": "incline_pushup", "sets": "2-3", "reps": "10-12", "rest": "60 s"}, {"exercise": "dumbbell_rdl", "sets": "2-3", "reps": "12-15", "rest": "60 s"}, {"exercise": "band_row", "sets": "2-3", "reps": "12-15", "rest": "60 s"}], "core_block": "pilates_core_blocks.slim_lean"}, {"day": 2, "name": "Cardio and mobility", "type": "cardio", "cardio": "incline walk or interval walk, 25-30 min", "mobility": "8 min: hip flexor stretch, thoracic rotation, calf stretch, cat-cow"}, {"day": 3, "name": "Full body B", "type": "strength", "strength": [{"exercise": "step_up", "sets": "2-3", "reps": "10-12 each leg", "rest": "60 s"}, {"exercise": "dumbbell_chest_press", "sets": "2-3", "reps": "12-15", "rest": "60 s"}, {"exercise": "band_pulldown", "sets": "2-3", "reps": "12-15", "rest": "60 s"}, {"exercise": "glute_bridge", "sets": "2-3", "reps": "15", "rest": "45 s"}], "core_block": "pilates_core_blocks.slim_lean"}, {"day": 4, "name": "Full body C", "type": "strength", "strength": [{"exercise": "bodyweight_squat", "sets": "2-3", "reps": "12-15", "rest": "60 s"}, {"exercise": "wall_pushup", "sets": "2-3", "reps": "10-12", "rest": "60 s"}, {"exercise": "dumbbell_row", "sets": "2-3", "reps": "12-15", "rest": "60 s"}, {"exercise": "lateral_raise", "sets": "2", "reps": "12-15", "rest": "45 s"}], "core_block": "pilates_core_blocks.slim_lean"}]}, "toned_sculpted": {"label": "Toned & Sculpted", "goal": "Defined shape: shoulders, back, arms, thighs and glutes, with a strong core.", "default_days": 4, "session_minutes": "45-60", "days": [{"day": 1, "name": "Upper A", "type": "strength", "strength": [{"exercise": "lat_pulldown", "sets": "3", "reps": "10-12", "rest": "60-75 s"}, {"exercise": "dumbbell_shoulder_press", "sets": "3", "reps": "10-12", "rest": "60-75 s"}, {"exercise": "dumbbell_chest_press", "sets": "3", "reps": "10-12", "rest": "60-75 s"}, {"exercise": "seated_cable_row", "sets": "3", "reps": "10-12", "rest": "60-75 s"}, {"exercise": "hammer_curl", "sets": "2-3", "reps": "12-15", "rest": "45-60 s"}, {"exercise": "triceps_pushdown", "sets": "2-3", "reps": "12-15", "rest": "45-60 s"}]}, {"day": 2, "name": "Lower A + core + intervals", "type": "strength", "strength": [{"exercise": "leg_press", "sets": "3", "reps": "10-12", "rest": "60-75 s"}, {"exercise": "bulgarian_split_squat", "sets": "3", "reps": "8-10 each leg", "rest": "60-75 s"}, {"exercise": "hip_thrust", "sets": "3", "reps": "10-12", "rest": "60-75 s"}, {"exercise": "hamstring_curl", "sets": "2-3", "reps": "12-15", "rest": "60 s"}, {"exercise": "calf_raise", "sets": "2-3", "reps": "12-15", "rest": "45 s"}, {"exercise": "cable_kickback", "sets": "2-3", "reps": "12-15 each leg", "rest": "45 s"}], "core_block": "pilates_core_blocks.toned_sculpted", "cardio": "intervals or rowing, 20-25 min"}, {"day": 3, "name": "Upper B", "type": "strength", "strength": [{"exercise": "face_pull", "sets": "3", "reps": "12-15", "rest": "60 s"}, {"exercise": "incline_dumbbell_press", "sets": "3", "reps": "10-12", "rest": "60-75 s"}, {"exercise": "one_arm_dumbbell_row", "sets": "3", "reps": "10-12 each arm", "rest": "60-75 s"}, {"exercise": "lateral_raise", "sets": "3", "reps": "12-15", "rest": "45-60 s"}, {"exercise": "overhead_triceps_extension", "sets": "2-3", "reps": "12-15", "rest": "45-60 s"}]}, {"day": 4, "name": "Lower B + core + cardio", "type": "strength", "strength": [{"exercise": "dumbbell_rdl", "sets": "3", "reps": "10-12", "rest": "60-75 s"}, {"exercise": "step_up", "sets": "3", "reps": "10 each leg", "rest": "60-75 s"}, {"exercise": "single_leg_glute_bridge", "sets": "3", "reps": "10-12 each leg", "rest": "60 s"}, {"exercise": "banded_side_walk", "sets": "2-3", "reps": "12 steps each way", "rest": "45 s"}, {"exercise": "calf_raise", "sets": "2-3", "reps": "12-15", "rest": "45 s"}], "core_block": "pilates_core_blocks.toned_sculpted", "cardio": "incline walk or rowing, 20-30 min"}]}, "strong_curvy": {"label": "Strong & Curvy", "goal": "Stronger glutes, legs, back and shoulders with progressive loading. Heavy compound lifts drive results.", "default_days": 4, "session_minutes": "45-60", "days": [{"day": 1, "name": "Glutes and legs (heavy)", "type": "strength", "strength": [{"exercise": "hip_thrust", "sets": "3-4", "reps": "6-10", "rest": "90-120 s"}, {"exercise": "goblet_squat", "sets": "3", "reps": "6-10", "rest": "90 s"}, {"exercise": "dumbbell_rdl", "sets": "3", "reps": "8-10", "rest": "90 s"}, {"exercise": "bulgarian_split_squat", "sets": "3", "reps": "8-10 each leg", "rest": "60-90 s"}, {"exercise": "cable_kickback", "sets": "2-3", "reps": "12-15 each leg", "rest": "45-60 s"}], "core_block": "pilates_core_blocks.strong_curvy"}, {"day": 2, "name": "Upper strength", "type": "strength", "strength": [{"exercise": "lat_pulldown", "sets": "3", "reps": "8-10", "rest": "90 s"}, {"exercise": "incline_dumbbell_press", "sets": "3", "reps": "8-10", "rest": "90 s"}, {"exercise": "seated_cable_row", "sets": "3", "reps": "8-10", "rest": "90 s"}, {"exercise": "lateral_raise", "sets": "2-3", "reps": "12-15", "rest": "45-60 s"}, {"exercise": "face_pull", "sets": "2-3", "reps": "12-15", "rest": "45-60 s"}]}, {"day": 3, "name": "Glutes and hamstrings (volume)", "type": "strength", "strength": [{"exercise": "single_leg_glute_bridge", "sets": "3", "reps": "10-12 each leg", "rest": "60-75 s"}, {"exercise": "hamstring_curl", "sets": "3", "reps": "10-12", "rest": "60-75 s"}, {"exercise": "step_up", "sets": "3", "reps": "10 each leg", "rest": "60 s"}, {"exercise": "banded_side_walk", "sets": "3", "reps": "12 steps each way", "rest": "45 s"}, {"exercise": "donkey_kick", "sets": "2-3", "reps": "12-15 each leg", "rest": "45 s"}], "core_block": "pilates_core_blocks.strong_curvy", "cardio": "incline walk, 15-20 min"}, {"day": 4, "name": "Full body athletic", "type": "strength", "strength": [{"exercise": "leg_press", "sets": "3", "reps": "8-10", "rest": "90 s"}, {"exercise": "one_arm_dumbbell_row", "sets": "3", "reps": "8-10 each arm", "rest": "90 s"}, {"exercise": "dumbbell_shoulder_press", "sets": "3", "reps": "8-10", "rest": "90 s"}, {"exercise": "calf_raise", "sets": "2-3", "reps": "12-15", "rest": "45 s"}, {"exercise": "dead_bug", "sets": "2-3", "reps": "8-10 each side", "rest": "45 s"}], "cardio": "intervals, 15-20 min (1 min faster, 2 min easy)"}]}}, "home_substitutions": {"hip_thrust": "home_hip_thrust", "leg_press": "bulgarian_split_squat", "lat_pulldown": "band_pulldown", "seated_cable_row": "band_row", "cable_kickback": "donkey_kick", "hamstring_curl": "single_leg_glute_bridge", "triceps_pushdown": "overhead_triceps_extension", "face_pull": "band_pull_apart", "incline_dumbbell_press": "dumbbell_chest_press", "dumbbell_chest_press": "incline_pushup", "pallof_press": "side_plank", "lat_pulldown_home_note": "Use a sturdy band anchored above the head, or the inverted row under a strong table if the client is able."}, "pilates_core_blocks_home_note": "All core blocks use bodyweight and need no equipment.", "safety": {"stop_and_check": ["sharp or joint pain", "dizziness, chest pain, or breathlessness beyond normal effort", "numbness or tingling", "pain that gets worse each session"], "action_on_pain": "The app stops the exercise, offers the easier option, and tells the user to see a doctor if the pain continues.", "screening_triggers": "Heart condition, recent injury or surgery, pregnancy, or recent childbirth: no program until a doctor approves.", "pregnancy_note": "Pregnancy and postpartum need a separate, doctor-approved program. Do not generate these plans for them."}};
+const EXID=Object.fromEntries(EX_LIB.map(e=>[e.id,e]));
+(function(){
+  const J=PROGRAM_DATA.exercises;
+  for(const id in J){
+    if(EXID[id]) continue;
+    const j=J[id];
+    const eq=j.equipment.includes('gym')?2:(j.equipment.some(x=>x==='dumbbell'||x==='band')?1:0);
+    const low=j.muscles.some(m=>['quads','glutes','hamstrings','calves'].includes(m));
+    EXID[id]={id,n:{en:j.name,ar:j.name},g:{en:j.muscles.join(' · '),ar:j.muscles.join(' · ')},
+      hl:j.muscles.map(m=>m==='obliques'?'core':m),cat:'json',eq,f:eq===0?0:(eq===1?0.2:0.6),
+      up:low?0:1,low:low?1:0,cue:{en:j.cue,ar:j.cue},equipment:j.equipment,easier:j.easier,harder:j.harder,
+      time:/plank/.test(id)?1:0};
+  }
+  EXID.cardio={id:'cardio',n:{en:'Cardio',ar:'كارديو'},g:{en:'Cardio',ar:'كارديو'},hl:[],cat:'cardio',eq:0,f:0,
+    cue:{en:'Keep a pace where you can still talk. Stop if dizzy or with chest pain.',ar:'حافظ على وتيرة يمكنك معها الكلام. توقف إذا شعرت بدوار أو ألم في الصدر.'},
+    equipment:['bodyweight'],easier:null,harder:null,time:0};
+})();
+const MUSCLE_NAME={obliques:{en:'Obliques',ar:'الجانبي للبطن'},chest:{en:'Chest',ar:'الصدر'},shoulders:{en:'Shoulders',ar:'الكتفان'},biceps:{en:'Biceps',ar:'البايسبس'},triceps:{en:'Triceps',ar:'الترايسبس'},back:{en:'Back',ar:'الظهر'},core:{en:'Core',ar:'البطن'},quads:{en:'Quads',ar:'الفخذ الأمامي'},hamstrings:{en:'Hamstrings',ar:'الفخذ الخلفي'},glutes:{en:'Glutes',ar:'الأرداف'},calves:{en:'Calves',ar:'الربلة'}};
+const EX_PHOTO=(ex,sex,pos)=>`images/exercises/${ex.id}_${sex}_${pos}.webp`;
+
+/* =====================================================================
+   PROGRAM GENERATION
+   ===================================================================== */
+function buildPlanGeneric(p){
+  const allowed=p.mode==='gym'?2:(p.equip==='light'?1:0);
+  const pool=cat=>EX_LIB.filter(e=>e.cat===cat&&e.eq<=allowed).sort((a,b)=>b.eq-a.eq);
+  const pick=(cat,count,offset)=>{const pl=pool(cat),out=[];for(let i=0;i<pl.length&&out.length<count;i++){out.push(pl[(offset+i)%pl.length]);}return [...new Set(out)];};
+  const scheme=p.mode==='gym'
+    ?({lean:{s:3,r:'12–15',rest:'60 s'},medium:{s:3,r:'8–12',rest:'75 s'},muscular:{s:4,r:'6–10',rest:'2 min'}})[p.bodyType||'medium']
+    :({lose:{s:3,r:'12–15',rest:'45 s'},maintain:{s:3,r:'10–12',rest:'60 s'},gain:{s:4,r:'8–12',rest:'75 s'}})[p.goal||'maintain'];
+  const sets=p.exp==='beginner'?Math.max(2,scheme.s-1):scheme.s;
+  const days=+p.days||3;
+  let splits;
+  if(days===2) splits=[{n:'Full body A',a:'A',p:[['legs',1],['push',1],['pull',1],['core',1]]},{n:'Full body B',a:'B',p:[['legs',1],['push',1],['pull',1],['core',1]]}];
+  else if(days===3) splits=[{n:'Full body A',p:[['legs',1],['push',1],['pull',1],['core',1]]},{n:'Full body B',p:[['legs',1],['push',1],['pull',1],['core',1]]},{n:'Full body C',p:[['legs',1],['push',1],['pull',1],['core',1]]}];
+  else if(days===4) splits=[{n:'Upper A',p:[['push',2],['pull',2]]},{n:'Lower A',p:[['legs',3],['core',1]]},{n:'Upper B',p:[['push',2],['pull',2]]},{n:'Lower B',p:[['legs',3],['core',1]]}];
+  else splits=[{n:'Push',p:[['push',3],['core',1]]},{n:'Pull',p:[['pull',3],['core',1]]},{n:'Legs',p:[['legs',3],['core',1]]},{n:'Upper',p:[['push',2],['pull',2]]},{n:'Lower',p:[['legs',2],['core',1]]}];
+  const templates=splits.map((s,di)=>{
+    const items=[];
+    s.p.forEach(([cat,count])=>{pick(cat,count,di).forEach(ex=>{
+      if(items.some(i=>i.ex===ex.id)) return;
+      items.push({ex:ex.id,sets:ex.time?sets:sets,reps:ex.time?'30–45 s':scheme.r,rest:scheme.rest});
+    });});
+    return {name:s.n,items};
+  });
+  return {templates,days:templates.length,weeks:(+p.months||1)*4};
+}
+
+
+/* ---- Female programs (from programs_female.json) ---- */
+const PERMIT={gym:['gym','dumbbell','band','bodyweight'],light:['dumbbell','band','bodyweight'],none:['bodyweight']};
+const canUse=(e,mode)=>(e.equipment||(e.eq===2?['gym']:(e.eq===1?['dumbbell','band']:['bodyweight']))).some(x=>PERMIT[mode].includes(x));
+function fixExercise(id,mode){
+  let cur=id;
+  for(let k=0;k<5&&cur;k++){
+    const e=EXID[cur]; if(!e) return null;
+    if(canUse(e,mode)) return cur;
+    const sub=PROGRAM_DATA.home_substitutions[cur];
+    cur=(mode!=='gym'&&sub&&EXID[sub])?sub:e.easier;
+  }
+  return null;
+}
+function minutesText(t){
+  const m=String(t||'').match(/(\d+)(?:\s*[-–]\s*(\d+))?\s*min/);
+  if(!m) return '20 min';
+  return m[2]?`${m[1]}–${m[2]} min`:`${m[1]} min`;
+}
+function jsonPlan(p){
+  const key=p.mode==='gym'?p.bodyType:({lose:'slim_lean',maintain:'toned_sculpted',gain:'strong_curvy'})[p.goal||'maintain'];
+  const prog=PROGRAM_DATA.programs[key]; if(!prog) return null;
+  const mode=p.mode==='gym'?'gym':(p.equip==='light'?'light':'none');
+  const adj=p.exp==='beginner'?-1:0;
+  const templates=prog.days.map(d=>{
+    const items=[];
+    const add=(id,sets,reps,rest)=>{const fx=fixExercise(id,mode); if(!fx||items.some(x=>x.ex===fx)) return; items.push({ex:fx,sets:Math.max(2,sets+adj),reps,rest});};
+    (d.strength||[]).forEach(s=>add(s.exercise,parseInt(s.sets,10)||2,s.reps,s.rest));
+    if(d.core_block){
+      const cb=PROGRAM_DATA.pilates_core_blocks[d.core_block.split('.')[1]];
+      if(cb) cb.moves.forEach(m=>{const e=EXID[m]; add(m,2,(e&&e.time)?'30–40 s':'8–10','30 s');});
+    }
+    if(d.type==='cardio'){
+      items.push({ex:'cardio',sets:1,reps:minutesText(d.cardio),rest:'0 s',note:[d.cardio,d.mobility].filter(Boolean).join(' · ')});
+    } else if(d.cardio){
+      items.push({ex:'cardio',sets:1,reps:minutesText(d.cardio),rest:'0 s',note:d.cardio});
+    }
+    return {name:d.name,items};
+  });
+  return {templates,days:templates.length,weeks:(+p.months||1)*4,source:'json'};
+}
+function buildPlan(p){
+  if(p.sex==='female'){const j=jsonPlan(p); if(j) return j;}
+  return buildPlanGeneric(p);
+}
+
+/* Starting weight estimate. Clearly labelled as an estimate on screen. */
+function estStart(p,ex){
+  if(!ex.f||ex.eq===0) return null;
+  const expM={beginner:0.7,intermediate:1,advanced:1.25}[p.exp]||1;
+  const sexM=p.sex==='female'?0.7:1;
+  let pu=1;
+  if(ex.up&&p.pushMax!=null){pu=p.pushMax<8?0.8:(p.pushMax>20?1.15:1);}
+  let w=(+p.weight||70)*ex.f*expM*sexM*pu;
+  if(ex.eq===1&&p.maxDb) w=Math.min(w,+p.maxDb);
+  return r25(w);
+}
+
+function lastResult(u,exId){
+  for(let i=u.sessions.length-1;i>=0;i--){
+    const it=(u.sessions[i].items||[]).find(x=>x.ex===exId&&(x.status==='done'||x.status==='adjusted'));
+    if(it&&it.sets&&it.sets.length){
+      const kgs=it.sets.map(s=>s.kg).filter(k=>k!=null);
+      return {kg:kgs.length?Math.max(...kgs):null,reps:it.sets.map(s=>+s.reps||0),pain:!!it.pain};
+    }
+  }
+  return null;
+}
+
+/* Weight suggestion: a range-based rule, not a fixed number. */
+function suggest(u,item){
+  const ex=EXID[item.ex],p=u.profile,last=lastResult(u,item.ex),[lo,hi]=rangeOf(item.reps);
+  if(ex.eq===0){
+    if(!last) return {kg:null,tip:tx('Bodyweight. Start at the bottom of the range.','وزن الجسم. ابدأ من أقل عدد في النطاق.')};
+    if(last.reps.every(r=>r>=hi)) return {kg:null,tip:tx('You reached the top of the range. Try a harder version.','وصلت إلى أعلى النطاق. جرّب نسخة أصعب.')};
+    return {kg:null,tip:tx('Aim for the top of the range.','استهدف أعلى النطاق.')};
+  }
+  if(!last||last.kg==null){
+    const w=estStart(p,ex);
+    return {kg:w,estimate:true,tip:tx('First-session estimate. Adjust after your first set.','تقدير الجلسة الأولى. عدّل بعد أول مجموعة.')};
+  }
+  const inc=ex.low?5:2.5;
+  let kg=last.kg,tip;
+  if(last.pain){kg=r25(last.kg*0.9);tip=tx('Pain was reported last time. Lighter weight today.','تم الإبلاغ عن ألم في المرة السابقة. وزن أخف اليوم.');}
+  else if(last.reps.every(r=>r>=hi)){kg=last.kg+inc;tip=tx('You beat the top of the range last time. Go up.','تجاوزت أعلى النطاق في المرة السابقة. ارفع الوزن.');}
+  else if(last.reps.some(r=>r<lo)){kg=r25(last.kg*0.95);tip=tx('You fell below the range last time. Go down a little.','نزلت تحت النطاق في المرة السابقة. خفّف قليلاً.');}
+  else tip=tx('Stay here and aim for the top of the range.','ابقَ على هذا الوزن واستهدف أعلى النطاق.');
+  return {kg,tip};
+}
+
+/* =====================================================================
+   ACCOUNT ACTIONS
+   ===================================================================== */
+async function doSignup(){
+  save();const f=UI.f;
+  if(!f.name||!f.name.trim()) return fail(tx('Enter your full name.','أدخل اسمك الكامل.'));
+  if(!/^\S+@\S+\.\S+$/.test(f.email||'')) return fail(tx('Enter a valid email address.','أدخل بريداً إلكترونياً صحيحاً.'));
+  if((f.phone||'').replace(/\D/g,'').length<8) return fail(tx('Enter a valid phone number.','أدخل رقم هاتف صحيحاً.'));
+  if(!f.country) return fail(tx('Choose your country.','اختر الدولة.'));
+  if(f.country==='AE'&&!f.emirate) return fail(tx('Choose your emirate.','اختر الإمارة.'));
+  if((f.pw||'').length<8) return fail(tx('Password must be at least 8 characters.','يجب أن تكون كلمة المرور 8 أحرف على الأقل.'));
+  if(f.pw!==f.pw2) return fail(tx('The two passwords do not match.','كلمتا المرور غير متطابقتين.'));
+  if(!f.c1||!f.c2||!f.c3) return fail(tx('Please accept the terms, privacy policy and health disclaimer.','يرجى قبول الشروط وسياسة الخصوصية وإخلاء المسؤولية الصحي.'));
+  const email=f.email.trim().toLowerCase();
+  if(DB.users.some(u=>u.email===email)) return fail(tx('An account with this email already exists.','يوجد حساب بهذا البريد الإلكتروني بالفعل.'));
+  const salt=newSalt();
+  const u={id:uid(),name:f.name.trim(),email,phone:f.phone.trim(),country:f.country,emirate:f.country==='AE'?f.emirate:null,
+    salt,pw:await hashPw(f.pw,salt),verified:false,code:genCode(),codeExp:Date.now()+15*60000,created:todayStr(),
+    profile:{setupDone:false},weights:[],sessions:[],photos:[],active:null,
+    consent:{terms:todayStr(),privacy:todayStr(),health:todayStr(),photos:null}};
+  DB.users.push(u);DB.sess=null;saveDB();
+  UI.pendingId=u.id;UI.demoCode=u.code;UI.f={};
+  go('verify');
+}
+
+function doVerify(){
+  save();const u=DB.users.find(x=>x.id===UI.pendingId);
+  if(!u) return go('welcome');
+  if(Date.now()>u.codeExp) return fail(tx('This code has expired. Request a new one.','انتهت صلاحية الرمز. اطلب رمزاً جديداً.'));
+  if((UI.f.code||'').trim()!==u.code) return fail(tx('That code is not correct.','هذا الرمز غير صحيح.'));
+  u.verified=true;DB.sess=u.id;saveDB();UI.f={};
+  go(u.profile.setupDone?'home':'onboard');
+}
+function resendCode(){
+  const u=DB.users.find(x=>x.id===UI.pendingId);if(!u) return;
+  u.code=genCode();u.codeExp=Date.now()+15*60000;saveDB();
+  UI.demoCode=u.code;UI.ok=tx('A new code was sent to your email.','تم إرسال رمز جديد إلى بريدك الإلكتروني.');render();
+}
+
+async function doLogin(){
+  save();const f=UI.f;
+  const email=(f.email||'').trim().toLowerCase();
+  const u=DB.users.find(x=>x.email===email);
+  if(!u) return fail(tx('No account uses this email.','لا يوجد حساب بهذا البريد.'));
+  if(await hashPw(f.pw||'',u.salt)!==u.pw) return fail(tx('Wrong email or password.','البريد الإلكتروني أو كلمة المرور غير صحيحة.'));
+  if(!u.verified){
+    UI.pendingId=u.id;u.code=genCode();u.codeExp=Date.now()+15*60000;UI.demoCode=u.code;saveDB();UI.f={};
+    UI.ok=tx('Verify your email before you log in. A new code was sent.','يجب تأكيد بريدك الإلكتروني قبل تسجيل الدخول. تم إرسال رمز جديد.');
+    return go('verify',true);
+  }
+  DB.sess=u.id;saveDB();UI.f={};
+  go(u.profile.setupDone?'home':'onboard');
+}
+function logout(){DB.sess=null;saveDB();UI.f={};go('welcome');}
+function deleteAccount(){
+  const u=me();if(!u) return;
+  if(!confirm(tx('Delete your account and all your data? This cannot be undone.','حذف حسابك وكل بياناتك؟ لا يمكن التراجع عن ذلك.'))) return;
+  DB.users=DB.users.filter(x=>x.id!==u.id);DB.sess=null;saveDB();go('welcome');
+}
+
+/* =====================================================================
+   ONBOARDING (setup questions, asked once)
+   ===================================================================== */
+const BT_GOAL={slim_lean:'lose',toned_sculpted:'maintain',strong_curvy:'gain',lean:'lose',medium:'maintain',muscular:'gain'};
+function nextStep(s){let n=s+1;if(n===4&&me()&&me().profile.mode==='gym') n=5;return n;}
+function backStep(s){let n=s-1;if(n===4&&me()&&me().profile.mode==='gym') n=3;return n;}
+function pick(key,val,advance){
+  const u=me();u.profile[key]=val;
+  if(key==='bodyType') u.profile.goal=BT_GOAL[val];
+  saveDB();UI.err='';UI.ok='';
+  if(advance){UI.ob=nextStep(UI.ob||0);}
+  render();
+}
+function obContinue(s){
+  save();const f=UI.f,u=me(),p=u.profile;
+  if(s===2){ if(f.maxDb!==undefined&&f.maxDb!==''&&(+f.maxDb<=0)) return fail(tx('Enter a weight above 0, or leave it empty.','أدخل وزناً أكبر من 0 أو اتركه فارغاً.')); p.maxDb=f.maxDb?+f.maxDb:null; }
+  if(s===3){
+    if(!f.dob) return fail(tx('Enter your date of birth.','أدخل تاريخ ميلادك.'));
+    if(!(+f.height>=120&&+f.height<=230)) return fail(tx('Enter a height between 120 and 230 cm.','أدخل طولاً بين 120 و230 سم.'));
+    if(!(+f.weight>=30&&+f.weight<=250)) return fail(tx('Enter a weight between 30 and 250 kg.','أدخل وزناً بين 30 و250 كغ.'));
+    p.dob=f.dob;p.height=+f.height;p.weight=+f.weight;
+  }
+  if(s===5){
+    if(f.pushMax===''||f.pushMax==null) return fail(tx('Enter your best push-up count, or 0.','أدخل أفضل عدد تمارين ضغط، أو 0.'));
+    p.exp=f.exp||p.exp||'beginner';p.pushMax=+f.pushMax;
+  }
+  if(s===8){
+    const yes=['q1','q2','q3','q4'].some(k=>f[k]==='yes');
+    const missing=['q1','q2','q3','q4'].some(k=>!f[k]);
+    if(missing) return fail(tx('Please answer all questions.','يرجى الإجابة عن جميع الأسئلة.'));
+    if(yes){p.screen='stop';saveDB();return go('stop');}
+    p.screen='ok';
+  }
+  saveDB();UI.err='';UI.ob=nextStep(s);UI.f={};render();
+}
+function finishSetup(){
+  const u=me(),p=u.profile;
+  p.setupDone=true;p.started=todayStr();
+  if(!u.weights.length) u.weights.push({date:todayStr(),kg:+p.weight});
+  saveDB();UI.ob=0;UI.f={};go('home');
+}
+
+/* =====================================================================
+   WORKOUT
+   ===================================================================== */
+function startWorkout(){
+  const u=me(),p=u.profile,plan=buildPlan(p),n=u.sessions.filter(x=>!x.custom).length,tpl=plan.templates[n%plan.days];
+  u.active={idx:n,week:Math.floor(n/plan.days)+1,day:tpl.name,startedAt:Date.now(),
+    items:tpl.items.map(it=>({ex:it.ex,sets:it.sets,reps:it.reps,rest:it.rest,note:it.note||'',status:'pending',pain:false,logged:[]}))};
+  UI.pi=null;UI.rest=null;UI.hold=null;saveDB();go('workout');
+}
+function itemPlanKg(u,item){return suggest(u,item).kg;}
+function doneAsPlanned(i){
+  const u=me(),it=u.active.items[i],[lo]=rangeOf(it.reps),ex=EXID[it.ex];
+  const kg=ex.eq===0?null:suggest(u,it).kg;
+  it.sets=Array.from({length:it.sets},()=>({reps:lo,kg}));
+  it.status='done';saveDB();render();
+}
+function openEdit(i){UI.editing=i;render();}
+function saveEdit(i){
+  save();const u=me(),it=u.active.items[i],ex=EXID[it.ex],sug=suggest(u,it),[lo]=rangeOf(it.reps);
+  it.sets=Array.from({length:it.sets},(_,k)=>{
+    const r=UI.f['r_'+i+'_'+k],w=UI.f['w_'+i+'_'+k];
+    return {reps:r!==undefined&&r!==''?+r:lo,kg:ex.eq===0?null:(w!==undefined&&w!==''?+w:sug.kg)};
+  });
+  it.status='adjusted';UI.editing=null;UI.f={};saveDB();render();
+}
+function skipItem(i){const u=me();u.active.items[i].status='skipped';saveDB();render();}
+function togglePain(i){const u=me();u.active.items[i].pain=!u.active.items[i].pain;saveDB();render();}
+function undoItem(i){const u=me();u.active.items[i].status='pending';u.active.items[i].sets=null;saveDB();render();}
+function finishWorkout(){
+  save();const u=me(),a=u.active;
+  const loggedAny=a.items.some(i=>i.status==='done'||i.status==='adjusted');
+  const allDone=a.items.every(i=>i.status==='done'||i.status==='adjusted');
+  let res=UI.f.res||(allDone?'all':'partly');
+  if(!loggedAny&&res!=='none') res='none';
+  const rec={idx:a.idx,week:a.week,day:a.day,custom:!!a.custom,date:todayStr(),minutes:Math.max(1,Math.round((Date.now()-a.startedAt)/60000)),status:res,notes:(UI.f.notes||'').trim(),
+    items:a.items.map(i=>({ex:i.ex,status:i.status,pain:!!i.pain,sets:i.logged||[]}))};
+  u.sessions.push(rec);u.active=null;UI.f={};UI.pi=null;UI.rest=null;UI.hold=null;saveDB();
+  UI.ok=tx('Workout saved. Well done.','تم حفظ التمرين. أحسنت.');
+  go('home',true);
+}
+function abandonWorkout(){const u=me();if(!confirm(tx('Discard this workout? Nothing will be saved.','إلغاء هذا التمرين؟ لن يتم حفظ شيء.'))) return;u.active=null;saveDB();go('home');}
+
+/* =====================================================================
+   PROGRESS
+   ===================================================================== */
+function addWeight(){
+  save();const u=me(),kg=+UI.f.w_new;
+  if(!(kg>=30&&kg<=250)) return fail(tx('Enter a weight between 30 and 250 kg.','أدخل وزناً بين 30 و250 كغ.'));
+  const i=u.weights.findIndex(w=>w.date===todayStr());
+  if(i>=0) u.weights[i].kg=kg; else u.weights.push({date:todayStr(),kg});
+  u.weights.sort((a,b)=>a.date.localeCompare(b.date));
+  UI.f={};saveDB();UI.ok=tx('Weight saved.','تم حفظ الوزن.');render();
+}
+function setPhotoConsent(){save();const u=me();if(!UI.f.photoConsent) return fail(tx('Please tick the privacy statement first.','يرجى تحديد بيان الخصوصية أولاً.'));u.consent.photos=todayStr();saveDB();UI.f={};render();}
+function compressImg(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>{const img=new Image();img.onload=()=>{const max=700,s=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',0.8));};img.onerror=rej;img.src=r.result;};
+    r.onerror=rej;r.readAsDataURL(file);
+  });
+}
+function handlePhoto(input){
+  const u=me(),file=input.files&&input.files[0];
+  if(!file) return;
+  if(!u.consent.photos){input.value='';return fail(tx('Confirm the privacy statement before you upload a photo.','أكد بيان الخصوصية قبل رفع الصورة.'));}
+  compressImg(file).then(d=>{u.photos.push({id:uid(),date:todayStr(),data:d,share:false});saveDB();UI.ok=tx('Photo saved privately.','تم حفظ الصورة بشكل خاص.');render();}).catch(()=>fail(tx('That photo could not be read.','تعذر قراءة الصورة.')));
+}
+function toggleShare(id){const u=me(),ph=u.photos.find(p=>p.id===id);if(ph){ph.share=!ph.share;saveDB();render();}}
+function deletePhoto(id){if(!confirm(tx('Delete this photo permanently?','حذف هذه الصورة نهائياً؟'))) return;const u=me();u.photos=u.photos.filter(p=>p.id!==id);saveDB();render();}
+function weightOn(u,date){let w=null;for(const x of u.weights){if(x.date<=date)w=x;}return w||u.weights[0]||null;}
+function photosDue(u){
+  if(!u.photos.length) return 'start';
+  const last=u.photos.reduce((a,b)=>a.date>b.date?a:b);
+  return daysAgo(last.date)>=30?'monthly':null;
+}
+function setCompare(){save();UI.cmpA=UI.f.cmpA||'';UI.cmpB=UI.f.cmpB||'';render();}
+function saveProfileEdits(){
+  save();const u=me(),p=u.profile,f=UI.f;
+  if(f.goal) p.goal=f.goal;
+  if(f.days) p.days=+f.days;
+  if(f.months) p.months=+f.months;
+  if(f.bodyType&&p.mode==='gym') p.bodyType=f.bodyType;
+  saveDB();UI.f={};UI.ok=tx('Saved. Your plan is updated.','تم الحفظ. تم تحديث برنامجك.');render();
+}
+
+/* =====================================================================
+   CHARTS
+   ===================================================================== */
+function lineChart(points){
+  if(points.length<2) return `<p class="muted">${tx('Add at least two weigh-ins to see your trend.','أضف قياسين على الأقل لرؤية الاتجاه.')}</p>`;
+  const w=320,h=150,pad=26,vals=points.map(p=>p.kg),min=Math.min(...vals),max=Math.max(...vals),span=(max-min)||1;
+  const xs=i=>pad+i*(w-2*pad)/(points.length-1);
+  const ys=v=>h-pad-(v-min)/span*(h-2*pad);
+  const poly=points.map((p,i)=>`${xs(i).toFixed(1)},${ys(p.kg).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">
+    <polyline points="${poly}" fill="none" stroke="#e5322d" stroke-width="3" stroke-linejoin="round"/>
+    ${points.map((p,i)=>`<circle cx="${xs(i).toFixed(1)}" cy="${ys(p.kg).toFixed(1)}" r="4" fill="#e5322d"/>`).join('')}
+    <text x="4" y="14" fill="#9a9aa3" font-size="11">${max} kg</text>
+    <text x="4" y="${h-6}" fill="#9a9aa3" font-size="11">${min} kg</text>
+    <text x="${w-4}" y="${h-6}" fill="#9a9aa3" font-size="11" text-anchor="end">${fdate(points[points.length-1].date)}</text>
+  </svg>`;
+}
+
+/* =====================================================================
+   SHARED UI PIECES
+   ===================================================================== */
+/* ===== APP SETTINGS (edit here) ===== */
+const APP_NAME='Repzo';
+const BRAND_NAME='THUGFIT';   /* the brand that owns the app; change if the official spelling differs */
+const PROMOS=[
+  {title:{en:'THUGFIT activewear',ar:'ملابس THUGFIT الرياضية'},text:{en:'See the latest range from the THUGFIT store.',ar:'تعرّف على أحدث تشكيلة من متجر THUGFIT.'},url:'https://thethugfit.com'}
+];
+const promoHTML=()=>PROMOS.map(p=>`<a href="${p.url}" target="_blank" rel="noopener" style="display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;background:var(--card,#141414);border:1px solid #2a2a2a;border-radius:12px;padding:8px 12px;margin:8px 0;color:inherit"><span><b style="font-size:13px">${L(p.title)}</b><br><span style="font-size:11px;opacity:.75">${L(p.text)}</span></span><span style="font-size:11px;opacity:.7">${tx('Visit','زيارة')} ›</span></a>`).join('');
+const brandHTML=()=>`<div class="brand"><img src="images/brand/thugfit-logo.png" alt="${BRAND_NAME}" onerror="this.style.display='none'">${APP_NAME}<span style="font-size:10px;opacity:.7;margin-inline-start:6px;font-weight:400">${tx('by','من')} ${BRAND_NAME}</span></div>`;
+const topHTML=(back)=>`<div class="hdr">${back?`<button class="back" onclick="go('${back}')">${tx('‹ Back','رجوع')}</button>`:brandHTML()}<div class="lang"><button class="${UI.lang==='en'?'on':''}" onclick="setLang('en')">EN</button> <button class="${UI.lang==='ar'?'on':''}" onclick="setLang('ar')">عربي</button></div></div>${promoHTML()}`;
+const msgHTML=()=>(UI.err?`<div class="err">${UI.err}</div>`:'')+(UI.ok?`<div class="ok">${UI.ok}</div>`:'');
+const NAV=[['home',tx('Today','اليوم')],['program',tx('Program','البرنامج')],['progress',tx('Progress','التقدم')],['profile',tx('Account','الحساب')]];
+const navHTML=()=>`<nav class="nav">${NAV.map(([k,l])=>`<button class="${UI.screen===k||(UI.screen==='workout'&&k==='home')?'on':''}" onclick="go('${k}')"><span class="dot"></span>${l}</button>`).join('')}</nav>`;
+
+function exThumb(ex,sex){
+  if(ex.photo) return `<img class="thumb" src="${EX_PHOTO(ex,sex,'pos1')}" alt="">`;
+  return `<div class="ph">${tx('photo soon','قريباً')}</div>`;
+}
+
+/* =====================================================================
+   SCREENS
+   ===================================================================== */
+const SCREENS={};
+
+const LEGAL={"terms": {"title": {"en": "Terms of Use", "ar": "شروط الاستخدام"}, "body": {"en": ["Repzo is a free fitness app by THUGFIT, operated by ZenLine FZ-LLC (RAKEZ, Ras Al Khaimah, UAE). Last updated: 30 October 2026.", "Eligibility: you must be 18 or older to create an account.", "Accurate information: give correct details and keep your password private. You are responsible for activity on your account.", "Guidance only: the app gives general fitness guidance. It is not medical advice and does not replace a doctor, physiotherapist or qualified coach.", "Free access: the app is free. If we add paid features later, we will tell you clearly before any charge.", "Promotions: the app may show offers for THUGFIT products and partners. These are marked as promotions.", "Acceptable use: do not misuse the app, attempt to access other users' data, or copy or resell the programs.", "Ownership: programs, text, photos and muscle diagrams belong to THUGFIT. You may use them for your own training only.", "Ending use: you can stop using the app and delete your account at any time from the Account screen.", "Liability: the app is provided as it is, to the extent allowed by UAE law.", "Governing law: these terms are governed by the laws of the United Arab Emirates."], "ar": ["ريبزو تطبيق لياقة مجاني من THUGFIT، ويديره ZenLine FZ-LLC (RAKEZ، رأس الخيمة، الإمارات). آخر تحديث: 30 أكتوبر 2026.", "الأهلية: يجب أن يكون عمرك 18 عاماً أو أكثر لإنشاء حساب.", "معلومات دقيقة: قدّم بيانات صحيحة واحتفظ بكلمة المرور سرية. أنت مسؤول عن النشاط في حسابك.", "إرشادات عامة فقط: يقدم التطبيق إرشادات لياقة عامة. وهو ليس نصيحة طبية ولا يحل محل الطبيب أو أخصائي العلاج الطبيعي أو المدرب المؤهل.", "الاستخدام المجاني: التطبيق مجاني. إذا أضفنا ميزات مدفوعة لاحقاً، سنخبرك بوضوح قبل أي رسوم.", "العروض: قد يعرض التطبيق عروضاً لمنتجات THUGFIT وشركائها، وستكون موضحة كعروض ترويجية.", "الاستخدام المقبول: لا تسيء استخدام التطبيق، ولا تحاول الوصول إلى بيانات مستخدمين آخرين، ولا تنسخ البرامج أو تعيد بيعها.", "الملكية: البرامج والنصوص والصور ورسوم العضلات مملوكة لـ THUGFIT. يمكنك استخدامها لتدريبك الشخصي فقط.", "إنهاء الاستخدام: يمكنك التوقف عن استخدام التطبيق وحذف حسابك في أي وقت من شاشة الحساب.", "المسؤولية: يُقدَّم التطبيق كما هو، وبالقدر الذي يسمح به القانون الإماراتي.", "القانون الحاكم: تخضع هذه الشروط لقوانين دولة الإمارات العربية المتحدة."]}}, "privacy": {"title": {"en": "Privacy Policy", "ar": "سياسة الخصوصية"}, "body": {"en": ["Who we are: ZenLine FZ-LLC (RAKEZ, UAE), which operates Repzo for THUGFIT. Contact: privacy@thugfit.ae.", "What we collect: name, email, phone number, country and emirate, and a password stored only as a secure hash. Your training profile (goals, experience, equipment, schedule), body measurements, weight, workout logs, and any health information you choose to enter.", "Why we use it: to create your account, build your program, track your progress, send verification and password-reset emails, and provide the service.", "Health information: we treat health details as sensitive. We use them only to adjust your program. Do not enter medical details you do not want to share.", "Who can see it: you, and THUGFIT staff who need it to run the service. Access is limited and recorded. Hosting, database and email providers process data for us under contract.", "Marketing: we only send THUGFIT offers if you opt in. You can opt out at any time.", "Security: passwords are hashed, data is sent over encrypted connections, and access is restricted.", "Keeping data: we keep your data while your account is active. When you delete your account, we delete your personal data within 30 days, except records the law requires us to keep.", "Your rights: you can ask to see, correct, or download your data, withdraw consent, or delete your account. Email privacy@thugfit.ae.", "Children: the app is not for anyone under 18.", "Law: this policy follows the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021). We will tell you in the app when it changes."], "ar": ["من نحن: ZenLine FZ-LLC (RAKEZ، الإمارات)، التي تدير ريبزو لصالح THUGFIT. للتواصل: privacy@thugfit.ae.", "ما نجمعه: الاسم، والبريد الإلكتروني، ورقم الهاتف، والدولة والإمارة، وكلمة المرور مخزنة فقط بشكل مشفّر. ملفك التدريبي (الأهداف، والخبرة، والمعدات، والجدول)، والقياسات، والوزن، وسجلات التمرين، وأي معلومات صحية تختار إدخالها.", "سبب الاستخدام: لإنشاء حسابك، وإعداد برنامجك، ومتابعة تقدمك، وإرسال رسائل التحقق وإعادة تعيين كلمة المرور، وتقديم الخدمة.", "المعلومات الصحية: نعامل التفاصيل الصحية كمعلومات حساسة، ونستخدمها فقط لتعديل برنامجك. لا تُدخل تفاصيل طبية لا تريد مشاركتها.", "من يمكنه الاطلاع: أنت، وموظفو THUGFIT الذين يحتاجونها لتشغيل الخدمة. الوصول محدود ومسجل. مزودو الاستضافة وقاعدة البيانات والبريد الإلكتروني يعالجون البيانات لصالحنا بموجب عقود.", "التسويق: لا نرسل عروض THUGFIT إلا إذا وافقت. يمكنك الانسحاب في أي وقت.", "الأمان: كلمات المرور مشفّرة، والبيانات تُنقل عبر اتصالات مشفّرة، والوصول مقيّد.", "الاحتفاظ بالبيانات: نحتفظ ببياناتك طالما حسابك نشط. عند حذف حسابك نحذف بياناتك الشخصية خلال 30 يوماً، باستثناء السجلات التي يتطلب القانون الاحتفاظ بها.", "حقوقك: يمكنك طلب الاطلاع على بياناتك أو تصحيحها أو تنزيلها، وسحب موافقتك، أو حذف حسابك. راسل privacy@thugfit.ae.", "الأطفال: التطبيق ليس لمن هم دون 18 عاماً.", "القانون: تتبع هذه السياسة قانون حماية البيانات الشخصية الإماراتي (المرسوم بقانون اتحادي رقم 45 لسنة 2021). سنخبرك في التطبيق عند تغييرها."]}}, "health": {"title": {"en": "Health Disclaimer", "ar": "إخلاء المسؤولية الصحية"}, "body": {"en": ["This app gives general fitness guidance only. It is not medical advice, diagnosis or treatment.", "See a doctor before you start, especially if you have a heart, blood pressure, joint, back, or breathing condition, diabetes, pregnancy, a recent injury, or a recent surgery.", "Stop immediately and seek medical help if you feel chest pain, dizziness, shortness of breath, faintness, or sharp pain.", "Use good form. Reduce the weight or skip the exercise if your form breaks down or the exercise causes pain.", "Results differ from person to person. We do not guarantee any result.", "This app is not for emergencies."], "ar": ["يقدم هذا التطبيق إرشادات لياقة عامة فقط. وليس نصيحة طبية أو تشخيصاً أو علاجاً.", "استشر طبيباً قبل البدء، خاصة إذا كان لديك مرض في القلب أو ضغط الدم أو المفاصل أو الظهر أو التنفس، أو السكري، أو الحمل، أو إصابة حديثة، أو عملية جراحية حديثة.", "توقف فوراً واطلب المساعدة الطبية إذا شعرت بألم في الصدر، أو دوخة، أو ضيق تنفس، أو إغماء، أو ألم حاد.", "حافظ على الوضعية الصحيحة. خفّف الوزن أو تخطَّ التمرين إذا اختلت وضعيتك أو سبب لك ألماً.", "تختلف النتائج من شخص لآخر، ولا نضمن أي نتيجة.", "هذا التطبيق ليس للحالات الطارئة."]}}};
+function openLegal(from,tab){UI.legalFrom=from;UI.legalTab=tab||'terms';go('legal');}
+SCREENS.legal=()=>{
+  const tab=UI.legalTab||'terms', d=LEGAL[tab];
+  return `${topHTML(UI.legalFrom||'welcome')}
+  <h1>${tx('Terms and privacy','الشروط والخصوصية')}</h1>
+  <div class="chips-wrap">${Object.keys(LEGAL).map(k=>`<button class="chip-btn ${k===tab?'on':''}" onclick="UI.legalTab='${k}';render()">${L(LEGAL[k].title)}</button>`).join('')}</div>
+  <div class="card">${L(d.body).map(p=>`<p style="font-size:14px;line-height:1.55;margin:8px 0">${esc(p)}</p>`).join('')}</div>
+  <p class="muted" style="font-size:12px">${tx('Questions? Email privacy@thugfit.ae','للاستفسار: privacy@thugfit.ae')}</p>`;
+};
+SCREENS.welcome=()=>`${topHTML()}
+  <div class="hero"><img src="images/brand/thugfit-logo.png" alt="" onerror="this.style.display='none'"></div>
+  <h1>${tx('Train with a plan that adapts to you.','تدرّب بخطة تتكيف معك.')}</h1>
+  <p>${tx('Set up once. Get your program, your weights, and a clear record of every session.','أعدّ حسابك مرة واحدة. احصل على برنامجك وأوزانك وسجل واضح لكل جلسة.')}</p>
+  ${msgHTML()}
+  <p style="text-align:center;font-size:12px;margin:10px 0"><button onclick="openLegal('welcome','terms')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Terms','الشروط')}</button> · <button onclick="openLegal('welcome','privacy')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Privacy','الخصوصية')}</button> · <button onclick="openLegal('welcome','health')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Health disclaimer','إخلاء المسؤولية الصحية')}</button></p>
+  <button class="btn" onclick="go('signup')">${tx('Create an account','إنشاء حساب')}</button>
+  <button class="btn ghost" onclick="go('login')">${tx('Log in','تسجيل الدخول')}</button>`;
+
+SCREENS.signup=()=>{
+  const f=UI.f,isAE=f.country==='AE';
+  return `${topHTML('welcome')}
+  <h1>${tx('Create your account','إنشاء حساب')}</h1>
+  <p>${tx('Takes about two minutes.','تستغرق حوالي دقيقتين.')}</p>
+  ${msgHTML()}
+  <label>${tx('Full name','الاسم الكامل')}</label><input data-k="name" value="${esc(f.name||'')}">
+  <label>${tx('Email','البريد الإلكتروني')}</label><input type="email" data-k="email" value="${esc(f.email||'')}">
+  <label>${tx('Phone number','رقم الهاتف')}</label><input type="tel" data-k="phone" value="${esc(f.phone||'')}" placeholder="+971 50 123 4567">
+  <label>${tx('Country','الدولة')}</label>
+  <select data-k="country" onchange="save();UI.f.emirate='';render()">
+    <option value="">${tx('Choose a country','اختر الدولة')}</option>
+    ${COUNTRIES.map(([k,v])=>`<option value="${k}" ${f.country===k?'selected':''}>${L(v)}</option>`).join('')}
+  </select>
+  ${isAE?`<label>${tx('Emirate','الإمارة')}</label>
+  <select data-k="emirate"><option value="">${tx('Choose an emirate','اختر الإمارة')}</option>
+    ${EMIRATES.map(e=>`<option value="${e.en}" ${f.emirate===e.en?'selected':''}>${L(e)}</option>`).join('')}
+  </select>`:''}
+  <label>${tx('Password (at least 8 characters)','كلمة المرور (8 أحرف على الأقل)')}</label><input type="password" data-k="pw" autocomplete="new-password">
+  <label>${tx('Confirm password','تأكيد كلمة المرور')}</label><input type="password" data-k="pw2" autocomplete="new-password">
+  <label class="chk"><input type="checkbox" data-k="c1" ${f.c1?'checked':''}><span>${tx('I accept the Terms of Use.','أوافق على شروط الاستخدام.')}</span></label>
+  <label class="chk"><input type="checkbox" data-k="c2" ${f.c2?'checked':''}><span>${tx('I have read the Privacy Policy. My data is used to build my program.','قرأت سياسة الخصوصية. تُستخدم بياناتي لإعداد برنامجي.')}</span></label>
+  <label class="chk"><input type="checkbox" data-k="c3" ${f.c3?'checked':''}><span>${tx('I understand this app gives general fitness guidance, not medical advice. I will stop any exercise that causes pain, and see a doctor if unsure.','أفهم أن هذا التطبيق يقدم إرشادات لياقة عامة وليس نصيحة طبية. سأتوقف عن أي تمرين يسبب ألماً، وأستشير طبيباً عند الشك.')}</span></label>
+  <p style="text-align:center;font-size:12px;margin:10px 0"><button onclick="openLegal('signup','terms')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Terms','الشروط')}</button> · <button onclick="openLegal('signup','privacy')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Privacy','الخصوصية')}</button> · <button onclick="openLegal('signup','health')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Health disclaimer','إخلاء المسؤولية الصحية')}</button></p>
+  <button class="btn" onclick="doSignup()">${tx('Create account','إنشاء الحساب')}</button>
+  <div style="text-align:center"><button class="link" onclick="go('login')">${tx('I already have an account','لدي حساب بالفعل')}</button></div>`;
+};
+
+SCREENS.verify=()=>{
+  const u=DB.users.find(x=>x.id===UI.pendingId);
+  return `${topHTML('welcome')}
+  <h1>${tx('Verify your email','تأكيد بريدك الإلكتروني')}</h1>
+  <p>${tx('We sent a 6-digit code to ','أرسلنا رمزاً من 6 أرقام إلى ')}<b>${esc(u?u.email:'')}</b>. ${tx('You need it before you can log in.','تحتاجه قبل تسجيل الدخول.')}</p>
+  ${UI.demoCode?`<div class="code">${UI.demoCode}</div><p class="muted" style="text-align:center;font-size:12px">${tx('Demo mode: the code is shown here. In the live app it arrives by email.','وضع تجريبي: الرمز يظهر هنا. في التطبيق الفعلي يصل عبر البريد الإلكتروني.')}</p>`:''}
+  ${msgHTML()}
+  <label>${tx('Verification code','رمز التحقق')}</label><input inputmode="numeric" maxlength="6" data-k="code" value="${esc(UI.f.code||'')}">
+  <button class="btn" onclick="doVerify()">${tx('Verify','تأكيد')}</button>
+  <button class="btn ghost" onclick="resendCode()">${tx('Send a new code','إرسال رمز جديد')}</button>`;
+};
+
+SCREENS.login=()=>`${topHTML('welcome')}
+  <h1>${tx('Welcome back','مرحباً بعودتك')}</h1>
+  ${msgHTML()}
+  <label>${tx('Email','البريد الإلكتروني')}</label><input type="email" data-k="email" value="${esc(UI.f.email||'')}">
+  <label>${tx('Password','كلمة المرور')}</label><input type="password" data-k="pw" autocomplete="current-password">
+  <button class="btn" onclick="doLogin()">${tx('Log in','تسجيل الدخول')}</button>
+  <div style="text-align:center"><button class="link" onclick="go('signup')">${tx('Create an account','إنشاء حساب')}</button></div>`;
+
+/* ---- Onboarding ---- */
+SCREENS.onboard=()=>{
+  const u=me(),p=u.profile,s=UI.ob||0,gymSkip=p.mode==='gym',STEPS=gymSkip?9:10,shown=(gymSkip&&s>4)?s:s+1,f=UI.f;
+  const head=`<div class="hdr">${brandHTML()}<div class="lang"><button class="${UI.lang==='en'?'on':''}" onclick="setLang('en')">EN</button> <button class="${UI.lang==='ar'?'on':''}" onclick="setLang('ar')">عربي</button></div></div>
+    <div class="step">${tx('Setup','الإعداد')} · ${shown} / ${STEPS}</div><div class="bar"><div style="width:${shown/STEPS*100}%"></div></div>`;
+  const back=s>0?`<button class="back" onclick="UI.ob=backStep(${s});UI.f={};render()">${tx('‹ Back','رجوع')}</button>`:'';
+  const opts=(items,key)=>`<div class="grid2">${items.map(([v,t,d,img])=>`<div class="opt ${p[key]===v?'on':''}" onclick="pick('${key}','${v}',true)">${img?`<img src="${img}" alt="">`:''}<b>${t}</b>${d?`<small>${d}</small>`:''}</div>`).join('')}</div>`;
+  let body='';
+  if(s===0){
+    body=`<h1>${tx('Are you male or female?','هل أنت ذكر أم أنثى؟')}</h1>
+    <p>${tx('This sets the exercise photos and starting weights.','يحدد هذا صور التمارين والأوزان الأولية.')}</p>
+    ${opts([['male',tx('Male','ذكر'),'','images/onboard/onboard_male.webp'],['female',tx('Female','أنثى'),'','images/onboard/onboard_female.webp']],'sex')}`;
+  }
+  else if(s===1){
+    body=`<h1>${tx('Where do you train?','أين تتدرب؟')}</h1>
+    <p>${tx('This decides which exercises you get.','هذا يحدد التمارين التي ستحصل عليها.')}</p>
+    ${opts([['gym',tx('Gym','صالة رياضية'),tx('Barbells, machines, cables and dumbbells','بار وأجهزة وكابلات ودمبلز'),'images/onboard/onboard_gym.webp'],['home',tx('Home','المنزل'),tx('Bodyweight or a few light weights','وزن الجسم أو أوزان خفيفة'),'images/onboard/onboard_home.webp']],'mode')}`;
+  }
+  else if(s===2){
+    if(p.mode==='gym'){
+      const F=p.sex==='female';
+      const items=F
+        ?[['slim_lean',tx('Slim & Lean','نحيفة ورشيقة'),tx('Fat loss, light definition, posture and endurance','تقليل الدهون وتحديد خفيف وقوام ممشوق وتحمل'),'images/bodytype/bodytype_female_slim.webp'],
+          ['toned_sculpted',tx('Toned & Sculpted','متناسقة ومشدودة'),tx('Defined core, shapely thighs, sculpted arms','بطن محدد وأفخاذ متناسقة وذراعان مشدودتان'),'images/bodytype/bodytype_female_toned.webp'],
+          ['strong_curvy',tx('Strong & Curvy','قوية ومنحنية'),tx('Fuller glutes, stronger legs, shoulders and back','ألوية أكثر امتلاءً وساقان وكتفان وظهر أقوى'),'images/bodytype/bodytype_female_strong.webp']]
+        :[['lean',tx('Lean','نحيف رياضي'),tx('Low body fat, visible definition, leaner frame','دهون منخفضة وتحديد واضح وجسم أنحف'),'images/bodytype/bodytype_male_lean.webp'],
+          ['medium',tx('Medium','متوسط'),tx('Balanced muscle and healthy body fat','عضلات متوازنة ونسبة دهون صحية'),'images/bodytype/bodytype_male_medium.webp'],
+          ['muscular',tx('Muscular','عضلي'),tx('Large muscle mass, broad shoulders, strong legs','كتلة عضلية كبيرة وكتفان عريضان وساقان قويتان'),'images/bodytype/bodytype_male_muscular.webp']];
+      body=`<h1>${tx('Which body type are you aiming for?','ما نوع الجسم الذي تطمح إليه؟')}</h1>
+      <p>${tx('This sets your exercises, sets, reps and cardio.','يحدد هذا تمارينك ومجموعاتك وتكراراتك وكارديو.')}</p>
+      ${opts(items,'bodyType')}`;
+    } else {
+      body=`<h1>${tx('What equipment do you have?','ما المعدات المتوفرة لديك؟')}</h1>
+      <p>${tx('Choose what matches your home.','اختر ما يناسب منزلك.')}</p>
+      <div class="grid2"><div class="opt ${p.equip==='none'?'on':''}" onclick="pick('equip','none',true)"><b>${tx('No equipment','بدون معدات')}</b><small>${tx('Bodyweight only','وزن الجسم فقط')}</small></div>
+      <div class="opt ${p.equip==='light'?'on':''}" onclick="pick('equip','light',false)"><b>${tx('Light equipment','معدات خفيفة')}</b><small>${tx('Dumbbells, bands','دمبلز وأحزمة')}</small></div></div>
+      ${p.equip==='light'?`<label>${tx('Heaviest dumbbell you own (kg), or leave empty','أثقل دمبل تملكه (كغ)، أو اتركه فارغاً')}</label><input type="number" inputmode="decimal" data-k="maxDb" value="${p.maxDb||''}">
+      <button class="btn" onclick="obContinue(2)">${tx('Continue','متابعة')}</button>`:''}`;
+    }
+  }
+  else if(s===3){
+    body=`<h1>${tx('Your body','جسمك')}</h1>
+    <p>${tx('Used to estimate your starting weights and track progress.','تُستخدم لتقدير أوزانك الأولية ومتابعة تقدمك.')}</p>
+    <label>${tx('Date of birth','تاريخ الميلاد')}</label><input type="date" data-k="dob" value="${f.dob||p.dob||''}">
+    <div class="row"><div><label>${tx('Height (cm)','الطول (سم)')}</label><input type="number" inputmode="decimal" data-k="height" value="${f.height||p.height||''}"></div>
+    <div><label>${tx('Weight (kg)','الوزن (كغ)')}</label><input type="number" inputmode="decimal" data-k="weight" value="${f.weight||p.weight||''}"></div></div>
+    <button class="btn" onclick="obContinue(3)">${tx('Continue','متابعة')}</button>`;
+  }
+  else if(s===4){
+    body=`<h1>${tx('What is your goal?','ما هدفك؟')}</h1>
+    <p>${tx('We use this to set the direction of your program and track your weight.','نستخدم هذا لتحديد اتجاه برنامجك ومتابعة وزنك.')}</p>
+    ${opts([['lose',tx('Lose weight','إنقاص الوزن'),tx('Reduce body fat','تقليل نسبة الدهون')],['maintain',tx('Maintain','الحفاظ على الوزن'),tx('Stay where you are, get stronger','ابقَ كما أنت وازدد قوة')],['gain',tx('Gain weight','زيادة الوزن'),tx('Build muscle and size','بناء العضلات والحجم')]],'goal')}`;
+  }
+  else if(s===5){
+    body=`<h1>${tx('Your training background','خبرتك في التدريب')}</h1>
+    <label>${tx('Experience','الخبرة')}</label>
+    <select data-k="exp">${[['beginner',tx('Beginner (under 1 year)','مبتدئ (أقل من سنة)')],['intermediate',tx('Intermediate','متوسط')],['advanced',tx('Advanced','متقدم')]].map(([v,t])=>`<option value="${v}" ${(f.exp||p.exp)===v?'selected':''}>${t}</option>`).join('')}</select>
+    <label>${tx('Most push-ups you can do in one set (0 if none)','أكبر عدد من تمارين الضغط في مجموعة واحدة (0 إن لم تستطع)')}</label>
+    <input type="number" inputmode="numeric" data-k="pushMax" value="${f.pushMax!==undefined?f.pushMax:(p.pushMax!=null?p.pushMax:'')}">
+    <p style="font-size:12px">${tx('This helps us estimate your upper-body starting weights. It is an estimate.','هذا يساعدنا في تقدير الأوزان الأولية للجزء العلوي. وهو تقدير فقط.')}</p>
+    <button class="btn" onclick="obContinue(5)">${tx('Continue','متابعة')}</button>`;
+  }
+  else if(s===6){
+    body=`<h1>${tx('How often do you train?','كم مرة تتدرب؟')}</h1>
+    <p>${tx('Days per week you can realistically train.','عدد الأيام في الأسبوع التي تستطيع فيها التدريب فعلياً.')}</p>
+    ${opts([['2','2','' ],['3','3',tx('Good for beginners','مناسب للمبتدئين')],['4','4',tx('Upper and lower split','تقسيم علوي وسفلي')],['5','5',tx('Advanced split','تقسيم متقدم')]].map(x=>[x[0],x[1],x[2]]),'days')}`;
+  }
+  else if(s===7){
+    body=`<h1>${tx('How long is your program?','كم مدة برنامجك؟')}</h1>
+    <p>${tx('Each plan progresses week by week.','كل برنامج يتقدم أسبوعاً بعد أسبوع.')}</p>
+    ${opts([['1',tx('1 month','شهر واحد'),tx('4 weeks','4 أسابيع')],['2',tx('2 months','شهران'),tx('8 weeks','8 أسابيع')],['3',tx('3 months','3 أشهر'),tx('12 weeks, best results','12 أسبوعاً، أفضل نتيجة')]],'months')}`;
+  }
+  else if(s===8){
+    const q=[['q1',tx('Has a doctor ever told you that you have a heart condition or high blood pressure?','هل أخبرك طبيب يوماً أنك تعاني من مرض في القلب أو ضغط الدم المرتفع؟')],
+      ['q2',tx('Do you get chest pain, dizziness, or unusual breathlessness during activity?','هل تشعر بألم في الصدر أو دوار أو ضيق تنفس غير معتاد أثناء النشاط؟')],
+      ['q3',tx('Have you had a recent injury, surgery, or a joint problem?','هل أصبت مؤخراً أو خضعت لعملية جراحية أو لديك مشكلة في المفاصل؟')],
+      ['q4',tx('Are you pregnant, or have you given birth in the last 6 months?','هل أنتِ حامل، أو وضعتِ مولودك خلال آخر 6 أشهر؟')]];
+    body=`<h1>${tx('Quick health check','فحص صحي سريع')}</h1>
+    <p>${tx('If you answer yes to any question, we will ask you to see a doctor before your program starts.','إذا أجبت بنعم على أي سؤال، سنطلب منك استشارة طبيب قبل بدء البرنامج.')}</p>
+    ${q.map(([k,t])=>`<label style="text-transform:none;letter-spacing:0;font-size:14px;color:var(--text)">${t}</label><select data-k="${k}"><option value="">${tx('Choose','اختر')}</option><option value="no" ${f[k]==='no'?'selected':''}>${tx('No','لا')}</option><option value="yes" ${f[k]==='yes'?'selected':''}>${tx('Yes','نعم')}</option></select>`).join('')}
+    <button class="btn" onclick="obContinue(8)">${tx('Continue','متابعة')}</button>`;
+  }
+  else {
+    const plan=buildPlan(p);
+    body=`<h1>${tx('Your program is ready','برنامجك جاهز')}</h1>
+    <div class="card hot"><h3>${tx('Summary','الملخص')}</h3><div class="kv">
+      <div><span>${tx('Training','التدريب')}</span><b>${p.mode==='gym'?tx('Gym','صالة'):tx('Home','منزل')}</b></div>
+      <div><span>${tx('Goal','الهدف')}</span><b>${({lose:tx('Lose weight','إنقاص الوزن'),maintain:tx('Maintain','الحفاظ'),gain:tx('Gain weight','زيادة الوزن')})[p.goal]||'—'}</b></div>
+      <div><span>${tx('Days per week','أيام في الأسبوع')}</span><b>${p.days}</b></div>
+      <div><span>${tx('Plan length','المدة')}</span><b>${p.months} ${tx('month(s)','شهر')}</b></div>
+    </div></div>
+    <div class="card"><p>${tx('Your starting weights are estimates. Your first session will show you the exact numbers to use, and every session after that adjusts them for you.','أوزانك الأولية تقديرية. ستظهر لك الجلسة الأولى الأرقام الدقيقة، وكل جلسة بعدها تعدّلها لك.')}</p></div>
+    <button class="btn" onclick="finishSetup()">${tx('Start my program','ابدأ برنامجي')}</button>`;
+  }
+  return `${head}${back}${msgHTML()}${body}`;
+};
+
+SCREENS.stop=()=>{
+  const u=me(),p=u.profile;
+  return `${topHTML()}
+  <div class="card stop" style="border-color:var(--red)"><h1 style="font-size:22px">${tx('Please see a doctor first','يرجى مراجعة الطبيب أولاً')}</h1>
+  <p>${tx('Based on your answers, speak with a doctor before you start an exercise program. Your program stays paused until then.','بناءً على إجاباتك، استشر طبيباً قبل البدء في برنامج تمارين. يبقى برنامجك متوقفاً حتى ذلك.')}</p></div>
+  <button class="btn ghost" onclick="p0();">${tx('I made a mistake, review my answers','أخطأت، أريد مراجعة إجاباتي')}</button>
+  <button class="btn ghost" onclick="logout()">${tx('Log out','تسجيل الخروج')}</button>`;
+};
+function p0(){const u=me();u.profile.screen='ok';u.profile.setupDone=false;UI.ob=8;saveDB();go('onboard');}
+
+/* ---- Dashboard ---- */
+SCREENS.home=()=>{
+  const u=me(),p=u.profile,plan=buildPlan(p),total=plan.days*plan.weeks,n=u.sessions.filter(x=>!x.custom).length;
+  const finished=n>=total;
+  const tpl=plan.templates[n%plan.days],week=Math.floor(n/plan.days)+1;
+  const weekDone=u.sessions.filter(s=>daysAgo(s.date)<7&&s.status!=='none').length;
+  const latest=u.weights.length?u.weights[u.weights.length-1]:null,first=u.weights[0];
+  const change=latest&&first&&u.weights.length>1?(latest.kg-first.kg):null;
+  const due=photosDue(u);
+  const name=u.name.split(' ')[0];
+  const active=u.active;
+  const heroCard=finished
+    ?`<div class="card hot"><h2>${tx('Program complete','اكتمل البرنامج')}</h2><h3>${tx('You finished your '+p.months+' month plan.','أنهيت برنامج '+p.months+' شهر.')}</h3><p>${tx('Check your progress, add a final photo, and set up your next program.','راجع تقدمك، أضف صورة نهائية، ثم جهّز برنامجك التالي.')}</p><button class="btn" onclick="go('progress')">${tx('See my progress','عرض تقدمي')}</button></div>`
+    :(active
+      ?`<div class="card hot"><div class="step">${tx('In progress','جارٍ الآن')}</div><h3>${esc(active.day)}</h3><p>${tx('Week','الأسبوع')} ${active.week} · ${active.items.length} ${tx('exercises','تمارين')}</p><button class="btn" onclick="go('workout')">${tx('Continue workout','متابعة التمرين')}</button></div>`
+      :`<div class="card hot"><div class="step">${tx('Week','الأسبوع')} ${week} / ${plan.weeks} · ${tx('Session','الجلسة')} ${(n%plan.days)+1} / ${plan.days}</div>
+        <h1 style="margin-top:6px">${tx('Start your workout today','ابدأ تمرينك اليوم')}</h1>
+        <p>${esc(tpl.name)} · ${tpl.items.length} ${tx('exercises','تمارين')}</p>
+        <button class="btn" onclick="startWorkout()">${tx('Start workout','ابدأ التمرين')}</button></div>`);
+  const photoCard=due
+    ?`<div class="card"><div class="row" style="align-items:center"><div><h3>${due==='start'?tx('Add your starting photo','أضف صورة البداية'):tx('Monthly photo is due','حان موعد الصورة الشهرية')}</h3><p style="margin:0">${tx('Only you can see it.','يراها أنت فقط.')}</p></div><button class="btn sm" onclick="go('progress')">${tx('Open','فتح')}</button></div></div>`:'';
+  return `${topHTML()}
+  <h1>${tx('Hi','أهلاً')} ${esc(name)}</h1>
+  ${msgHTML()}
+  ${heroCard}
+  <button class="btn ghost" onclick="UI.parts=[];go('parts')">${tx('Workout by body part','تمرين حسب العضلة')}</button>
+  <div class="stats" style="margin:12px 0">
+    <div class="stat"><span>${tx('Sessions','الجلسات')}</span><b>${n}</b></div>
+    <div class="stat"><span>${tx('This week','هذا الأسبوع')}</span><b>${weekDone}/${plan.days}</b></div>
+    <div class="stat"><span>${tx('Weight','الوزن')}</span><b>${latest?latest.kg:'—'}</b></div>
+  </div>
+  ${change!=null?`<p style="margin-top:4px">${tx('Since start','منذ البداية')}: <b style="color:${change<=0?'var(--green)':'var(--red2)'}">${change>0?'+':''}${change.toFixed(1)} kg</b></p>`:''}
+  ${photoCard}
+  <h2>${tx('Log today’s weight','سجّل وزن اليوم')}</h2>
+  <div class="row"><input type="number" inputmode="decimal" data-k="w_new" placeholder="${tx('kg','كغ')}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
+  ${navHTML()}`;
+};
+
+
+/* ---- Workout by body part ---- */
+const PARTS=[
+  {k:'chest',en:'Chest',ar:'الصدر',map:['chest'],boxes:[[36,27,28,10]]},
+  {k:'shoulders',en:'Shoulders',ar:'الكتفان',map:['shoulders'],boxes:[[17,16,11,8],[72,16,11,8]]},
+  {k:'arms',en:'Arms',ar:'الذراعان',map:['biceps','triceps'],boxes:[[18,28,9,16],[73,28,9,16]]},
+  {k:'core',en:'Core',ar:'البطن',map:['core'],boxes:[[40,38,20,11]]},
+  {k:'quads',en:'Quads',ar:'الفخذ الأمامي',map:['quads'],boxes:[[34,50,15,17],[51,50,15,17]]},
+  {k:'calves',en:'Calves',ar:'الربلة',map:['calves'],boxes:[[36,70,13,17],[51,70,13,17]]},
+  {k:'back',en:'Back',ar:'الظهر',map:['back'],boxes:[]},
+  {k:'glutes',en:'Glutes',ar:'الأرداف',map:['glutes'],boxes:[]},
+  {k:'hamstrings',en:'Hamstrings',ar:'الفخذ الخلفي',map:['hamstrings'],boxes:[]}
+];
+function partsExercises(u,sel){
+  const p=u.profile,mode=p.mode==='gym'?'gym':(p.equip==='light'?'light':'none');
+  const out=[];
+  sel.forEach(k=>{
+    const part=PARTS.find(x=>x.k===k); if(!part) return;
+    const cands=Object.values(EXID).filter(e=>e.id!=='cardio'&&e.hl&&e.hl.some(h=>part.map.includes(h))&&canUse(e,mode))
+      .sort((a,b)=>{const sc=e=>e.hl.filter(h=>part.map.includes(h)).length/Math.max(1,e.hl.length);return (sc(b)-sc(a))||(mode==='gym'?b.eq-a.eq:0);});
+    cands.slice(0,2).forEach(e=>{if(!out.includes(e.id)) out.push(e.id);});
+  });
+  return out;
+}
+function partsName(sel){return sel.map(k=>{const x=PARTS.find(y=>y.k===k);return x?L(x):k;}).join(' · ');}
+function togglePart(k){UI.parts=UI.parts||[];UI.parts=UI.parts.includes(k)?UI.parts.filter(x=>x!==k):UI.parts.concat([k]);render();}
+function startPartsWorkout(){
+  const u=me(),sel=UI.parts||[],ids=partsExercises(u,sel);
+  if(!ids.length) return fail(tx('Choose at least one body part.','اختر عضلة واحدة على الأقل.'));
+  const rest=u.profile.mode==='gym'?'75 s':'60 s';
+  const items=ids.map(id=>({ex:id,sets:3,reps:EXID[id].low?'8–12':'10–12',rest,note:'',status:'pending',pain:false,logged:[]}));
+  u.active={idx:u.sessions.filter(x=>!x.custom).length,week:0,custom:true,day:partsName(sel),startedAt:Date.now(),items};
+  UI.pi=null;UI.rest=null;UI.hold=null;UI.setTimer=null;UI.parts=[];saveDB();go('workout');
+}
+SCREENS.parts=()=>{
+  const u=me(),sex=u.profile.sex||'male',sel=UI.parts||[],ids=partsExercises(u,sel);
+  const spots=PARTS.filter(x=>x.boxes.length).map(x=>x.boxes.map(([l,t,w,h])=>`<button class="hot-spot ${sel.includes(x.k)?'on':''}" style="left:${l}%;top:${t}%;width:${w}%;height:${h}%" onclick="togglePart('${x.k}')" aria-label="${L(x)}"></button>`).join('')).join('');
+  const chips=PARTS.map(x=>`<button class="chip-btn ${sel.includes(x.k)?'on':''}" onclick="togglePart('${x.k}')">${L(x)}</button>`).join('');
+  const preview=ids.map(id=>`<div class="sessionrow"><span>${L(EXID[id].n)}</span><span class="muted">3 × ${EXID[id].low?'8–12':'10–12'}</span></div>`).join('');
+  return `${topHTML('home')}
+  <h1>${tx('Workout by body part','تمرين حسب العضلة')}</h1>
+  <p>${tx('Tap the muscles you want to train. They turn red. Your exercises appear below.','اضغط العضلات التي تريد تدريبها. تتحول إلى اللون الأحمر، وتظهر تمارينها بالأسفل.')}</p>
+  ${msgHTML()}
+  <div class="map-wrap"><img src="images/onboard/onboard_${sex==='female'?'female':'male'}.webp" alt="">${spots}</div>
+  <div class="chips-wrap">${chips}</div>
+  <h2>${tx('Your exercises','تمارينك')}</h2>
+  <div class="card">${preview||`<p class="muted">${tx('Choose a body part to see exercises.','اختر عضلة لرؤية التمارين.')}</p>`}</div>
+  <button class="btn" onclick="startPartsWorkout()" ${ids.length?'':'disabled'}>${tx('Build my workout','أنشئ تمريني')}</button>
+  <div style="text-align:center"><button class="link" onclick="go('home')">${tx('Back to today','العودة إلى اليوم')}</button></div>`;
+};
+
+/* ---- Workout player: timers, sets, rest, cardio ---- */
+const mmss=ms=>{const t=Math.max(0,Math.floor(ms/1000));return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');};
+const restSecs=s=>{const m=String(s||'').match(/\d+/);const n=m?+m[0]:60;return /min/.test(String(s||''))?n*60:n;};
+const firstOpen=a=>{const i=a.items.findIndex(x=>x.status==='pending');return i<0?0:i;};
+function nextPending(a,from){
+  for(let k=from+1;k<a.items.length;k++) if(a.items[k].status==='pending') return k;
+  for(let k=0;k<a.items.length;k++) if(a.items[k].status==='pending') return k;
+  return -1;
+}
+function estMinutes(a){
+  let secs=0;
+  a.items.forEach(it=>{
+    if(it.ex==='cardio'){secs+=(rangeOf(it.reps)[0]||20)*60;return;}
+    secs+=it.sets*(40+restSecs(it.rest));
+  });
+  return Math.round(secs/60);
+}
+function updateTimers(){
+  const u=me(); if(!u||!u.active) return;
+  const el=document.getElementById('elapsed'); if(el) el.textContent=mmss(Date.now()-u.active.startedAt);
+  if(UI.rest&&!UI.rest.done){
+    const left=UI.rest.end-Date.now();
+    const rt=document.getElementById('restLeft'); if(rt) rt.textContent=mmss(left);
+    const bar=document.getElementById('restBar'); if(bar) bar.style.width=Math.max(0,Math.min(100,(1-left/(UI.rest.total*1000))*100))+'%';
+    if(left<=0){UI.rest.done=true; try{navigator.vibrate&&navigator.vibrate([200,100,200]);}catch(e){} render();}
+  }
+  if(UI.hold&&!UI.hold.done){
+    const left=UI.hold.end-Date.now();
+    const ht=document.getElementById('holdLeft'); if(ht) ht.textContent=mmss(left);
+    if(left<=0){UI.hold.done=true; try{navigator.vibrate&&navigator.vibrate([200,100,200]);}catch(e){} render();}
+  }
+  if(UI.setTimer){const se=document.getElementById('setTimer'); if(se) se.textContent=mmss(Math.max(0,Date.now()-UI.setTimer.start));}
+  const it=u.active.items[UI.pi];
+  if(it&&it.cardioEnd&&!it.cardioDone){
+    const left=it.cardioEnd-Date.now();
+    const ct=document.getElementById('cardioLeft'); if(ct) ct.textContent=mmss(left);
+    if(left<=0){it.cardioDone=true; saveDB(); try{navigator.vibrate&&navigator.vibrate([200,100,200]);}catch(e){} render();}
+  }
+}
+
+
+/* ---- Exercise instructions (coach review required before launch) ---- */
+const INSTR={
+ goblet_squat:{en:{setup:["Hold one dumbbell vertically against your chest with both hands.","Feet shoulder-width apart, toes turned slightly out.","Chest up, core braced."],move:["Sit the hips down and back, keeping the chest up.","Lower until the thighs are about parallel with the floor, or as deep as you can keep the back flat.","Drive through the whole foot to stand tall."],breathe:"Breathe in as you lower. Breathe out as you stand.",avoid:["heels lifting","knees caving inward","rounding the lower back"]},ar:{setup:["امسك دمبلاً عمودياً على صدرك بكلتا اليدين.","القدمان بعرض الكتفين، والأصابع مائلة قليلاً للخارج.","الصدر مرفوع والبطن مشدود."],move:["اخفض الوركين إلى الخلف والأسفل مع إبقاء الصدر مرفوعاً.","أنزل حتى تصبح الفخذان موازيين تقريباً للأرض، أو بالعمق الذي تستطيع فيه إبقاء الظهر مستقيماً.","ادفع بكامل القدم للوقوف منتصباً."],breathe:"خذ النفس أثناء النزول، وأخرجه أثناء الوقوف.",avoid:["رفع الكعبين","انحراف الركبتين إلى الداخل","تقوس أسفل الظهر"]}},
+ dumbbell_row:{en:{setup:["Place one hand and the same knee on a flat bench, back flat.","Hold the dumbbell in the free hand, arm straight down.","Keep the torso parallel to the floor."],move:["Pull the dumbbell up toward the hip, elbow close to the body.","Pause briefly at the top with the shoulder blade squeezed back.","Lower slowly until the arm is straight."],breathe:"Breathe out as you pull up. Breathe in as you lower.",avoid:["twisting the torso","rounding the back","jerking the weight up"]},ar:{setup:["ضع يداً واحدة والركبة المقابلة لها على مقعد مسطح، والظهر مستقيم.","امسك الدمبل باليد الحرة وذراعك مستقيمة نحو الأسفل.","اجعل الجذع موازياً للأرض."],move:["اسحب الدمبل نحو الوركين، والكوع قريب من الجسم.","توقف لحظة في الأعلى مع ضغط لوح الكتف للخلف.","أنزل ببطء حتى تستقيم الذراع."],breathe:"أخرج النفس أثناء السحب، وخذ النفس أثناء النزول.",avoid:["لف الجذع","تقوس الظهر","جذب الوزن بحركة مفاجئة"]}},
+ dumbbell_rdl:{en:{setup:["Stand with feet hip-width apart, dumbbells in front of the thighs.","Knees softly bent, chest up, shoulders back."],move:["Push the hips back, letting the dumbbells slide down the front of the thighs.","Lower until you feel a stretch in the hamstrings, with the back flat.","Drive the hips forward to stand tall, squeezing the glutes."],breathe:"Breathe in as you lower. Breathe out as you stand.",avoid:["rounding the back","turning the hinge into a squat","letting the dumbbells drift away from the legs"]},ar:{setup:["قف والقدمان بعرض الوركين، والدمبلان أمام الفخذين.","الركبتان مرنتان قليلاً، والصدر مرفوع والكتفان إلى الخلف."],move:["ادفع الوركين إلى الخلف، ودع الدمبلين ينزلان على مقدمة الفخذين.","أنزل حتى تشعر بالشد في الأوتار الخلفية للفخذ، مع بقاء الظهر مستقيماً.","ادفع الوركين إلى الأمام للوقوف منتصباً مع شد الأرداف."],breathe:"خذ النفس أثناء النزول، وأخرجه أثناء الوقوف.",avoid:["تقوس الظهر","تحويل الحركة إلى قرفصاء","ترك الدمبلين يبتعدان عن الساقين"]}},
+ dumbbell_chest_press:{en:{setup:["Lie on a flat bench, feet flat on the floor.","Hold the dumbbells above the chest, palms facing forward.","Shoulder blades pulled back onto the bench."],move:["Lower the dumbbells to chest level, elbows at about 45 degrees from the body.","Press up in a slight arc until the arms are nearly straight."],breathe:"Breathe in as you lower. Breathe out as you press.",avoid:["bouncing the weights off the chest","flaring the elbows out to 90 degrees","arching the lower back hard"]},ar:{setup:["استلق على مقعد مسطح والقدمان مسطحتان على الأرض.","امسك الدمبلين فوق الصدر والكفان للأمام.","اسحب لوحي الكتف للخلف ليستقرا على المقعد."],move:["أنزل الدمبلين إلى مستوى الصدر والمرفقان بزاوية 45 درجة تقريباً عن الجسم.","ادفع للأعلى في قوس خفيف حتى تكاد الذراعان تستقيمان."],breathe:"خذ النفس أثناء النزول، وأخرجه أثناء الدفع.",avoid:["ارتداد الأوزان عن الصدر","فتح المرفقين إلى 90 درجة","تقوس أسفل الظهر بشدة"]}},
+ incline_pushup:{en:{setup:["Place the hands on the edge of a sturdy bench, under the shoulders.","Body in one straight line from head to heels.","Core and glutes tight."],move:["Lower the chest toward the bench edge, elbows about 45 degrees from the body.","Press back up until the arms are straight."],breathe:"Breathe in as you lower. Breathe out as you press up.",avoid:["sagging or raised hips","flaring the elbows wide","dropping the head forward"]},ar:{setup:["ضع الكفين على حافة مقعد متين، أسفل الكتفين.","الجسم في خط مستقيم من الرأس إلى الكعبين.","البطن والأرداف مشدودان."],move:["أنزل الصدر نحو حافة المقعد، والمرفقان بزاوية 45 درجة تقريباً عن الجسم.","ادفع للأعلى حتى تستقيم الذراعان."],breathe:"خذ النفس أثناء النزول، وأخرجه أثناء الدفع للأعلى.",avoid:["ترهل الوركين أو رفعهما","فتح المرفقين على نطاق واسع","إسقاط الرأس للأمام"]}},
+ bodyweight_squat:{en:{setup:["Feet shoulder-width apart, toes turned slightly out.","Arms straight forward at shoulder height for balance.","Chest up, core braced."],move:["Sit the hips back and down, as if onto a chair.","Lower until the thighs are about parallel with the floor, or as deep as you can keep the heels down.","Drive through the whole foot to stand."],breathe:"Breathe in as you lower. Breathe out as you stand.",avoid:["heels lifting","knees caving inward","rounding the lower back"]},ar:{setup:["القدمان بعرض الكتفين، والأصابع مائلة قليلاً للخارج.","الذراعان ممدودتان للأمام بمستوى الكتف للحفاظ على التوازن.","الصدر مرفوع والبطن مشدود."],move:["اخفض الوركين إلى الخلف والأسفل كأنك تجلس على كرسي.","أنزل حتى تصبح الفخذان موازيين تقريباً للأرض، أو بالعمق الذي تستطيع فيه إبقاء الكعبين على الأرض.","ادفع بكامل القدم للوقوف."],breathe:"خذ النفس أثناء النزول، وأخرجه أثناء الوقوف.",avoid:["رفع الكعبين","انحراف الركبتين إلى الداخل","تقوس أسفل الظهر"]}},
+ plank:{en:{setup:["Forearms on the floor, elbows directly under the shoulders.","Feet together, toes tucked under."],move:["Lift the body into one straight line from head to heels.","Squeeze the glutes and brace the abs.","Hold the position, keeping the neck in line with the spine."],breathe:"Breathe slowly and steadily. Never hold your breath.",avoid:["sagging or raised hips","shoulders shrugged up toward the ears","dropping the head"]},ar:{setup:["الساعدان على الأرض والكوعان تحت الكتفين مباشرة.","القدمان متلاصقتان وأطراف الأصابع مثنية تحت القدم."],move:["ارفع الجسم في خط مستقيم واحد من الرأس إلى الكعبين.","اشد الأرداف واشدد عضلات البطن.","حافظ على الوضعية مع بقاء الرقبة في استقامة مع العمود الفقري."],breathe:"تنفس ببطء وثبات، ولا تحبس النفس أبداً.",avoid:["ترهل الوركين أو رفعهما","رفع الكتفين نحو الأذنين","إسقاط الرأس"]}},
+ glute_bridge:{en:{setup:["Lie on your back, knees bent, feet flat on the floor about hip-width apart.","Heels close to the glutes, arms resting along the sides."],move:["Press through the heels and lift the hips until the shoulders, hips and knees form a straight line.","Squeeze the glutes at the top.","Lower slowly back to the floor."],breathe:"Breathe out as you lift. Breathe in as you lower.",avoid:["arching the lower back at the top","pushing through the toes","feet sliding away from the body"]},ar:{setup:["استلق على ظهرك والركبتان مثنيتان، والقدمان مسطحتان على الأرض بعرض الوركين تقريباً.","الكعبان قريبان من الأرداف، والذراعان ممدودتان بجانب الجسم."],move:["ادفع بالكعبين وارفع الوركين حتى تكوّن الكتفان والوركان والركبتان خطاً مستقيماً.","اضغط على الأرداف في الأعلى.","أنزل ببطء إلى الأرض."],breathe:"أخرج النفس أثناء الرفع، وخذ النفس أثناء الإنزال.",avoid:["تقوس أسفل الظهر في الأعلى","الدفع بأطراف الأصابع","انزلاق القدمين بعيداً عن الجسم"]}},
+ dead_bug:{en:{setup:["Lie on your back, arms straight up toward the ceiling.","Knees bent to 90 degrees, shins parallel to the floor.","Press the lower back flat onto the floor."],move:["Slowly lower the opposite arm and leg toward the floor, without touching it.","Keep the lower back flat throughout.","Return to the start and repeat on the other side."],breathe:"Breathe out as you lower the arm and leg. Breathe in as you return.",avoid:["arching the lower back off the floor","moving too fast","letting the lower back lift"]},ar:{setup:["استلق على ظهرك والذراعان ممدودتان نحو السقف.","الركبتان مثنيتان بزاوية 90 درجة، والساقان موازيتان للأرض.","اضغط أسفل الظهر على الأرض بشكل مسطح."],move:["أنزل الذراع والساق المقابلتين ببطء نحو الأرض دون لمسها.","حافظ على تسطيح أسفل الظهر طوال الحركة.","عد إلى وضع البداية وكرر على الجانب الآخر."],breathe:"أخرج النفس أثناء إنزال الذراع والساق، وخذ النفس أثناء العودة.",avoid:["تقوس أسفل الظهر عن الأرض","الحركة بسرعة كبيرة","ترك أسفل الظهر يرتفع"]}},
+ bird_dog:{en:{setup:["Start on hands and knees, hands under the shoulders, knees under the hips.","Back flat and neutral, neck in line with the spine."],move:["Extend one arm forward and the opposite leg back, both in line with the spine.","Hold briefly, keeping the hips level.","Return slowly and switch sides."],breathe:"Breathe out as you extend. Breathe in as you return.",avoid:["rotating the hips","arching the back","lifting the leg higher than the hip"]},ar:{setup:["ابدأ على اليدين والركبتين، واليدان تحت الكتفين والركبتان تحت الوركين.","الظهر مستوٍ ومحايد، والرقبة في استقامة مع العمود الفقري."],move:["امدد ذراعاً للأمام والساق المقابلة للخلف، والاثنتان في استقامة مع العمود الفقري.","توقف لحظة مع الحفاظ على استواء الوركين.","عد ببطء وبدّل الجانبين."],breathe:"أخرج النفس أثناء المد، وخذ النفس أثناء العودة.",avoid:["لف الوركين","تقوس الظهر","رفع الساق أعلى من مستوى الورك"]}},
+ side_plank:{en:{setup:["Lie on one side, forearm under the shoulder, elbow under the shoulder.","Knees bent on the floor, or legs straight for a harder version."],move:["Lift the hips until the body forms a straight line from head to knees or feet.","Hold, keeping the top hand on the hip or reaching up.","Lower with control and switch sides."],breathe:"Breathe steadily. Do not hold your breath.",avoid:["hips sagging toward the floor","shoulder shrugged toward the ear","rolling forward or back"]},ar:{setup:["استلق على جانب واحد، والساعد تحت الكتف والكوع تحت الكتف.","الركبتان مثنيتان على الأرض، أو الساقان مستقيمتان للنسخة الأصعب."],move:["ارفع الوركين حتى يكوّن الجسم خطاً مستقيماً من الرأس إلى الركبتين أو القدمين.","توقف مع إبقاء اليد العليا على الورك أو ممدودة للأعلى.","أنزل بتحكم وبدّل الجانبين."],breathe:"تنفس بانتظام، ولا تحبس النفس.",avoid:["ترهل الوركين نحو الأرض","رفع الكتف نحو الأذن","الميل للأمام أو للخلف"]}},
+ step_up:{en:{setup:["Stand facing a sturdy bench.","Place one whole foot on the bench, heel down, weight in that heel."],move:["Drive up through the front foot until you stand tall on the bench.","Bring the other leg up to meet it, or hold briefly.","Step down with control and switch legs."],breathe:"Breathe out as you step up. Breathe in as you step down.",avoid:["pushing off the back foot","leaning forward excessively","stepping up with only the toes"]},ar:{setup:["قف مواجهاً لمقعد متين.","ضع القدم كاملة على المقعد، والكعب على السطح مع تحميل الوزن على هذا الكعب."],move:["ادفع عبر القدم الأمامية حتى تقف منتصباً على المقعد.","اجمع الساق الأخرى معها، أو توقف لحظة.","انزل بتحكم وبدّل الساقين."],breathe:"أخرج النفس أثناء الصعود، وخذ النفس أثناء النزول.",avoid:["الدفع بالقدم الخلفية","الميل للأمام بشدة","الصعود بأطراف الأصابع فقط"]}},
+ lateral_raise:{en:{setup:["Stand tall with a light dumbbell in each hand at your sides.","Slight bend in the elbows, palms facing your body."],move:["Raise the arms out to the sides until they reach shoulder height.","Pause briefly, keeping the elbows slightly bent.","Lower slowly back to the sides."],breathe:"Breathe out as you raise. Breathe in as you lower.",avoid:["shrugging the shoulders","swinging the body","raising the arms above shoulder height"]},ar:{setup:["قف منتصباً ودمبل خفيف في كل يد بجانب الجسم.","انحناءة خفيفة في المرفقين، والكفان متجهان نحو الجسم."],move:["ارفع الذراعين إلى الجانبين حتى يصلا إلى مستوى الكتف.","توقف لحظة مع إبقاء المرفقين منحنيين قليلاً.","أنزل ببطء إلى الجانبين."],breathe:"أخرج النفس أثناء الرفع، وخذ النفس أثناء الإنزال.",avoid:["رفع الكتفين","تأرجح الجسم","رفع الذراعين فوق مستوى الكتف"]}},
+ band_row:{en:{setup:["Anchor the band at about chest height in front of you.","Step back to create tension, hinge the torso slightly forward, back flat."],move:["Pull the hands toward the lower ribs, elbows back.","Squeeze the shoulder blades together.","Return slowly until the arms are straight."],breathe:"Breathe out as you pull. Breathe in as you return.",avoid:["rounding the back","leaning back to pull","jerking the band"]},ar:{setup:["ثبّت الحزام عند مستوى الصدر تقريباً أمامك.","ابتعد للخلف لتوليد الشد، واملِ الجذع قليلاً للأمام مع بقاء الظهر مستقيماً."],move:["اسحب اليدين نحو الأضلاع السفلية، والكوعان إلى الخلف.","اضغط لوحي الكتف معاً.","عد ببطء حتى تستقيم الذراعان."],breathe:"أخرج النفس أثناء السحب، وخذ النفس أثناء العودة.",avoid:["تقوس الظهر","الميل للخلف أثناء السحب","جذب الحزام بعنف"]}},
+ clamshell:{en:{setup:["Lie on one side, hips and shoulders stacked.","Knees bent, feet together, head resting on the bottom arm."],move:["Keep the feet together and open the top knee like a clamshell.","Pause at the top without rolling the hips back.","Close the knee slowly."],breathe:"Breathe out as you open. Breathe in as you close.",avoid:["rolling the hips backward","moving too fast","lifting the feet apart from the hip"]},ar:{setup:["استلق على جانب واحد والوركان والكتفان في خط واحد.","الركبتان مثنيتان والقدمان متلاصقتان، والرأس على الذراع السفلية."],move:["أبقِ القدمين متلاصقتين وافتح الركبة العليا كالمحارة.","توقف في الأعلى دون دحرجة الوركين للخلف.","أغلق الركبة ببطء."],breathe:"أخرج النفس أثناء الفتح، وخذ النفس أثناء الإغلاق.",avoid:["دحرجة الوركين للخلف","الحركة بسرعة كبيرة","رفع القدمين عن الورك"]}},
+ band_pulldown:{en:{setup:["Anchor the band above your head.","Grip the band with both hands, arms straight overhead."],move:["Pull the elbows down toward the sides of the body.","Squeeze the lats at the bottom.","Return slowly until the arms are overhead again."],breathe:"Breathe out as you pull down. Breathe in as you return.",avoid:["shrugging the shoulders","leaning back to pull","letting the arms drift forward"]},ar:{setup:["ثبّت الحزام فوق رأسك.","أمسك الحزام بكلتا اليدين والذراعان ممدودتان فوق الرأس."],move:["اسحب المرفقين نحو جانبي الجسم.","اضغط عضلات الظهر العريضة في الأسفل.","عد ببطء حتى تعود الذراعان فوق الرأس."],breathe:"أخرج النفس أثناء السحب للأسفل، وخذ النفس أثناء العودة.",avoid:["رفع الكتفين","الميل للخلف أثناء السحب","انجراف الذراعين للأمام"]}},
+ wall_pushup:{en:{setup:["Stand about an arm's length from a wall, feet flat.","Hands flat on the wall at shoulder height and shoulder-width apart."],move:["Bend the elbows and lean the chest toward the wall.","Press back to the start until the arms are straight."],breathe:"Breathe in as you lean in. Breathe out as you press back.",avoid:["sagging hips","flaring the elbows wide","moving the feet"]},ar:{setup:["قف على بعد ذراع من الحائط، والقدمان مسطحتان.","الكفان على الحائط بمستوى الكتف وبعرض الكتفين."],move:["اثنِ المرفقين واقترب بالصدر من الحائط.","ادفع للعودة إلى وضع البداية حتى تستقيم الذراعان."],breathe:"خذ النفس أثناء الاقتراب، وأخرجه أثناء الدفع.",avoid:["ترهل الوركين","فتح المرفقين على نطاق واسع","تحريك القدمين"]}},
+ lat_pulldown:{en:{setup:["Sit at the machine with thighs under the pads.","Grip the bar wider than shoulder-width, arms straight up."],move:["Pull the bar down to the upper chest, elbows down and in.","Keep the chest up with only a slight lean back.","Return slowly until the arms are nearly straight."],breathe:"Breathe out as you pull down. Breathe in as you return.",avoid:["leaning back too far","pulling the bar behind the neck","shrugging the shoulders"]},ar:{setup:["اجلس على الجهاز والفخذان تحت الوسادات.","أمسك القضيب بعرض أكبر من عرض الكتفين، والذراعان ممدودتان للأعلى."],move:["اسحب القضيب نحو أعلى الصدر، والمرفقان للأسفل وللداخل.","أبقِ الصدر مرفوعاً مع ميل خفيف للخلف.","عد ببطء حتى تكاد الذراعان تستقيمان."],breathe:"أخرج النفس أثناء السحب للأسفل، وخذ النفس أثناء العودة.",avoid:["الميل للخلف بشدة","سحب القضيب خلف الرقبة","رفع الكتفين"]}},
+ dumbbell_shoulder_press:{en:{setup:["Sit upright on a bench with back support.","Dumbbells at shoulder height, palms facing forward."],move:["Press the dumbbells up until the arms are nearly straight, not locked.","Lower slowly back to shoulder height."],breathe:"Breathe out as you press up. Breathe in as you lower.",avoid:["arching the lower back","bouncing the weights","letting the elbows drop below the shoulders at the bottom"]},ar:{setup:["اجلس منتصباً على مقعد مع مسند للظهر.","الدمبلان بمستوى الكتف، والكفان للأمام."],move:["ادفع الدمبلين للأعلى حتى تكاد الذراعان تستقيمان دون قفل المرفقين.","أنزل ببطء إلى مستوى الكتف."],breathe:"أخرج النفس أثناء الدفع للأعلى، وخذ النفس أثناء الإنزال.",avoid:["تقوس أسفل الظهر","ارتداد الأوزان","ترك المرفقين تنخفض تحت مستوى الكتف في الأسفل"]}},
+ incline_dumbbell_press:{en:{setup:["Set the bench to about 30 degrees.","Dumbbells at the upper chest, palms facing forward, shoulder blades back."],move:["Press the dumbbells up over the upper chest.","Lower to chest level with the elbows about 45 degrees from the body."],breathe:"Breathe out as you press up. Breathe in as you lower.",avoid:["flaring the elbows wide","bouncing the dumbbells off the chest","lifting the hips off the bench"]},ar:{setup:["اضبط المقعد على زاوية 30 درجة تقريباً.","الدمبلان عند أعلى الصدر، والكفان للأمام ولوحا الكتف للخلف."],move:["ادفع الدمبلين للأعلى فوق أعلى الصدر.","أنزل إلى مستوى الصدر والمرفقان بزاوية 45 درجة تقريباً عن الجسم."],breathe:"أخرج النفس أثناء الدفع للأعلى، وخذ النفس أثناء الإنزال.",avoid:["فتح المرفقين على نطاق واسع","ارتداد الدمبلين عن الصدر","رفع الوركين عن المقعد"]}},
+ seated_cable_row:{en:{setup:["Sit with feet on the platform, knees slightly bent.","Arms extended forward, holding the handle, back upright."],move:["Pull the handle to the lower ribs, elbows back.","Squeeze the shoulder blades together.","Return slowly until the arms are straight, without rounding forward."],breathe:"Breathe out as you pull. Breathe in as you return.",avoid:["leaning back to pull","rounding the back","shrugging the shoulders"]},ar:{setup:["اجلس والقدمان على المنصة، والركبتان مثنيتان قليلاً.","الذراعان ممدودتان للأمام وتمسكان المقبض، والظهر منتصب."],move:["اسحب المقبض نحو الأضلاع السفلية، والكوعان إلى الخلف.","اضغط لوحي الكتف معاً.","عد ببطء حتى تستقيم الذراعان دون الانحناء للأمام."],breathe:"أخرج النفس أثناء السحب، وخذ النفس أثناء العودة.",avoid:["الميل للخلف أثناء السحب","تقوس الظهر","رفع الكتفين"]}},
+ hammer_curl:{en:{setup:["Stand with a dumbbell in each hand, palms facing your body.","Elbows close to the sides of the torso."],move:["Curl the dumbbells up toward the shoulders, keeping the thumbs facing forward.","Keep the elbows still.","Lower slowly until the arms are straight."],breathe:"Breathe out as you curl. Breathe in as you lower.",avoid:["swinging the body","elbows drifting forward","shrugging the shoulders"]},ar:{setup:["قف ودمبل في كل يد، والكفان متجهان نحو الجسم.","المرفقان قريبان من جانبي الجذع."],move:["ارفع الدمبلين نحو الكتفين، مع إبقاء الإبهامين متجهين للأمام.","أبقِ المرفقين ثابتين.","أنزل ببطء حتى تستقيم الذراعان."],breathe:"أخرج النفس أثناء الرفع، وخذ النفس أثناء الإنزال.",avoid:["تأرجح الجسم","انجراف المرفقين للأمام","رفع الكتفين"]}},
+ triceps_pushdown:{en:{setup:["Stand at a cable machine facing it, elbows at the sides.","Grip the bar overhand, shoulder-width apart."],move:["Push the bar down by straightening the elbows fully.","Pause briefly at the bottom.","Return slowly until the forearms are at about 90 degrees."],breathe:"Breathe out as you push down. Breathe in as you return.",avoid:["elbows moving away from the sides","leaning forward to push","shoulders rising"]},ar:{setup:["قف أمام جهاز الكابل مواجهاً له، والمرفقان بجانب الجسم.","أمسك القضيب من الأعلى بعرض الكتفين."],move:["ادفع القضيب للأسفل بمد المرفقين بالكامل.","توقف لحظة في الأسفل.","عد ببطء حتى يصبح الساعدان بزاوية 90 درجة تقريباً."],breathe:"أخرج النفس أثناء الدفع للأسفل، وخذ النفس أثناء العودة.",avoid:["ابتعاد المرفقين عن الجانبين","الميل للأمام أثناء الدفع","ارتفاع الكتفين"]}},
+ chest_fly:{en:{setup:["Lie on a flat bench, feet flat on the floor.","Dumbbells above the chest, palms facing each other, elbows with a slight fixed bend of about 10 to 15 degrees."],move:["Open the arms in a wide arc until the upper arms are level with the bench.","Squeeze the chest to bring the dumbbells back along the same arc."],breathe:"Breathe in as you open. Breathe out as you close.",avoid:["bending the elbows into a press","dropping the dumbbells quickly","going below bench level"]},ar:{setup:["استلق على مقعد مسطح والقدمان مسطحتان على الأرض.","الدمبلان فوق الصدر والكفان متقابلان، والمرفقان منحنيان بانحناءة ثابتة خفيفة بين 10 و15 درجة."],move:["افتح الذراعين في قوس واسع حتى يصبح العضدان موازيين للمقعد.","اضغط الصدر لإعادة الدمبلين على القوس نفسه."],breathe:"خذ النفس أثناء الفتح، وأخرجه أثناء الإغلاق.",avoid:["ثني المرفقين فتتحول الحركة إلى ضغط","إسقاط الدمبلين بسرعة","النزول تحت مستوى المقعد"]}},
+ pushup:{en:{setup:["Hands on the floor under the shoulders, slightly wider than shoulder-width.","Body in one straight line from head to heels."],move:["Lower the chest toward the floor, elbows about 45 degrees from the body.","Press back up until the arms are straight."],breathe:"Breathe in as you lower. Breathe out as you press up.",avoid:["sagging or raised hips","flaring the elbows wide","dropping the head forward"]},ar:{setup:["الكفان على الأرض تحت الكتفين، وأوسع قليلاً من عرض الكتفين.","الجسم في خط مستقيم واحد من الرأس إلى الكعبين."],move:["أنزل الصدر نحو الأرض، والمرفقان بزاوية 45 درجة تقريباً عن الجسم.","ادفع للعودة حتى تستقيم الذراعان."],breathe:"خذ النفس أثناء النزول، وأخرجه أثناء الدفع للأعلى.",avoid:["ترهل الوركين أو رفعهما","فتح المرفقين على نطاق واسع","إسقاط الرأس للأمام"]}},
+ face_pull:{en:{setup:["Set the rope at about eye height on a cable machine.","Overhand grip, shoulder-width apart, step back for tension, torso upright."],move:["Pull the rope toward the face, leading with the elbows, elbows high and wide.","Finish with the hands beside the ears, knuckles rotated up and back.","Return slowly without losing the elbow height."],breathe:"Breathe out as you pull. Breathe in as you return.",avoid:["leaning back","dropping the elbows below shoulder height","shrugging the shoulders"]},ar:{setup:["اضبط الحبل عند مستوى العين تقريباً على جهاز الكابل.","قبضة من الأعلى بعرض الكتفين، وتراجع خطوة لتوليد الشد، والجذع منتصب."],move:["اسحب الحبل نحو الوجه، مع قيادة المرفقين، والمرفقان عاليان وبعيدان.","أنهِ الحركة بوضع اليدين بجانب الأذنين، مع تدوير المفاصل للأعلى وللخلف.","عد ببطء دون فقدان ارتفاع المرفقين."],breathe:"أخرج النفس أثناء السحب، وخذ النفس أثناء العودة.",avoid:["الميل للخلف","إنزال المرفقين تحت مستوى الكتف","رفع الكتفين"]}},
+ one_arm_dumbbell_row:{en:{setup:["Place one knee and the same hand on a flat bench, back flat and parallel to the floor.","Hold the dumbbell in the free hand, arm hanging straight down.","Feet planted, head in line with the spine."],move:["Pull the dumbbell up toward the ribcage, elbow close to the body.","Pause briefly with the shoulder blade squeezed back.","Lower slowly until the arm is straight."],breathe:"Breathe out as you pull up. Breathe in as you lower.",avoid:["rounding the back","twisting the hips","jerking the weight up"]},ar:{setup:["ضع ركبة واحدة واليد المقابلة لها على مقعد مسطح، والظهر مستقيم وموازٍ للأرض.","امسك الدمبل باليد الحرة وذراعك مرخية نحو الأرض.","القدمان ثابتتان والرأس في استقامة مع العمود الفقري."],move:["اسحب الدمبل نحو الصدر، والكوع قريب من الجسم.","توقف لحظة في الأعلى مع ضغط لوح الكتف للخلف.","أنزل ببطء حتى تستقيم الذراع."],breathe:"أخرج النفس أثناء السحب، وخذ النفس أثناء الإنزال.",avoid:["تقويس الظهر","لف الوركين","جذب الوزن بحركة مفاجئة"]}},
+ leg_press:{en:{setup:["Sit with the back and head flat against the pad.","Feet shoulder-width apart on the platform, toes slightly out.","Release the safety catch before pressing."],move:["Press the platform away by extending the legs.","Stop just short of locking the knees.","Lower with control until the knees reach about 90 degrees."],breathe:"Breathe out as you press. Breathe in as you lower.",avoid:["locking the knees","lifting the lower back off the pad","knees caving inward"]},ar:{setup:["اجلس والظهر والرأس ملتصقان بالوسادة.","القدمان على المنصة بعرض الكتفين وأصابعهما مائلة قليلاً للخارج.","افتح مشبك الأمان قبل الدفع."],move:["ادفع المنصة بعيداً بمد الساقين.","توقف قبل قفل الركبتين.","أنزل بتحكم حتى تصل الركبتان إلى حوالي 90 درجة."],breathe:"أخرج النفس أثناء الدفع، وخذ النفس أثناء الإنزال.",avoid:["قفل الركبتين","رفع أسفل الظهر عن الوسادة","انحراف الركبتين إلى الداخل"]}},
+ bulgarian_split_squat:{en:{setup:["Stand 2–3 feet in front of a knee-height bench, facing away.","Rest the top of the rear foot on the bench.","Hold a dumbbell in each hand at the sides."],move:["Lower until the front thigh is about parallel with the floor.","Let the rear knee drop toward the floor, hovering just above it.","Drive through the front heel to stand."],breathe:"Breathe in as you lower. Breathe out as you stand.",avoid:["front knee caving inward","leaning the torso too far forward","pushing off the rear foot"]},ar:{setup:["قف على بعد 2 إلى 3 أقدام أمام مقعد بارتفاع الركبة، مع إدارة ظهرك له.","ضع أعلى القدم الخلفية على المقعد.","امسك دمبلاً في كل يد بجانب الجسم."],move:["أنزل حتى يصبح الفخذ الأمامي موازياً تقريباً للأرض.","دع الركبة الخلفية تنخفض نحو الأرض دون أن تلمسها.","ادفع بكعب القدم الأمامية للوقوف."],breathe:"خذ النفس أثناء النزول، وأخرجه أثناء الوقوف.",avoid:["انحراف الركبة الأمامية إلى الداخل","الانحناء الزائد للجذع إلى الأمام","الدفع بالقدم الخلفية"]}},
+ hip_thrust:{en:{setup:["Sit on the floor with the upper back against a bench, the edge just below the shoulder blades.","Feet flat, hip-width apart, knees bent.","Hold a dumbbell across the hips."],move:["Drive through the heels and lift the hips.","Form a straight line from shoulders to knees, shins vertical at the top.","Pause briefly, then lower with control."],breathe:"Breathe out as you lift. Breathe in as you lower.",avoid:["arching the lower back","feet too far forward","lifting onto the toes"]},ar:{setup:["اجلس على الأرض والظهر العلوي مستند على مقعد، وحافته أسفل لوحي الكتف مباشرة.","القدمان مسطحتان بعرض الوركين والركبتان مثنيتان.","امسك دمبلاً على الوركين."],move:["ادفع بالكعبين وارفع الوركين.","كوّن خطاً مستقيماً من الكتفين إلى الركبتين، والساقان عموديتان في الأعلى.","توقف لحظة ثم أنزل بتحكم."],breathe:"أخرج النفس أثناء الرفع، وخذ النفس أثناء الإنزال.",avoid:["تقويس أسفل الظهر","وضع القدمين بعيداً إلى الأمام","رفع الجسم على أصابع القدمين"]}},
+ hamstring_curl:{en:{setup:["Lie face down on the machine, hips flat on the pad.","Roller just above the heels, legs straight.","Hold the handles."],move:["Curl the heels up toward the glutes.","Pause briefly at the top.","Lower slowly without letting the weight stack drop."],breathe:"Breathe out as you curl. Breathe in as you lower.",avoid:["lifting the hips off the pad","arching the lower back","using momentum"]},ar:{setup:["استلقِ على وجهك على الجهاز، والوركان مسطحان على الوسادة.","الوسادة المتدحرجة فوق الكعبين مباشرة، والساقان مستقيمتان.","أمسك المقابض."],move:["اثنِ الساقين لرفع الكعبين نحو الأرداف.","توقف لحظة في الأعلى.","أنزل ببطء دون أن تترك الأثقال تهبط بقوة."],breathe:"أخرج النفس أثناء الثني، وخذ النفس أثناء الإنزال.",avoid:["رفع الوركين عن الوسادة","تقويس أسفل الظهر","استخدام الزخم"]}},
+ calf_raise:{en:{setup:["Stand on the edge of a step with the balls of the feet on the edge.","Heels hanging off the edge, knees straight but soft.","Hold a dumbbell in each hand at the sides."],move:["Rise onto the toes as high as possible.","Pause briefly at the top.","Lower the heels below the step for a full stretch."],breathe:"Breathe out as you rise. Breathe in as you lower.",avoid:["bouncing at the bottom","rolling onto the outer edges of the feet","locking the knees"]},ar:{setup:["قف على حافة درجة بحيث تكون كرات القدمين على الحافة.","الكعبان متدليان خارج الحافة، والركبتان مستقيمتان لكن مرنتان.","امسك دمبلاً في كل يد بجانب الجسم."],move:["ارتفع على أصابع القدمين قدر المستطاع.","توقف لحظة في الأعلى.","أنزل الكعبين تحت مستوى الدرجة لتمدد كامل."],breathe:"أخرج النفس أثناء الصعود، وخذ النفس أثناء النزول.",avoid:["الارتداد في الأسفل","التدحرج على حافتي القدمين","قفل الركبتين"]}},
+ cable_kickback:{en:{setup:["Attach an ankle strap to the low pulley and fasten it on the working ankle.","Stand facing the machine with one hand on the frame.","Keep the standing knee soft and the torso slightly hinged."],move:["Kick the working leg straight back, keeping it straight.","Squeeze the glute at the top, keeping the hips square.","Return slowly without letting the weight stack touch."],breathe:"Breathe out as you kick back. Breathe in as you return.",avoid:["arching the lower back","opening the hips","swinging the leg"]},ar:{setup:["ثبّت حزام الكاحل على البكرة السفلية وأحكم ربطه على الكاحل العامل.","قف مواجهاً للجهاز ويدك على الإطار.","اترك الركبة الواقفة مرنة وأمِل الجذع قليلاً."],move:["اركل الساق العاملة إلى الخلف مع إبقائها مستقيمة.","اضغط على الأرداف في الأعلى مع بقاء الوركين مستويين.","أعدها ببطء دون أن تلمس الأثقال."],breathe:"أخرج النفس أثناء الركل، وخذ النفس أثناء العودة.",avoid:["تقويس أسفل الظهر","فتح الوركين","تأرجح الساق"]}},
+ overhead_triceps_extension:{en:{setup:["Stand tall, feet hip-width apart.","Hold one dumbbell in both hands above the head, arms straight.","Keep the elbows close to the ears."],move:["Lower the dumbbell behind the head by bending the elbows.","Stop when the elbows reach about 90 degrees.","Extend the arms back up, squeezing the triceps."],breathe:"Breathe in as you lower. Breathe out as you extend.",avoid:["flaring the elbows out","arching the lower back","lowering too far behind the head"]},ar:{setup:["قف منتصباً والقدمان بعرض الوركين.","امسك دمبلاً واحداً بكلتا اليدين فوق الرأس والذراعان مستقيمتان.","أبقِ المرفقين قريبين من الأذنين."],move:["أنزل الدمبل خلف الرأس بثني المرفقين.","توقف عندما تصل المرفقان إلى حوالي 90 درجة.","ارفع الذراعين مجدداً مع الضغط على العضلة ثلاثية الرؤوس."],breathe:"خذ النفس أثناء النزول، وأخرجه أثناء الرفع.",avoid:["تباعد المرفقين إلى الخارج","تقويس أسفل الظهر","إنزال الدمبل بعيداً جداً خلف الرأس"]}},
+ pallof_press:{en:{setup:["Stand sideways to a cable at chest height, feet hip-width apart.","Hold the handle at the center of the chest with both hands.","Knees soft, hips and shoulders square."],move:["Press the handle straight out until the arms are fully extended.","Hold briefly, resisting the pull toward the machine.","Return the handle to the chest with control."],breathe:"Breathe out as you press. Breathe in as you return.",avoid:["twisting the torso toward the machine","letting the hands drift sideways","holding your breath"]},ar:{setup:["قف جانبياً أمام كابل بارتفاع الصدر، والقدمان بعرض الوركين.","أمسك المقبض عند منتصف الصدر بكلتا اليدين.","الركبتان مرنتان، والوركان والكتفان مستويان."],move:["ادفع المقبض للأمام مستقيماً حتى تمتد الذراعان بالكامل.","توقف لحظة مقاوماً سحب الكابل نحو الجهاز.","أعد المقبض إلى الصدر بتحكم."],breathe:"أخرج النفس أثناء الدفع، وخذ النفس أثناء العودة.",avoid:["لف الجذع نحو الجهاز","انحراف اليدين جانباً","حبس النفس"]}},
+ leg_lowers:{en:{setup:["Lie flat on your back, hands tucked under the glutes.","Legs straight and together, pointing up toward the ceiling.","Press the lower back into the floor."],move:["Lower the legs together with control.","Stop just above the floor, before the lower back lifts.","Raise the legs back up with the abs and glutes."],breathe:"Breathe in as you lower. Breathe out as you lift.",avoid:["lifting the lower back off the floor","bending the knees to cheat","dropping the legs fast"]},ar:{setup:["استلقِ على ظهرك وضع يديك تحت الأرداف.","الساقان مستقيمتان ومتلاصقتان وموجهتان نحو السقف.","اضغط أسفل الظهر على الأرض."],move:["أنزل الساقين معاً بتحكم.","توقف قبل أن يرتفع أسفل الظهر، وفوق الأرض مباشرة.","ارفع الساقين مجدداً بعضلات البطن والأرداف."],breathe:"خذ النفس أثناء النزول، وأخرجه أثناء الرفع.",avoid:["رفع أسفل الظهر عن الأرض","ثني الركبتين للتخفيف","إنزال الساقين بسرعة"]}},
+ single_leg_glute_bridge:{en:{setup:["Lie on your back, one knee bent with the foot flat on the floor.","Extend the other leg straight, hovering a few inches above the floor.","Arms by the sides, palms down."],move:["Drive through the bent heel and lift the hips.","Form a straight line from the bent knee through the hip to the shoulders.","Squeeze the glute, then lower with control."],breathe:"Breathe out as you lift. Breathe in as you lower.",avoid:["arching the lower back","letting the hips drop unevenly","pushing with the toes"]},ar:{setup:["استلقِ على ظهرك، وركبة واحدة مثنية والقدم مسطحة على الأرض.","امتد بالساق الأخرى مستقيمة ومعلقة على بعد بضع بوصات فوق الأرض.","الذراعان بجانب الجسم وكفاهما للأسفل."],move:["ادفع بكعب الساق المثنية وارفع الوركين.","كوّن خطاً مستقيماً من الركبة المثنية عبر الورك إلى الكتف.","اضغط على الأرداف، ثم أنزل بتحكم."],breathe:"أخرج النفس أثناء الرفع، وخذ النفس أثناء الإنزال.",avoid:["تقويس أسفل الظهر","ترك الوركين يهبطان بشكل غير متساوٍ","الدفع بأصابع القدم"]}},
+ banded_side_walk:{en:{setup:["Loop a mini band just above the knees.","Feet hip-width apart in a quarter squat, toes forward.","Keep the band taut throughout."],move:["Step one foot wide to the side, pushing the knee out against the band.","Bring the trailing foot in to hip-width, keeping the band under tension.","Keep the hips back and the chest up."],breathe:"Breathe steadily. Do not hold the breath.",avoid:["letting the knees cave inward","leaning side to side","letting the feet turn out"]},ar:{setup:["ضع حزاماً صغيراً فوق الركبتين مباشرة.","قف بالقدمين بعرض الوركين في نصف قرفصاء، وأصابع القدمين للأمام.","أبقِ الحزام مشدوداً طوال الوقت."],move:["اخطُ بقدم واحدة إلى الجانب، وادفع الركبة للخارج ضد الحزام.","أحضر القدم الخلفية إلى عرض الوركين مع بقاء الحزام مشدوداً.","أبقِ الوركين إلى الخلف والصدر مرفوعاً."],breathe:"تنفس بانتظام، ولا تحبس النفس.",avoid:["انحراف الركبتين إلى الداخل","الميل يميناً ويساراً","إدارة القدمين إلى الخارج"]}},
+ donkey_kick:{en:{setup:["Start on all fours, hands under the shoulders, knees under the hips.","Back flat, core braced.","Bend one knee to 90 degrees."],move:["Lift the bent-knee heel toward the ceiling by squeezing the glute.","Stop before the lower back arches.","Lower with control without touching the knee to the floor."],breathe:"Breathe out as you lift. Breathe in as you lower.",avoid:["arching the lower back","rotating the hips","lifting higher than the back can stay neutral"]},ar:{setup:["ابدأ على اليدين والركبتين، واليدان تحت الكتفين والركبتان تحت الوركين.","الظهر مستقيم والبطن مشدود.","اثنِ ركبة واحدة إلى 90 درجة."],move:["ارفع كعب الساق المثنية نحو السقف بالضغط على الأرداف.","توقف قبل أن يتقوس أسفل الظهر.","أنزل بتحكم دون أن تلمس الركبة الأرض."],breathe:"أخرج النفس أثناء الرفع، وخذ النفس أثناء النزول.",avoid:["تقويس أسفل الظهر","لف الوركين","الرفع أعلى مما يسمح به ثبات الظهر"]}},
+ home_hip_thrust:{en:{setup:["Sit on the floor with the upper back against a sturdy chair seat.","Feet flat, hip-width apart, knees bent.","Hands resting on the hips."],move:["Drive through the heels and lift the hips.","Form a straight line from shoulders to knees.","Pause briefly, then lower with control."],breathe:"Breathe out as you lift. Breathe in as you lower.",avoid:["arching the lower back","feet sliding forward","lifting onto the toes"]},ar:{setup:["اجلس على الأرض والظهر العلوي مستند على مقعد كرسي ثابت.","القدمان مسطحتان بعرض الوركين والركبتان مثنيتان.","اترك اليدين على الوركين."],move:["ادفع بالكعبين وارفع الوركين.","كوّن خطاً مستقيماً من الكتفين إلى الركبتين.","توقف لحظة ثم أنزل بتحكم."],breathe:"أخرج النفس أثناء الرفع، وخذ النفس أثناء النزول.",avoid:["تقويس أسفل الظهر","انزلاق القدمين إلى الأمام","رفع الجسم على أصابع القدمين"]}},
+ band_pull_apart:{en:{setup:["Stand with feet shoulder-width apart.","Hold a resistance band with both hands, palms down, arms straight in front at shoulder height.","Keep the elbows soft and almost straight."],move:["Pull the band apart by moving the hands out to the sides.","Drive the movement from the shoulder blades until the band reaches the chest.","Squeeze the shoulder blades together, then return with control."],breathe:"Breathe out as you pull apart. Breathe in as you return.",avoid:["shrugging the shoulders toward the ears","bending the elbows too much","letting the band snap back"]},ar:{setup:["قف والقدمان بعرض الكتفين.","امسك حزام مقاومة بكلتا اليدين، والكفان للأسفل، والذراعان مستقيمتان أمامك بمستوى الكتف.","أبقِ المرفقين مرنين وشبه مستقيمين."],move:["افصل الحزام بتحريك اليدين إلى الجانبين.","ادفع الحركة من لوحي الكتفين حتى يصل الحزام إلى الصدر.","اضغط لوحي الكتفين معاً، ثم عد بتحكم."],breathe:"أخرج النفس أثناء الفصل، وخذ النفس أثناء العودة.",avoid:["رفع الكتفين نحو الأذنين","ثني المرفقين كثيراً","ترك الحزام يرتد بقوة"]}}
+};
+function effortText(){
+  const e=(me()&&me().profile.exp)||'intermediate';
+  const n={beginner:'2 to 3',intermediate:'1 to 2',advanced:'0 to 1'}[e]||'1 to 2';
+  return 'stop when about '+n+' reps are left in the tank. The last rep should be hard but still controlled.';
+}
+const INSTR_ALIAS={goblet:'goblet_squat',dbrow:'dumbbell_row',dbrdl:'dumbbell_rdl',bsquat:'bodyweight_squat',deadbug:'dead_bug'};
+function instrHTML(id,ex){
+  const I0=INSTR[id]||INSTR[INSTR_ALIAS[id]];
+  const I=I0&&(I0[UI.lang]||I0.en);
+  if(!I) return `<p style="color:var(--text);font-size:15px;margin:10px 0 6px">${L(ex.cue||{en:'',ar:''})}</p><p class="note" style="font-size:12px">${tx('Full step-by-step instructions for this exercise are being reviewed by a coach. Follow the key point above, and stop if you feel pain.','تعليمات مفصلة لهذا التمرين قيد مراجعة المدرب. اتبع النقطة الأساسية أعلاه، وتوقف إذا شعرت بألم.')}</p>`;
+  const list=a=>a.map(x=>`<li style="margin:3px 0">${x}</li>`).join('');
+  return `<div class="card" style="margin:10px 0;font-size:14px;line-height:1.5">
+    <b style="color:var(--red2)">Setup</b><ol style="margin:4px 0 10px;padding-inline-start:20px;color:var(--text)">${list(I.setup)}</ol>
+    <b style="color:var(--red2)">Movement</b><ol style="margin:4px 0 10px;padding-inline-start:20px;color:var(--text)">${list(I.move)}</ol>
+    <p style="color:var(--text);margin:6px 0"><b>Breathing:</b> ${I.breathe}</p>
+    <p style="color:var(--text);margin:6px 0"><b>Avoid:</b> ${I.avoid.join(', ')}</p>
+    <p style="color:var(--text);margin:6px 0"><b>How hard:</b> ${effortText()}</p>
+  </div>`;
+}
+function exImg(id,sex,pos){return `images/exercises/${id}_${sex}_${pos}.webp`;}
+function photoBox(src,label){
+  return `<div><div style="position:relative;border-radius:12px;overflow:hidden;background:#fff"><img src="${src}" alt="" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'" style="width:100%;height:auto;object-fit:contain;background:#fff;display:block;user-select:none;-webkit-user-select:none;pointer-events:none"></div><div class="ph" style="display:none;width:100%;height:120px;font-size:12px">${tx('Photo coming soon','الصورة قريباً')}</div><div class="muted" style="font-size:11px;text-align:center;margin-top:4px">${label}</div></div>`;
+}
+/* Muscle group image per exercise: images/muscles/{group}_{sex}.webp */
+const MUSCLE_GROUP={
+  goblet_squat:'legs_quad_glute_hamstring',
+  bodyweight_squat:'legs_quad_glute_hamstring',
+  leg_press:'legs_quad_glute_hamstring',
+  bulgarian_split_squat:'legs_quad_glute_hamstring',
+  step_up:'legs_quad_glute_hamstring',
+  dumbbell_rdl:'glute_hamstring_hinge',
+  glute_bridge:'glute_hamstring_bridge',
+  hip_thrust:'glute_hamstring_bridge',
+  single_leg_glute_bridge:'glute_hamstring_bridge',
+  cable_kickback:'glute_hamstring_bridge',
+  donkey_kick:'glute_hamstring_bridge',
+  home_hip_thrust:'glute_hamstring_bridge',
+  hamstring_curl:'hamstring_curl',
+  calf_raise:'calves',
+  dumbbell_row:'back_lats_rhomboids',
+  one_arm_dumbbell_row:'back_lats_rhomboids',
+  band_row:'back_lats_rhomboids',
+  seated_cable_row:'back_lats_rhomboids',
+  lat_pulldown:'back_lats_rhomboids',
+  face_pull:'rear_delts_traps',
+  band_pull_apart:'rear_delts_traps',
+  bird_dog:'rear_delts_traps',
+  dumbbell_chest_press:'chest_front_delts_triceps',
+  incline_pushup:'chest_front_delts_triceps',
+  wall_pushup:'chest_front_delts_triceps',
+  pushup:'chest_front_delts_triceps',
+  incline_dumbbell_press:'upper_chest_delts_triceps',
+  dumbbell_shoulder_press:'upper_chest_delts_triceps',
+  lateral_raise:'side_delts',
+  chest_fly:'chest_fly',
+  hammer_curl:'biceps',
+  triceps_pushdown:'triceps',
+  overhead_triceps_extension:'triceps',
+  band_pulldown:'lats_triceps',
+  plank:'core_abs_obliques',
+  dead_bug:'core_abs_obliques',
+  pallof_press:'core_abs_obliques',
+  leg_lowers:'core_abs_obliques',
+  side_plank:'obliques_side_plank',
+  clamshell:'hip_abductors',
+  banded_side_walk:'hip_abductors',
+};
+function MUSCLE_IMG(id,sex){const g=MUSCLE_GROUP[id];return g?`images/muscles/${g}_${sex}.webp`:'';}
+function howToHTML(i,ex,it){
+  const sex=(me().profile.sex)||'male';
+  return `<div class="step">${tx('Step 1 · How to do it','الخطوة 1 · طريقة الأداء')}</div>
+    <div class="imgs" style="grid-template-columns:1fr 1fr">${photoBox(exImg(it.ex,sex,'pos1'),tx('Starting position','وضع البداية'))}${photoBox(exImg(it.ex,sex,'pos2'),tx('Working position','وضع التنفيذ'))}<div style="grid-column:1/-1">${photoBox(MUSCLE_IMG(it.ex,sex),tx('Muscles worked','العضلات المستهدفة'))}</div></div>
+    ${instrHTML(it.ex,ex)}
+    ${ex.easier&&EXID[ex.easier]?`<p class="muted" style="font-size:12px;margin:0 0 8px">${tx('Easier option','خيار أسهل')}: ${L(EXID[ex.easier].n)}</p>`:''}
+    <button class="btn" onclick="startExercise(${i})">${tx('Step 2 · Start exercise','الخطوة 2 · ابدأ التمرين')}</button>
+    <p class="muted" style="font-size:12px;text-align:center">${tx('Step 3: the set timer starts when you tap Start.','الخطوة 3: يبدأ مؤقت المجموعة عند الضغط على ابدأ.')}</p>`;
+}
+function startExercise(i){
+  const u=me(),it=u.active.items[i];
+  it.started=true;UI.setTimer={i,start:Date.now()};saveDB();render();
+}
+function jumpTo(i){UI.pi=i;UI.rest=null;UI.hold=null;render();}
+function skipRest(){UI.rest=null;render();}
+function startHold(i){const u=me(),it=u.active.items[i];const t=rangeOf(it.reps)[1]||30;UI.hold={i,end:Date.now()+t*1000,total:t,done:false};render();}
+function startCardio(i){const u=me(),it=u.active.items[i];it.cardioEnd=Date.now()+(rangeOf(it.reps)[0]||20)*60000;it.cardioDone=false;saveDB();render();}
+function logCardio(i){
+  const u=me(),a=u.active,it=a.items[i];
+  it.logged=[{reps:rangeOf(it.reps)[0]||20,kg:null}];it.status='done';it.cardioEnd=null;
+  const nx=nextPending(a,i);UI.pi=nx<0?i:nx;UI.rest=null;UI.hold=null;saveDB();render();
+}
+function skipEx(i){
+  const u=me(),a=u.active;a.items[i].status='skipped';
+  const nx=nextPending(a,i);UI.pi=nx<0?i:nx;UI.rest=null;UI.hold=null;saveDB();render();
+}
+function swapEasier(i){
+  const u=me(),it=u.active.items[i],ex=EXID[it.ex];
+  if(!ex||!ex.easier||!EXID[ex.easier]) return;
+  it.ex=ex.easier;it.logged=[];it.note=tx('Easier option','خيار أسهل');saveDB();render();
+}
+function logSet(i){
+  save();
+  const u=me(),a=u.active,it=a.items[i],ex=EXID[it.ex]||{eq:0};
+  const lo=rangeOf(it.reps)[0];
+  const r=(UI.f['pr_'+i]!==undefined&&UI.f['pr_'+i]!=='')?+UI.f['pr_'+i]:lo;
+  const kg=ex.eq===0?null:((UI.f['pk_'+i]!==undefined&&UI.f['pk_'+i]!=='')?+UI.f['pk_'+i]:suggest(u,it).kg);
+  it.logged=(it.logged||[]).concat([{reps:r,kg}]);
+  UI.f={};UI.hold=null;UI.setTimer=null;
+  if(it.logged.length>=it.sets){
+    it.status='done';UI.rest=null;
+    const nx=nextPending(a,i);UI.pi=nx<0?i:nx;
+  } else {
+    const t=restSecs(it.rest);
+    UI.rest={end:Date.now()+t*1000,total:t,done:false};
+    UI.setTimer={i,start:Date.now()+t*1000};
+  }
+  saveDB();render();
+}
+
+SCREENS.workout=()=>{
+  const u=me();
+  if(!u.active) return SCREENS.home();
+  const a=u.active;
+  if(UI.pi==null||UI.pi<0||UI.pi>=a.items.length) UI.pi=firstOpen(a);
+  const i=UI.pi,it=a.items[i];
+  const ex=EXID[it.ex]||{n:{en:it.ex,ar:it.ex},cue:{en:'',ar:''},hl:[],eq:0,time:0,easier:null};
+  const isCardio=it.ex==='cardio', isHold=!!ex.time && !isCardio;
+  const k=(it.logged||[]).length;
+  const [lo,hi]=rangeOf(it.reps);
+  const sug=(isCardio||ex.eq===0)?{kg:null,tip:''}:suggest(u,it);
+  const totalSets=a.items.reduce((s,x)=>s+(x.ex==='cardio'?1:x.sets),0);
+  const doneSets=a.items.reduce((s,x)=>s+((x.logged||[]).length),0);
+  let card='';
+  if(isCardio){
+    const running=!!it.cardioEnd&&!it.cardioDone;
+    const ready=it.cardioDone||(it.cardioEnd&&Date.now()>=it.cardioEnd);
+    card=`<div class="step">${tx('Cardio timer','مؤقت الكارديو')}</div>
+      <div class="big" id="cardioLeft" style="font-size:46px;font-weight:900;margin:6px 0">${running?mmss(it.cardioEnd-Date.now()):mmss((rangeOf(it.reps)[0]||20)*60000)}</div>
+      <p>${esc(it.reps)}${it.note?' · '+esc(it.note):''}</p>
+      ${it.status==='pending'&&!running&&!ready?`<button class="btn" onclick="startCardio(${i})">${tx('Start cardio timer','ابدأ مؤقت الكارديو')}</button>`:''}
+      ${it.status==='pending'&&ready?`<button class="btn" onclick="logCardio(${i})">${tx('Mark cardio done','تم الكارديو')}</button>`:''}
+      ${it.status==='pending'?`<button class="btn ghost" onclick="skipEx(${i})">${tx('Skip cardio','تخطي الكارديو')}</button>`:''}`;
+  } else {
+    const setNo=Math.min(k+1,it.sets);
+    card=(!it.started&&k===0)?howToHTML(i,ex,it):`<div class="step">${tx('Set','مجموعة')} ${setNo} / ${it.sets} · ${tx('target','الهدف')} ${esc(it.reps)}</div>
+      <div class="chips">${(ex.hl||[]).map(m=>`<span class="chip">${L(MUSCLE_NAME[m]||{en:m,ar:m})}</span>`).join('')}</div>
+      <p style="color:var(--text);font-size:16px;margin:6px 0 4px">${L(ex.cue||{en:'',ar:''})}</p>
+      ${ex.easier&&EXID[ex.easier]?`<p class="muted" style="font-size:12px;margin:0 0 6px">${tx('Easier option','خيار أسهل')}: ${L(EXID[ex.easier].n)}</p>`:''}
+      <div class="row" style="margin-top:8px">
+        <div><label>${isHold?tx('Seconds held','ثوانٍ'):tx('Reps done','التكرارات')}</label><input type="number" inputmode="numeric" data-k="pr_${i}" value="${isHold?hi:lo}"></div>
+        ${ex.eq===0?'':`<div><label>${tx('Weight (kg)','الوزن (كغ)')}</label><input type="number" inputmode="decimal" data-k="pk_${i}" value="${sug.kg!=null?sug.kg:''}"></div>`}
+      </div>
+      ${ex.eq===0?'':`<p style="font-size:13px;margin:8px 0">${tx('Suggested','المقترح')}: <b style="color:var(--red2)">${sug.kg!=null?sug.kg+' kg':'—'}</b>${sug.estimate?` <span class="muted">(${tx('estimate','تقدير')})</span>`:''}<br><span class="muted" style="font-size:12px">${esc(sug.tip||'')}</span></p>`}
+      ${isHold?`<div class="card" style="text-align:center;margin:10px 0"><div class="step">${tx('Hold timer','مؤقت الثبات')}</div>
+        <div class="big" id="holdLeft" style="font-size:40px;font-weight:900">${UI.hold&&UI.hold.i===i&&!UI.hold.done?mmss(UI.hold.end-Date.now()):mmss(hi*1000)}</div>
+        ${UI.hold&&UI.hold.i===i&&!UI.hold.done?'':`<button class="btn sm dark" onclick="startHold(${i})">${tx('Start hold','ابدأ الثبات')}</button>`}</div>`:''}
+      <div class="card" style="text-align:center;margin:10px 0"><div class="step">${tx('Set time','وقت المجموعة')}</div><div class="big" id="setTimer" style="font-size:40px;font-weight:900">${UI.setTimer&&UI.setTimer.i===i?mmss(Math.max(0,Date.now()-UI.setTimer.start)):'00:00'}</div></div>
+      <button class="btn" onclick="logSet(${i})">${tx('Log set','سجّل المجموعة')}</button>
+      ${UI.rest&&!UI.rest.done&&UI.pi===i?`<div class="card hot" style="text-align:center;margin-top:12px"><div class="step">${tx('Rest, then the next set','راحة ثم المجموعة التالية')}</div>
+        <div class="big" id="restLeft" style="font-size:52px;font-weight:900">${mmss(UI.rest.end-Date.now())}</div>
+        <div class="bar"><div id="restBar" style="width:0%"></div></div>
+        <button class="btn sm dark" onclick="skipRest()">${tx('Skip rest','تخطي الراحة')}</button></div>`:''}
+      <div class="acts" style="margin-top:12px">
+        ${ex.easier&&EXID[ex.easier]&&k===0?`<button class="btn sm dark" onclick="swapEasier(${i})">${tx('Use easier option','استخدم الخيار الأسهل')}</button>`:''}
+        <button class="btn sm dark" onclick="skipEx(${i})">${tx('Skip exercise','تخطي التمرين')}</button>
+      </div>
+      <label class="chk"><input type="checkbox" ${it.pain?'checked':''} onchange="togglePain(${i})"><span style="font-size:12px">${tx('I felt pain in this exercise','شعرت بألم في هذا التمرين')}</span></label>`;
+  }
+  const list=a.items.map((x,idx)=>{
+    const e=EXID[x.ex]||{n:{en:x.ex,ar:x.ex}};
+    const mark=x.status==='done'?'✓':(x.status==='skipped'?'–':(idx===i?'▶':String(idx+1)));
+    const cls=x.status==='done'?'done':(idx===i?'on':'');
+    const meta=x.ex==='cardio'?esc(x.reps):`${x.sets} × ${esc(x.reps)}`;
+    return `<div class="ex ${cls}" style="cursor:pointer" onclick="jumpTo(${idx})"><div class="num">${mark}</div><div class="main"><div class="title" style="font-size:14px">${L(e.n)}</div><div class="plan">${meta}</div></div></div>`;
+  }).join('');
+  const doneAll=a.items.every(x=>x.status==='done'||x.status==='skipped');
+  return `${topHTML()}
+  <button class="back" onclick="go('home')">${tx('‹ Today','‹ اليوم')}</button>
+  <div class="row" style="align-items:flex-end">
+    <div style="flex:1"><div class="step">${a.custom?tx('Custom workout','تمرين مخصص'):tx('Week','الأسبوع')+' '+a.week}</div><h1 style="margin:2px 0 0;font-size:22px">${esc(a.day)}</h1></div>
+    <div style="text-align:right"><div class="step">${tx('Elapsed','المدة')}</div><div id="elapsed" style="font-weight:900;font-size:20px">${mmss(Date.now()-a.startedAt)}</div></div>
+  </div>
+  <div class="muted" style="font-size:12px;margin-top:4px">${tx('About','تقريباً')} ${estMinutes(a)} ${tx('min planned','دقيقة مخططة')} · ${doneSets}/${totalSets} ${tx('sets logged','مجموعات مسجلة')}</div>
+  <div class="bar"><div style="width:${totalSets?Math.round(doneSets/totalSets*100):0}%"></div></div>
+  ${msgHTML()}
+  <div class="card hot">
+    <div class="step">${tx('Exercise','التمرين')} ${i+1} / ${a.items.length}</div>
+    <h2 style="margin:4px 0 8px;color:var(--text);font-size:22px;text-transform:none;letter-spacing:0">${L(ex.n)}</h2>
+    ${card}
+  </div>
+  <h2>${tx('This session','هذه الجلسة')}</h2>
+  <div class="card" style="padding:6px 14px">${list}</div>
+  <div class="pagebar">
+    <div><b>${a.items.filter(x=>x.status==='done').length} / ${a.items.length}</b> <span class="muted" style="font-size:12px">${tx('exercises','تمارين')}</span></div>
+    <div class="row" style="flex:none;gap:8px"><button class="btn sm dark" onclick="abandonWorkout()">${tx('Discard','إلغاء')}</button><button class="btn sm ${doneAll?'':'dark'}" onclick="UI.sheet={type:'finish'};render()">${tx('Finish','إنهاء')}</button></div>
+  </div>`;
+};
+
+/* ---- Program ---- */
+SCREENS.program=()=>{
+  const u=me(),p=u.profile,plan=buildPlan(p),sex=p.sex||'male';
+  return `${topHTML()}
+  <h1>${tx('Your program','برنامجك')}</h1>
+  <p>${plan.days} ${tx('training days','أيام تدريب')} · ${plan.weeks} ${tx('weeks','أسبوع')} · ${p.mode==='gym'?tx('Gym','صالة'):tx('Home','منزل')}${p.mode==='gym'?' · '+esc(p.bodyType):''}${p.mode==='home'?' · '+(p.equip==='light'?tx('light equipment','معدات خفيفة'):tx('bodyweight','وزن الجسم')):''}</p>
+  <div class="card" style="font-size:13px"><span class="pill red">${tx('Weights are estimates until you log your first session.','الأوزان تقديرية حتى تسجل جلستك الأولى.')}</span></div>
+  ${plan.templates.map(t=>`<div class="card"><h3>${esc(t.name)}</h3>${t.items.map(it=>{const ex=EXID[it.ex];return `<div class="ex">${exThumb(ex,sex)}<div class="main" onclick="UI.sheet={type:'ex',id:'${ex.id}'};render()" style="cursor:pointer"><div class="title">${L(ex.n)}</div><div class="plan">${it.sets} × ${it.reps} · ${tx('rest','راحة')} ${it.rest}</div></div></div>`;}).join('')}</div>`).join('')}
+  <h2>${tx('Change my goal or schedule','تغيير الهدف أو الجدول')}</h2>
+  <div class="card">
+    <label>${tx('Goal','الهدف')}</label><select data-k="goal">${[['lose',tx('Lose weight','إنقاص الوزن')],['maintain',tx('Maintain','الحفاظ')],['gain',tx('Gain weight','زيادة الوزن')]].map(([v,t])=>`<option value="${v}" ${p.goal===v?'selected':''}>${t}</option>`).join('')}</select>
+    <label>${tx('Days per week','أيام في الأسبوع')}</label><select data-k="days">${[2,3,4,5].map(d=>`<option value="${d}" ${p.days==d?'selected':''}>${d}</option>`).join('')}</select>
+    ${p.mode==='gym'?`<label>${tx('Body type','نوع الجسم')}</label><select data-k="bodyType">${[['lean',tx('Lean','نحيف رياضي')],['medium',tx('Medium','متوسط')],['muscular',tx('Muscular','عضلي')]].map(([v,t])=>`<option value="${v}" ${p.bodyType===v?'selected':''}>${t}</option>`).join('')}</select>`:''}
+    <button class="btn" onclick="saveProfileEdits()">${tx('Update program','تحديث البرنامج')}</button>
+  </div>
+  ${navHTML()}`;
+};
+
+/* ---- Progress dashboard ---- */
+function weekBars(u){
+  const out=[];
+  for(let w=7;w>=0;w--) out.push(u.sessions.filter(s=>{const d=daysAgo(s.date);return d>=w*7&&d<=w*7+6&&s.status!=='none';}).length);
+  return out;
+}
+function barChart(vals){
+  const w=320,h=140,pad=18,max=Math.max(4,...vals),slot=(w-pad*2)/vals.length,bw=slot-8;
+  return `<svg viewBox="0 0 ${w} ${h}" class="chart">${vals.map((v,i)=>{
+    const bh=(v/max)*(h-pad*2-14),x=pad+i*slot+4,y=h-pad-bh-0;
+    const label=(vals.length-1-i)===0?tx('now','الآن'):'-'+(vals.length-1-i);
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="4" fill="${v?'#e5322d':'#2a2a30'}"/>`+
+      (v?`<text x="${(x+bw/2).toFixed(1)}" y="${(y-4).toFixed(1)}" fill="#f4f4f5" font-size="11" text-anchor="middle">${v}</text>`:'')+
+      `<text x="${(x+bw/2).toFixed(1)}" y="${h-2}" fill="#9a9aa3" font-size="10" text-anchor="middle">${label}</text>`;
+  }).join('')}</svg>`;
+}
+function strengthExercises(u){
+  const ids=new Set();
+  u.sessions.forEach(s=>(s.items||[]).forEach(it=>{if(it.ex!=='cardio'&&(it.sets||[]).some(x=>x.kg!=null)) ids.add(it.ex);}));
+  return [...ids].filter(id=>EXID[id]);
+}
+function strengthSeries(u,exId){
+  const pts=[];
+  u.sessions.forEach(s=>{
+    const it=(s.items||[]).find(x=>x.ex===exId);
+    if(it&&it.sets&&it.sets.length){const kgs=it.sets.map(x=>x.kg).filter(k=>k!=null);if(kgs.length) pts.push({date:s.date,kg:Math.max(...kgs)});}
+  });
+  return pts;
+}
+function setStrEx(){save();UI.strEx=UI.f.strEx;UI.f={};render();}
+
+SCREENS.progress=()=>{
+  const u=me(),p=u.profile,f=UI.f;
+  const sortedW=u.weights.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const hasConsent=!!u.consent.photos;
+  const plan=p.setupDone?buildPlan(p):null;
+  const planned=plan?plan.days:0,total=plan?plan.days*plan.weeks:0,n=u.sessions.length;
+  const totalMin=u.sessions.reduce((s,x)=>s+(x.minutes||0),0);
+  const thisWeek=u.sessions.filter(s=>daysAgo(s.date)<7&&s.status!=='none').length;
+  const pct=total?Math.min(100,Math.round(n/total*100)):0;
+  const exIds=strengthExercises(u);
+  const sel=(UI.strEx&&exIds.includes(UI.strEx))?UI.strEx:(exIds[0]||'');
+  const strPts=sel?strengthSeries(u,sel):[];
+  const recent=u.sessions.slice().reverse().slice(0,10).map(s=>`<div class="sessionrow"><span>${fdate(s.date)} · ${esc(s.day)}${s.minutes?' · '+s.minutes+' min':''}</span><span class="pill ${s.status==='all'?'green':(s.status==='none'?'':'red')}">${s.status==='all'?tx('all done','كل التمارين'):s.status==='partly'?tx('partly','جزئياً'):tx('not trained','لم يتم التدريب')}</span></div>`).join('');
+  const photoGrid=u.photos.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(ph=>`<figure><img src="${ph.data}" alt=""><figcaption><span>${fdate(ph.date)}</span><span>
+      <button class="btn sm dark" style="padding:4px 8px;font-size:11px" onclick="toggleShare('${ph.id}')">${ph.share?tx('Shared','مشارك'):tx('Private','خاص')}</button>
+      <button class="btn sm danger" style="padding:4px 8px;font-size:11px;margin-left:4px" onclick="deletePhoto('${ph.id}')">✕</button></span></figcaption></figure>`).join('');
+  const A=u.photos.find(x=>x.id===UI.cmpA),B=u.photos.find(x=>x.id===UI.cmpB);
+  const byDate=u.photos.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const compare=u.photos.length>=2?`
+    <h2>${tx('Compare','المقارنة')}</h2>
+    <div class="row"><select data-k="cmpA" onchange="setCompare()"><option value="">${tx('Earlier photo','صورة سابقة')}</option>${byDate.map(x=>`<option value="${x.id}" ${UI.cmpA===x.id?'selected':''}>${fdate(x.date)}</option>`).join('')}</select>
+    <select data-k="cmpB" onchange="setCompare()"><option value="">${tx('Later photo','صورة لاحقة')}</option>${byDate.map(x=>`<option value="${x.id}" ${UI.cmpB===x.id?'selected':''}>${fdate(x.date)}</option>`).join('')}</select></div>
+    ${A&&B?`<div class="imgs"><div><img src="${A.data}" alt=""><p style="text-align:center;font-size:12px">${fdate(A.date)} · ${weightOn(u,A.date)?weightOn(u,A.date).kg+' kg':''}</p></div><div><img src="${B.data}" alt=""><p style="text-align:center;font-size:12px">${fdate(B.date)} · ${weightOn(u,B.date)?weightOn(u,B.date).kg+' kg':''}</p></div></div>`:`<p class="muted">${tx('Pick two photos to compare them side by side.','اختر صورتين للمقارنة جنباً إلى جنب.')}</p>`}`:'';
+  return `${topHTML()}
+  <h1>${tx('Progress','التقدم')}</h1>
+  ${msgHTML()}
+  <div class="stats" style="margin-bottom:12px">
+    <div class="stat"><span>${tx('Sessions','الجلسات')}</span><b>${n}</b></div>
+    <div class="stat"><span>${tx('Minutes','دقائق')}</span><b>${totalMin}</b></div>
+    <div class="stat"><span>${tx('This week','هذا الأسبوع')}</span><b>${thisWeek}${planned?'/'+planned:''}</b></div>
+  </div>
+  <div class="card">
+    <div class="row" style="align-items:center"><div style="flex:1"><h3>${tx('Program','البرنامج')}</h3><p style="margin:0">${n}/${total||'—'} ${tx('sessions completed','جلسة مكتملة')}</p></div><b style="font-size:24px;color:var(--red2)">${pct}%</b></div>
+    <div class="bar"><div style="width:${pct}%"></div></div>
+  </div>
+  <div class="card"><h3>${tx('Sessions per week','الجلسات أسبوعياً')}</h3>${barChart(weekBars(u))}</div>
+  <div class="card"><h3>${tx('Strength','القوة')}</h3>${exIds.length?`
+    <select data-k="strEx" onchange="setStrEx()">${exIds.map(id=>`<option value="${id}" ${id===sel?'selected':''}>${esc(L(EXID[id].n))}</option>`).join('')}</select>
+    <p class="muted" style="font-size:12px;margin:6px 0 0">${tx('Heaviest weight used in each session (kg)','أثقل وزن مستخدم في كل جلسة (كغ)')}</p>${lineChart(strPts)}`
+    :`<p class="muted">${tx('Your lifts will appear here after your first logged session.','ستظهر تمارينك هنا بعد أول جلسة مسجلة.')}</p>`}</div>
+  <div class="card"><h3>${tx('Weight trend','اتجاه الوزن')}</h3>${lineChart(sortedW)}
+    <div class="row" style="margin-top:12px"><input type="number" inputmode="decimal" data-k="w_new" placeholder="${tx('Today’s weight (kg)','وزن اليوم (كغ)')}" value="${f.w_new||''}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
+  </div>
+  <h2>${tx('Recent sessions','الجلسات الأخيرة')}</h2>
+  <div class="card">${recent||`<p class="muted">${tx('Your sessions will appear here.','ستظهر جلساتك هنا.')}</p>`}</div>
+  <h2>${tx('Progress photos','صور التقدم')}</h2>
+  <div class="card">
+    ${!hasConsent?`<div style="background:#120a0a;border:1px dashed var(--red);border-radius:14px;padding:14px">
+      <b style="color:var(--red2)">${tx('Your photos are private','صورك خاصة')}</b>
+      <p style="margin:8px 0">${tx('These photos are stored only in your profile. They are not shared with anyone, including the coach, unless you turn sharing on for a specific photo. You can delete them at any time.','تُحفظ هذه الصور في ملفك فقط. لا تُشارك مع أي شخص، بما في ذلك المدرب، إلا إذا فعّلت المشاركة لصورة معينة. يمكنك حذفها في أي وقت.')}</p>
+      <label class="chk"><input type="checkbox" data-k="photoConsent" ${f.photoConsent?'checked':''}><span>${tx('I understand and agree.','فهمت وأوافق.')}</span></label>
+      <button class="btn" onclick="setPhotoConsent()">${tx('Continue','متابعة')}</button></div>`
+    :`<p style="font-size:13px"><b>${tx('Private to you.','خاصة بك.')}</b> ${tx('Only you can see these photos. Sharing is off unless you switch it on for a photo.','يراها أنت فقط. المشاركة متوقفة إلا إذا فعّلتها لصورة.')}</p>
+    <label for="ph" class="btn sm dark" style="display:inline-block;text-align:center">${tx('Add photo','إضافة صورة')}</label>
+    <input id="ph" type="file" accept="image/*" capture="user" onchange="handlePhoto(this)" style="display:none">`}
+    <div class="photos" style="margin-top:12px">${photoGrid||`<p class="muted" style="grid-column:1/3">${tx('No photos yet. Take a starting photo, then one every month.','لا توجد صور بعد. التقط صورة البداية، ثم صورة كل شهر.')}</p>`}</div>
+    ${compare}
+  </div>
+  ${navHTML()}`;
+};
+
+/* ---- Account ---- */
+SCREENS.profile=()=>{
+  const u=me(),p=u.profile;
+  return `${topHTML()}
+  <h1>${tx('Account','الحساب')}</h1>
+  <p style="text-align:center;font-size:12px;margin:10px 0"><button onclick="openLegal('profile','terms')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Terms','الشروط')}</button> · <button onclick="openLegal('profile','privacy')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Privacy','الخصوصية')}</button> · <button onclick="openLegal('profile','health')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Health disclaimer','إخلاء المسؤولية الصحية')}</button></p>
+  <div class="card"><h3>${esc(u.name)}</h3><p>${esc(u.email)}<br>${esc(u.phone)}<br>${esc(countryName(u.country))}${u.emirate?' · '+esc(u.emirate):''}</p></div>
+  <div class="card"><h3>${tx('Your details','بياناتك')}</h3><div class="kv">
+    <div><span>${tx('Sex','الجنس')}</span><b>${p.sex==='male'?tx('Male','ذكر'):tx('Female','أنثى')}</b></div>
+    <div><span>${tx('Height','الطول')}</span><b>${p.height} cm</b></div>
+    <div><span>${tx('Goal','الهدف')}</span><b>${({lose:tx('Lose weight','إنقاص الوزن'),maintain:tx('Maintain','الحفاظ'),gain:tx('Gain weight','زيادة الوزن')})[p.goal]||'—'}</b></div>
+    <div><span>${tx('Training','التدريب')}</span><b>${p.mode==='gym'?tx('Gym','صالة'):tx('Home','منزل')}</b></div>
+  </div></div>
+  <div class="card" style="font-size:13px"><b>${tx('Privacy','الخصوصية')}</b>
+    <p>${tx('Your progress photos are private to you. Coaches see your weight, measurements, sessions and goal so they can support your training. Your photos are not shared unless you choose to share a specific photo.','صور تقدمك خاصة بك. يرى المدرب وزنك وقياساتك وجلساتك وهدفك ليدعم تدريبك. لا تُشارك صورك إلا إذا اخترت مشاركة صورة معينة.')}</p>
+  </div>
+  <button class="btn ghost" onclick="logout()">${tx('Log out','تسجيل الخروج')}</button>
+  <div style="text-align:center"><button class="link" onclick="deleteAccount()">${tx('Delete my account and data','حذف حسابي وبياناتي')}</button></div>
+  ${navHTML()}`;
+};
+
+/* ---- Sheets (exercise info, finish) ---- */
+function sheetHTML(){
+  const s=UI.sheet;if(!s) return '';
+  const u=me();
+  if(s.type==='ex'){
+    const ex=EXID[s.id],sex=(u&&u.profile.sex)||'male';
+    const pics=ex.photo?`<div class="imgs"><img src="${EX_PHOTO(ex,sex,'pos1')}" alt=""><img src="${EX_PHOTO(ex,sex,'pos2')}" alt=""></div><p class="muted" style="font-size:12px">${tx('Up position · Down position','وضع الصعود · وضع النزول')}</p>`:`<div class="ph" style="width:100%;height:120px;font-size:12px;margin:10px 0">${tx('Photo coming soon','الصورة قريباً')}</div>`;
+    return `<div class="sheet-bg" onclick="UI.sheet=null;render()"><div class="sheet" onclick="event.stopPropagation()">
+      <button class="x" onclick="UI.sheet=null;render()">×</button>
+      <h3 style="font-size:20px">${L(ex.n)}</h3>
+      <div class="chips">${(ex.hl||[]).map(k=>`<span class="chip">${L(MUSCLE_NAME[k])}</span>`).join('')}</div>
+      ${pics}
+      <h2>${tx('Key point','نقطة مهمة')}</h2><p style="color:var(--text);font-size:15px">${L(ex.cue)}</p>
+      <p class="muted" style="font-size:12px">${tx('Stop if you feel sharp pain. Mark it with the pain box on the workout screen.','توقف إذا شعرت بألم حاد. سجّله من خانة الألم في شاشة التمرين.')}</p>
+    </div></div>`;
+  }
+  if(s.type==='finish'){
+    const a=u.active,allDone=a.items.every(i=>i.status==='done'||i.status==='adjusted');
+    return `<div class="sheet-bg" onclick="UI.sheet=null;render()"><div class="sheet" onclick="event.stopPropagation()">
+      <button class="x" onclick="UI.sheet=null;render()">×</button>
+      <h2 style="margin-top:0">${tx('Finish workout','إنهاء التمرين')}</h2>
+      <h3>${tx('How did it go?','كيف كان التمرين؟')}</h3>
+      <div class="grid2" style="margin-top:8px">
+        <div class="opt ${(UI.f.res||(allDone?'all':'partly'))==='all'?'on':''}" onclick="save();UI.f.res='all';render()"><b>${tx('All done','أنجزت كله')}</b><small>${tx('Everything as planned or adjusted','كل شيء كما هو مخطط أو معدّل')}</small></div>
+        <div class="opt ${(UI.f.res||(allDone?'all':'partly'))==='partly'?'on':''}" onclick="save();UI.f.res='partly';render()"><b>${tx('Partly','جزئياً')}</b><small>${tx('Some exercises were missed','بعض التمارين فاتت')}</small></div>
+        <div class="opt ${UI.f.res==='none'?'on':''}" onclick="save();UI.f.res='none';render()"><b>${tx('Could not train','لم أتمكن من التدريب')}</b><small>${tx('Logged as a missed session','تسجل كجلسة فائتة')}</small></div>
+      </div>
+      <label>${tx('Notes (optional)','ملاحظات (اختياري)')}</label>
+      <textarea rows="3" data-k="notes" placeholder="${tx('How did you feel? Anything to change?','كيف شعرت؟ هل هناك ما يحتاج تغييراً؟')}">${esc(UI.f.notes||'')}</textarea>
+      <button class="btn" onclick="save();finishWorkout()">${tx('Save workout','حفظ التمرين')}</button>
+    </div></div>`;
+  }
+  return '';
+}
+
+/* =====================================================================
+   ROUTING + RENDER
+   ===================================================================== */
+const PUBLIC=['welcome','signup','verify','login'];
+const APP=['home','program','progress','profile','workout','onboard','stop','parts'];
+function route(){
+  const u=me();
+  if(!u){ if(!PUBLIC.includes(UI.screen)) UI.screen='welcome'; return; }
+  if(!u.verified){ UI.screen='verify'; UI.pendingId=u.id; return; }
+  if(u.profile.screen==='stop'&&UI.screen!=='stop'){ UI.screen='stop'; return; }
+  if(!u.profile.setupDone){ if(UI.screen!=='onboard'&&UI.screen!=='stop') UI.screen='onboard'; return; }
+  if(PUBLIC.includes(UI.screen)||UI.screen==='onboard'||UI.screen==='stop'){ if(UI.screen!=='stop') UI.screen='home'; }
+  if(!APP.includes(UI.screen)) UI.screen='home';
+}
+function render(){
+  route();
+  const u=me();
+  const showNav=u&&u.profile.setupDone&&!['onboard','stop','workout'].includes(UI.screen)&&APP.includes(UI.screen);
+  const screenHTML=(SCREENS[UI.screen]||SCREENS.welcome)();
+  document.getElementById('app').innerHTML=screenHTML+(showNav&&!String(screenHTML).includes('class="nav"')?navHTML():'')+sheetHTML();
+}
+
+
+setInterval(updateTimers,1000);
+render();
+</script>
+<div style="position:fixed;top:8px;inset-inline-end:8px;background:#b91c1c;color:#fff;font:600 11px system-ui,sans-serif;padding:3px 8px;border-radius:6px;z-index:99999;letter-spacing:.5px">PREVIEW</div></body>
+</html>
