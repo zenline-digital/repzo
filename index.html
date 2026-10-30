@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Repzo — by THUGFIT</title>
+<link rel="icon" type="image/png" sizes="512x512" href="favicon.png"><link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png"><meta name="apple-mobile-web-app-title" content="Repzo"><title>Repzo — by THUGFIT</title>
 <style>
 :root{--bg:#0b0b0c;--card:#141417;--card2:#1b1b20;--line:#2a2a30;--text:#f4f4f5;--muted:#9a9aa3;--red:#e5322d;--red2:#ff8a80;--green:#3ddc84}
 *{box-sizing:border-box}
@@ -562,7 +562,7 @@ const PROMOS=[
   {title:{en:'THUGFIT activewear',ar:'ملابس THUGFIT الرياضية'},text:{en:'See the latest range from the THUGFIT store.',ar:'تعرّف على أحدث تشكيلة من متجر THUGFIT.'},url:'https://thethugfit.com'}
 ];
 const promoHTML=()=>PROMOS.map(p=>`<a href="${p.url}" target="_blank" rel="noopener" style="display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;background:var(--card,#141414);border:1px solid #2a2a2a;border-radius:12px;padding:8px 12px;margin:8px 0;color:inherit"><span><b style="font-size:13px">${L(p.title)}</b><br><span style="font-size:11px;opacity:.75">${L(p.text)}</span></span><span style="font-size:11px;opacity:.7">${tx('Visit','زيارة')} ›</span></a>`).join('');
-const brandHTML=()=>`<div class="brand"><img src="images/brand/thugfit-logo.png" alt="${BRAND_NAME}" onerror="this.style.display='none'">${APP_NAME}<span style="font-size:10px;opacity:.7;margin-inline-start:6px;font-weight:400">${tx('by','من')} ${BRAND_NAME}</span></div>`;
+const brandHTML=()=>`<div class="brand" style="flex-direction:column;align-items:center;gap:4px"><img src="images/brand/thugfit-logo.png" alt="THUGFIT" onerror="this.style.display='none'" style="height:34px;width:auto"><span style="font-size:11px;font-weight:800;letter-spacing:7px;padding-inline-start:7px">${APP_NAME.toUpperCase().split('').join(' ')}</span></div>`;
 const topHTML=(back)=>`<div class="hdr">${back?`<button class="back" onclick="go('${back}')">${tx('‹ Back','رجوع')}</button>`:brandHTML()}<div class="lang"><button class="${UI.lang==='en'?'on':''}" onclick="setLang('en')">EN</button> <button class="${UI.lang==='ar'?'on':''}" onclick="setLang('ar')">عربي</button></div></div>${promoHTML()}`;
 const msgHTML=()=>(UI.err?`<div class="err">${UI.err}</div>`:'')+(UI.ok?`<div class="ok">${UI.ok}</div>`:'');
 const NAV=[['home',tx('Today','اليوم')],['program',tx('Program','البرنامج')],['progress',tx('Progress','التقدم')],['profile',tx('Account','الحساب')]];
