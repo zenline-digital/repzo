@@ -115,6 +115,13 @@ table.t tr:hover td{background:#17171c;cursor:pointer}
 </head>
 <body>
 <div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* REPZO backend connection (public values only) */
+const SUPABASE_URL="https://rabzuknmzpsvsyxvghis.supabase.co";
+const SUPABASE_KEY="sb_publishable_rusFDtWKie2C72tX2EYjdQ_5EL8_hui";
+const sb=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+</script>
 <script>
 /* =====================================================================
    STORAGE (prototype: browser localStorage. Production: server + database)
@@ -420,22 +427,25 @@ function pick(key,val,advance){
   if(advance){UI.ob=nextStep(UI.ob||0);}
   render();
 }
+/* Accept decimals typed with '.' or ',' */
+function num(x){return parseFloat(String(x==null?'':x).replace(',','.'));}
 function obContinue(s){
   save();const f=UI.f,u=me(),p=u.profile;
-  if(s===2){ if(f.maxDb!==undefined&&f.maxDb!==''&&(+f.maxDb<=0)) return fail(tx('Enter a weight above 0, or leave it empty.','أدخل وزناً أكبر من 0 أو اتركه فارغاً.')); p.maxDb=f.maxDb?+f.maxDb:null; }
+  if(s===2){ if(f.maxDb!==undefined&&f.maxDb!==''&&(num(f.maxDb)<=0)) return fail(tx('Enter a weight above 0, or leave it empty.','أدخل وزناً أكبر من 0 أو اتركه فارغاً.')); p.maxDb=f.maxDb?num(f.maxDb):null; }
   if(s===3){
     if(!f.dob) return fail(tx('Enter your date of birth.','أدخل تاريخ ميلادك.'));
-    if(!(+f.height>=120&&+f.height<=230)) return fail(tx('Enter a height between 120 and 230 cm.','أدخل طولاً بين 120 و230 سم.'));
-    if(!(+f.weight>=30&&+f.weight<=250)) return fail(tx('Enter a weight between 30 and 250 kg.','أدخل وزناً بين 30 و250 كغ.'));
-    p.dob=f.dob;p.height=+f.height;p.weight=+f.weight;
+    if(!(num(f.height)>=120&&num(f.height)<=230)) return fail(tx('Enter a height between 120 and 230 cm.','أدخل طولاً بين 120 و230 سم.'));
+    if(!(num(f.weight)>=30&&num(f.weight)<=250)) return fail(tx('Enter a weight between 30 and 250 kg.','أدخل وزناً بين 30 و250 كغ.'));
+    p.dob=f.dob;p.height=num(f.height);p.weight=num(f.weight);
   }
   if(s===5){
     if(f.pushMax===''||f.pushMax==null) return fail(tx('Enter your best push-up count, or 0.','أدخل أفضل عدد تمارين ضغط، أو 0.'));
     p.exp=f.exp||p.exp||'beginner';p.pushMax=+f.pushMax;
   }
   if(s===8){
-    const yes=['q1','q2','q3','q4'].some(k=>f[k]==='yes');
-    const missing=['q1','q2','q3','q4'].some(k=>!f[k]);
+    const qKeys=['q1','q2','q3'].concat((f.sex||p.sex)==='male'?[]:['q4']);
+    const yes=qKeys.some(k=>f[k]==='yes');
+    const missing=qKeys.some(k=>!f[k]);
     if(missing) return fail(tx('Please answer all questions.','يرجى الإجابة عن جميع الأسئلة.'));
     if(yes){p.screen='stop';saveDB();return go('stop');}
     p.screen='ok';
@@ -495,7 +505,7 @@ function abandonWorkout(){const u=me();if(!confirm(tx('Discard this workout? Not
    PROGRESS
    ===================================================================== */
 function addWeight(){
-  save();const u=me(),kg=+UI.f.w_new;
+  save();const u=me(),kg=num(UI.f.w_new);
   if(!(kg>=30&&kg<=250)) return fail(tx('Enter a weight between 30 and 250 kg.','أدخل وزناً بين 30 و250 كغ.'));
   const i=u.weights.findIndex(w=>w.date===todayStr());
   if(i>=0) u.weights[i].kg=kg; else u.weights.push({date:todayStr(),kg});
@@ -559,7 +569,7 @@ function lineChart(points){
 const APP_NAME='Repzo';
 const BRAND_NAME='THUGFIT';   /* the brand that owns the app; change if the official spelling differs */
 const PROMOS=[
-  {title:{en:'THUGFIT activewear',ar:'ملابس THUGFIT الرياضية'},text:{en:'See the latest range from the THUGFIT store.',ar:'تعرّف على أحدث تشكيلة من متجر THUGFIT.'},url:'https://thethugfit.com'}
+  {title:{en:'THUGFIT activewear',ar:'ملابس THUGFIT الرياضية'},text:{en:'See the latest range from the THUGFIT store.',ar:'تعرّف على أحدث تشكيلة من متجر THUGFIT.'},url:'https://thugfit.ae'}
 ];
 const promoHTML=()=>PROMOS.map(p=>`<a href="${p.url}" target="_blank" rel="noopener" style="display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;background:var(--card,#141414);border:1px solid #2a2a2a;border-radius:12px;padding:8px 12px;margin:8px 0;color:inherit"><span><b style="font-size:13px">${L(p.title)}</b><br><span style="font-size:11px;opacity:.75">${L(p.text)}</span></span><span style="font-size:11px;opacity:.7">${tx('Visit','زيارة')} ›</span></a>`).join('');
 const brandHTML=()=>`<div class="brand" style="flex-direction:column;align-items:center;gap:4px"><img src="images/brand/thugfit-logo.png" alt="THUGFIT" onerror="this.style.display='none'" style="height:34px;width:auto"><span style="font-size:11px;font-weight:800;letter-spacing:7px;padding-inline-start:7px">${APP_NAME.toUpperCase().split('').join(' ')}</span></div>`;
@@ -681,7 +691,7 @@ SCREENS.onboard=()=>{
       <p>${tx('Choose what matches your home.','اختر ما يناسب منزلك.')}</p>
       <div class="grid2"><div class="opt ${p.equip==='none'?'on':''}" onclick="pick('equip','none',true)"><b>${tx('No equipment','بدون معدات')}</b><small>${tx('Bodyweight only','وزن الجسم فقط')}</small></div>
       <div class="opt ${p.equip==='light'?'on':''}" onclick="pick('equip','light',false)"><b>${tx('Light equipment','معدات خفيفة')}</b><small>${tx('Dumbbells, bands','دمبلز وأحزمة')}</small></div></div>
-      ${p.equip==='light'?`<label>${tx('Heaviest dumbbell you own (kg), or leave empty','أثقل دمبل تملكه (كغ)، أو اتركه فارغاً')}</label><input type="number" inputmode="decimal" data-k="maxDb" value="${p.maxDb||''}">
+      ${p.equip==='light'?`<label>${tx('Heaviest dumbbell you own (kg), or leave empty','أثقل دمبل تملكه (كغ)، أو اتركه فارغاً')}</label><input type="text" inputmode="decimal" data-k="maxDb" value="${p.maxDb||''}">
       <button class="btn" onclick="obContinue(2)">${tx('Continue','متابعة')}</button>`:''}`;
     }
   }
@@ -689,8 +699,8 @@ SCREENS.onboard=()=>{
     body=`<h1>${tx('Your body','جسمك')}</h1>
     <p>${tx('Used to estimate your starting weights and track progress.','تُستخدم لتقدير أوزانك الأولية ومتابعة تقدمك.')}</p>
     <label>${tx('Date of birth','تاريخ الميلاد')}</label><input type="date" data-k="dob" value="${f.dob||p.dob||''}">
-    <div class="row"><div><label>${tx('Height (cm)','الطول (سم)')}</label><input type="number" inputmode="decimal" data-k="height" value="${f.height||p.height||''}"></div>
-    <div><label>${tx('Weight (kg)','الوزن (كغ)')}</label><input type="number" inputmode="decimal" data-k="weight" value="${f.weight||p.weight||''}"></div></div>
+    <div class="row"><div><label>${tx('Height (cm)','الطول (سم)')}</label><input type="text" inputmode="decimal" data-k="height" value="${f.height||p.height||''}"></div>
+    <div><label>${tx('Weight (kg)','الوزن (كغ)')}</label><input type="text" inputmode="decimal" data-k="weight" value="${f.weight||p.weight||''}"></div></div>
     <button class="btn" onclick="obContinue(3)">${tx('Continue','متابعة')}</button>`;
   }
   else if(s===4){
@@ -718,10 +728,11 @@ SCREENS.onboard=()=>{
     ${opts([['1',tx('1 month','شهر واحد'),tx('4 weeks','4 أسابيع')],['2',tx('2 months','شهران'),tx('8 weeks','8 أسابيع')],['3',tx('3 months','3 أشهر'),tx('12 weeks, best results','12 أسبوعاً، أفضل نتيجة')]],'months')}`;
   }
   else if(s===8){
+    const isMale=(UI.f.sex||me().profile.sex)==='male';
     const q=[['q1',tx('Has a doctor ever told you that you have a heart condition or high blood pressure?','هل أخبرك طبيب يوماً أنك تعاني من مرض في القلب أو ضغط الدم المرتفع؟')],
       ['q2',tx('Do you get chest pain, dizziness, or unusual breathlessness during activity?','هل تشعر بألم في الصدر أو دوار أو ضيق تنفس غير معتاد أثناء النشاط؟')],
       ['q3',tx('Have you had a recent injury, surgery, or a joint problem?','هل أصبت مؤخراً أو خضعت لعملية جراحية أو لديك مشكلة في المفاصل؟')],
-      ['q4',tx('Are you pregnant, or have you given birth in the last 6 months?','هل أنتِ حامل، أو وضعتِ مولودك خلال آخر 6 أشهر؟')]];
+      ['q4',tx('Are you pregnant, or have you given birth in the last 6 months?','هل أنتِ حامل، أو وضعتِ مولودك خلال آخر 6 أشهر؟')]].filter(([k])=>!(k==='q4'&&isMale));
     body=`<h1>${tx('Quick health check','فحص صحي سريع')}</h1>
     <p>${tx('If you answer yes to any question, we will ask you to see a doctor before your program starts.','إذا أجبت بنعم على أي سؤال، سنطلب منك استشارة طبيب قبل بدء البرنامج.')}</p>
     ${q.map(([k,t])=>`<label style="text-transform:none;letter-spacing:0;font-size:14px;color:var(--text)">${t}</label><select data-k="${k}"><option value="">${tx('Choose','اختر')}</option><option value="no" ${f[k]==='no'?'selected':''}>${tx('No','لا')}</option><option value="yes" ${f[k]==='yes'?'selected':''}>${tx('Yes','نعم')}</option></select>`).join('')}
@@ -786,7 +797,7 @@ SCREENS.home=()=>{
   ${change!=null?`<p style="margin-top:4px">${tx('Since start','منذ البداية')}: <b style="color:${change<=0?'var(--green)':'var(--red2)'}">${change>0?'+':''}${change.toFixed(1)} kg</b></p>`:''}
   ${photoCard}
   <h2>${tx('Log today’s weight','سجّل وزن اليوم')}</h2>
-  <div class="row"><input type="number" inputmode="decimal" data-k="w_new" placeholder="${tx('kg','كغ')}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
+  <div class="row"><input type="text" inputmode="decimal" data-k="w_new" placeholder="${tx('kg','كغ')}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
   ${navHTML()}`;
 };
 
@@ -1075,7 +1086,7 @@ SCREENS.workout=()=>{
       ${ex.easier&&EXID[ex.easier]?`<p class="muted" style="font-size:12px;margin:0 0 6px">${tx('Easier option','خيار أسهل')}: ${L(EXID[ex.easier].n)}</p>`:''}
       <div class="row" style="margin-top:8px">
         <div><label>${isHold?tx('Seconds held','ثوانٍ'):tx('Reps done','التكرارات')}</label><input type="number" inputmode="numeric" data-k="pr_${i}" value="${isHold?hi:lo}"></div>
-        ${ex.eq===0?'':`<div><label>${tx('Weight (kg)','الوزن (كغ)')}</label><input type="number" inputmode="decimal" data-k="pk_${i}" value="${sug.kg!=null?sug.kg:''}"></div>`}
+        ${ex.eq===0?'':`<div><label>${tx('Weight (kg)','الوزن (كغ)')}</label><input type="text" inputmode="decimal" data-k="pk_${i}" value="${sug.kg!=null?sug.kg:''}"></div>`}
       </div>
       ${ex.eq===0?'':`<p style="font-size:13px;margin:8px 0">${tx('Suggested','المقترح')}: <b style="color:var(--red2)">${sug.kg!=null?sug.kg+' kg':'—'}</b>${sug.estimate?` <span class="muted">(${tx('estimate','تقدير')})</span>`:''}<br><span class="muted" style="font-size:12px">${esc(sug.tip||'')}</span></p>`}
       ${isHold?`<div class="card" style="text-align:center;margin:10px 0"><div class="step">${tx('Hold timer','مؤقت الثبات')}</div>
@@ -1213,7 +1224,7 @@ SCREENS.progress=()=>{
     <p class="muted" style="font-size:12px;margin:6px 0 0">${tx('Heaviest weight used in each session (kg)','أثقل وزن مستخدم في كل جلسة (كغ)')}</p>${lineChart(strPts)}`
     :`<p class="muted">${tx('Your lifts will appear here after your first logged session.','ستظهر تمارينك هنا بعد أول جلسة مسجلة.')}</p>`}</div>
   <div class="card"><h3>${tx('Weight trend','اتجاه الوزن')}</h3>${lineChart(sortedW)}
-    <div class="row" style="margin-top:12px"><input type="number" inputmode="decimal" data-k="w_new" placeholder="${tx('Today’s weight (kg)','وزن اليوم (كغ)')}" value="${f.w_new||''}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
+    <div class="row" style="margin-top:12px"><input type="text" inputmode="decimal" data-k="w_new" placeholder="${tx('Today’s weight (kg)','وزن اليوم (كغ)')}" value="${f.w_new||''}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
   </div>
   <h2>${tx('Recent sessions','الجلسات الأخيرة')}</h2>
   <div class="card">${recent||`<p class="muted">${tx('Your sessions will appear here.','ستظهر جلساتك هنا.')}</p>`}</div>
