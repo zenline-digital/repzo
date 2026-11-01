@@ -363,7 +363,7 @@ function toggleMarketing(){
   else { u.consent.marketingOptOut=todayStr(); }
   saveDB(); render();
 }
-async function doSignup(){
+async function legacy_doSignup(){
   save();const f=UI.f;
   if(!f.name||!f.name.trim()) return fail(tx('Enter your full name.','أدخل اسمك الكامل.'));
   if(!/^\S+@\S+\.\S+$/.test(f.email||'')) return fail(tx('Enter a valid email address.','أدخل بريداً إلكترونياً صحيحاً.'));
@@ -385,7 +385,7 @@ async function doSignup(){
   go('verify');
 }
 
-function doVerify(){
+function legacy_doVerify(){
   save();const u=DB.users.find(x=>x.id===UI.pendingId);
   if(!u) return go('welcome');
   if(Date.now()>u.codeExp) return fail(tx('This code has expired. Request a new one.','انتهت صلاحية الرمز. اطلب رمزاً جديداً.'));
@@ -393,13 +393,13 @@ function doVerify(){
   u.verified=true;DB.sess=u.id;saveDB();UI.f={};
   go(u.profile.setupDone?'home':'onboard');
 }
-function resendCode(){
+function legacy_resendCode(){
   const u=DB.users.find(x=>x.id===UI.pendingId);if(!u) return;
   u.code=genCode();u.codeExp=Date.now()+15*60000;saveDB();
   UI.demoCode=u.code;UI.ok=tx('A new code was sent to your email.','تم إرسال رمز جديد إلى بريدك الإلكتروني.');render();
 }
 
-async function doLogin(){
+async function legacy_doLogin(){
   save();const f=UI.f;
   const email=(f.email||'').trim().toLowerCase();
   const u=DB.users.find(x=>x.email===email);
@@ -413,7 +413,7 @@ async function doLogin(){
   DB.sess=u.id;saveDB();UI.f={};
   go(u.profile.setupDone?'home':'onboard');
 }
-function logout(){DB.sess=null;saveDB();UI.f={};go('welcome');}
+function legacy_logout(){DB.sess=null;saveDB();UI.f={};go('welcome');}
 function deleteAccount(){
   const u=me();if(!u) return;
   if(!confirm(tx('Delete your account and all your data? This cannot be undone.','حذف حسابك وكل بياناتك؟ لا يمكن التراجع عن ذلك.'))) return;
@@ -638,27 +638,29 @@ SCREENS.signup=()=>{
   <label class="chk"><input type="checkbox" data-k="c3" ${f.c3?'checked':''}><span>${tx('I understand this app gives general fitness guidance, not medical advice. I will stop any exercise that causes pain, and see a doctor if unsure.','أفهم أن هذا التطبيق يقدم إرشادات لياقة عامة وليس نصيحة طبية. سأتوقف عن أي تمرين يسبب ألماً، وأستشير طبيباً عند الشك.')}</span></label>
   <p style="text-align:center;font-size:12px;margin:10px 0"><button onclick="openLegal('signup','terms')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Terms','الشروط')}</button> · <button onclick="openLegal('signup','privacy')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Privacy','الخصوصية')}</button> · <button onclick="openLegal('signup','health')" style="background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px">${tx('Health disclaimer','إخلاء المسؤولية الصحية')}</button></p>
   <p class="muted" style="font-size:12px;line-height:1.5;margin:8px 0">${tx('Your email and phone number are used for THUGFIT marketing messages. This is accepted automatically when you create an account. You can stop these at any time from Account.','بريدك الإلكتروني ورقم هاتفك يُستخدمان لرسائل التسويق من THUGFIT. يتم قبول ذلك تلقائياً عند إنشاء الحساب، ويمكنك إيقافها في أي وقت من صفحة الحساب.')}</p>
+  <button class="btn ghost" onclick="loginGoogle()">${tx('Continue with Google','المتابعة باستخدام Google')}</button>
   <button class="btn" onclick="doSignup()">${tx('Create account','إنشاء الحساب')}</button>
   <div style="text-align:center"><button class="link" onclick="go('login')">${tx('I already have an account','لدي حساب بالفعل')}</button></div>`;
 };
 
 SCREENS.verify=()=>{
-  const u=DB.users.find(x=>x.id===UI.pendingId);
+  const email=UI.pendingEmail||'';
   return `${topHTML('welcome')}
   <h1>${tx('Verify your email','تأكيد بريدك الإلكتروني')}</h1>
-  <p>${tx('We sent a 6-digit code to ','أرسلنا رمزاً من 6 أرقام إلى ')}<b>${esc(u?u.email:'')}</b>. ${tx('You need it before you can log in.','تحتاجه قبل تسجيل الدخول.')}</p>
-  ${UI.demoCode?`<div class="code">${UI.demoCode}</div><p class="muted" style="text-align:center;font-size:12px">${tx('Demo mode: the code is shown here. In the live app it arrives by email.','وضع تجريبي: الرمز يظهر هنا. في التطبيق الفعلي يصل عبر البريد الإلكتروني.')}</p>`:''}
+  <p>${tx('We sent a 6-digit code to ','أرسلنا رمزاً من 6 أرقام إلى ')}<b>${esc(email)}</b>. ${tx('Enter it below to finish signing in.','أدخله أدناه لإتمام تسجيل الدخول.')}</p>
   ${msgHTML()}
   <label>${tx('Verification code','رمز التحقق')}</label><input inputmode="numeric" maxlength="6" data-k="code" value="${esc(UI.f.code||'')}">
   <button class="btn" onclick="doVerify()">${tx('Verify','تأكيد')}</button>
   <button class="btn ghost" onclick="resendCode()">${tx('Send a new code','إرسال رمز جديد')}</button>`;
 };
 
+
 SCREENS.login=()=>`${topHTML('welcome')}
   <h1>${tx('Welcome back','مرحباً بعودتك')}</h1>
   ${msgHTML()}
   <label>${tx('Email','البريد الإلكتروني')}</label><input type="email" data-k="email" value="${esc(UI.f.email||'')}">
   <label>${tx('Password','كلمة المرور')}</label><input type="password" data-k="pw" autocomplete="current-password">
+  <button class="btn ghost" onclick="loginGoogle()">${tx('Continue with Google','المتابعة باستخدام Google')}</button>
   <button class="btn" onclick="doLogin()">${tx('Log in','تسجيل الدخول')}</button>
   <div style="text-align:center"><button class="link" onclick="go('signup')">${tx('Create an account','إنشاء حساب')}</button></div>`;
 
@@ -1333,8 +1335,96 @@ function render(){
 }
 
 
+
+/* ===================================================================== 
+   AUTH (Supabase Auth): sign-up, email code, login, Google, session
+   ===================================================================== */
+function authErr(e){ return (e&&e.message)||tx('Something went wrong. Try again.','حدث خطأ. حاول مرة أخرى.'); }
+function ensureLocal(au){
+  const m=au.user_metadata||{};
+  let u=DB.users.find(x=>x.id===au.id);
+  if(!u){
+    u={id:au.id,name:m.full_name||'',email:(au.email||'').toLowerCase(),phone:m.phone||'',
+      country:m.country||'',emirate:m.emirate||null,verified:true,created:todayStr(),
+      profile:{setupDone:false},weights:[],sessions:[],photos:[],active:null,
+      consent:{terms:m.consent_terms||todayStr(),privacy:m.consent_privacy||todayStr(),health:m.consent_health||todayStr(),photos:null,marketing:m.consent_marketing||todayStr(),marketingOptOut:null}};
+    DB.users.push(u);
+  }
+  u.verified=true; return u;
+}
+function afterSignIn(au){
+  const u=ensureLocal(au); DB.sess=u.id; saveDB(); UI.f={}; UI.pendingEmail=null;
+  go(u.profile.setupDone?'home':'onboard');
+}
+async function doSignup(){
+  save(); const f=UI.f;
+  if(!sb) return fail(tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
+  if(!f.name||!f.name.trim()) return fail(tx('Enter your full name.','أدخل اسمك الكامل.'));
+  if(!/^\S+@\S+\.\S+$/.test(f.email||'')) return fail(tx('Enter a valid email address.','أدخل بريداً إلكترونياً صحيحاً.'));
+  if((f.phone||'').replace(/\D/g,'').length<8) return fail(tx('Enter a valid phone number.','أدخل رقم هاتف صحيحاً.'));
+  if(!f.country) return fail(tx('Choose your country.','اختر الدولة.'));
+  if(f.country==='AE'&&!f.emirate) return fail(tx('Choose your emirate.','اختر الإمارة.'));
+  if((f.pw||'').length<8) return fail(tx('Password must be at least 8 characters.','يجب أن تكون كلمة المرور 8 أحرف على الأقل.'));
+  if(f.pw!==f.pw2) return fail(tx('The two passwords do not match.','كلمتا المرور غير متطابقتين.'));
+  if(!f.c1||!f.c2||!f.c3) return fail(tx('Please accept the terms, privacy policy and health disclaimer.','يرجى قبول الشروط وسياسة الخصوصية وإخلاء المسؤولية الصحي.'));
+  const email=f.email.trim().toLowerCase();
+  const {data,error}=await sb.auth.signUp({email,password:f.pw,options:{data:{
+    full_name:f.name.trim(),phone:f.phone.trim(),country:f.country,emirate:f.country==='AE'?f.emirate:null,
+    consent_terms:todayStr(),consent_privacy:todayStr(),consent_health:todayStr(),consent_marketing:todayStr()}}});
+  if(error) return fail(authErr(error));
+  if(data.user&&Array.isArray(data.user.identities)&&data.user.identities.length===0)
+    return fail(tx('An account with this email already exists. Log in instead.','يوجد حساب بهذا البريد. سجّل الدخول بدلاً من ذلك.'));
+  UI.pendingEmail=email; UI.f={}; UI.err=''; go('verify');
+}
+async function doVerify(){
+  save(); const token=(UI.f.code||'').trim(); const email=UI.pendingEmail;
+  if(!email) return go('welcome');
+  if(!/^\d{6}$/.test(token)) return fail(tx('Enter the 6-digit code from your email.','أدخل الرمز المكون من 6 أرقام من بريدك.'));
+  const {data,error}=await sb.auth.verifyOtp({email,token,type:'signup'});
+  if(error||!data.user) return fail(tx('That code is not correct or has expired. Send a new code.','هذا الرمز غير صحيح أو منتهي. أرسل رمزاً جديداً.'));
+  afterSignIn(data.user);
+}
+async function resendCode(){
+  const email=UI.pendingEmail; if(!email||!sb) return;
+  const {error}=await sb.auth.resend({type:'signup',email});
+  if(error) return fail(authErr(error));
+  UI.ok=tx('A new code was sent to your email.','تم إرسال رمز جديد إلى بريدك الإلكتروني.'); render();
+}
+async function doLogin(){
+  save(); const f=UI.f; const email=(f.email||'').trim().toLowerCase();
+  if(!sb) return fail(tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
+  const {data,error}=await sb.auth.signInWithPassword({email,password:f.pw||''});
+  if(error){
+    if(/not confirmed/i.test(error.message||'')){
+      UI.pendingEmail=email; UI.f={email}; await sb.auth.resend({type:'signup',email});
+      UI.ok=tx('Verify your email first. A code was sent.','يجب تأكيد بريدك أولاً. تم إرسال رمز.'); return go('verify',true);
+    }
+    return fail(tx('Wrong email or password.','البريد الإلكتروني أو كلمة المرور غير صحيحة.'));
+  }
+  afterSignIn(data.user);
+}
+async function loginGoogle(){
+  if(!sb) return fail(tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
+  const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});
+  if(error) fail(authErr(error));
+}
+async function logout(){
+  if(sb) await sb.auth.signOut();
+  DB.sess=null; saveDB(); UI.f={}; UI.pendingEmail=null; go('welcome');
+}
+async function restoreSession(){
+  if(!sb) return;
+  const {data}=await sb.auth.getSession();
+  if(data&&data.session&&data.session.user){
+    const u=ensureLocal(data.session.user); DB.sess=u.id; saveDB();
+    if(UI.screen==='welcome'||UI.screen==='login'||UI.screen==='signup') UI.screen=u.profile.setupDone?'home':'onboard';
+    render();
+  }
+}
+
 setInterval(updateTimers,1000);
 render();
+restoreSession();
 </script>
 <div style="position:fixed;top:8px;inset-inline-end:8px;background:#b91c1c;color:#fff;font:600 11px system-ui,sans-serif;padding:3px 8px;border-radius:6px;z-index:99999;letter-spacing:.5px">PREVIEW</div></body>
 </html>
