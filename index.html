@@ -1350,7 +1350,8 @@ SCREENS.profile=()=>{
   <div class="card" style="font-size:13px"><b>${tx('Privacy','الخصوصية')}</b>
     <p>${tx('Your progress photos are private to you. Coaches see your weight, measurements, sessions and goal so they can support your training. Your photos are not shared unless you choose to share a specific photo.','صور تقدمك خاصة بك. يرى المدرب وزنك وقياساتك وجلساتك وهدفك ليدعم تدريبك. لا تُشارك صورك إلا إذا اخترت مشاركة صورة معينة.')}</p>
   </div>
-  <div class="card"><h3>${tx('Feedback and ideas','ملاحظات وأفكار')}</h3>
+  <div class="card" id="fbcard"><h3>${tx('Feedback and ideas','ملاحظات وأفكار')}</h3>
+    ${UI.fbNote?`<div class="${UI.fbNote.ok?'pill green':'pill red'}" style="display:block;margin-bottom:8px;white-space:normal">${esc(UI.fbNote.text)}</div>`:''}
     <p class="muted" style="font-size:13px">${tx('Tell us what to improve, what is missing, or what you would like to see.','أخبرنا بما يحتاج إلى تحسين، أو ما ينقص، أو ما تود رؤيته.')}</p>
     <label>${tx('Type','النوع')}</label> <select data-k="fbCat"><option value="suggestion" ${f.fbCat==='suggestion'?'selected':''}>${tx('Suggestion','اقتراح')}</option><option value="problem" ${f.fbCat==='problem'?'selected':''}>${tx('Something is not working','شيء لا يعمل')}</option><option value="feature" ${f.fbCat==='feature'?'selected':''}>${tx('New feature','ميزة جديدة')}</option><option value="other" ${f.fbCat==='other'?'selected':''}>${tx('Other','أخرى')}</option></select>
     <label>${tx('Your message','رسالتك')}</label><textarea data-k="fbMsg" rows="4" maxlength="2000" style="width:100%">${esc(f.fbMsg||'')}</textarea>
@@ -1392,12 +1393,25 @@ function calendarHTML(u){
 async function doFeedback(){
   save(); const f=UI.f, u=me(); if(!u) return;
   const msg=(f.fbMsg||'').trim();
-  if(msg.length<5) return fail(tx('Please write a few words so we can understand.','يرجى كتابة بضع كلمات حتى نفهم.'));
-  if(!sb) return fail(tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
-  const {data,error}=await sb.functions.invoke('send-feedback',{body:{category:f.fbCat||'suggestion',message:msg.slice(0,2000)}});
-  if(error||(data&&data.error)) return fail(tx('Could not send. Try again.','تعذّر الإرسال. حاول مرة أخرى.'));
-  UI.f.fbMsg=''; UI.ok=tx('Thank you. Your feedback was sent.','شكراً. تم إرسال ملاحظاتك.'); render();
+  const note=(ok,text)=>{ UI.fbNote={ok,text}; render(); setTimeout(()=>{ const c=document.getElementById('fbcard'); if(c) c.scrollIntoView({behavior:'smooth',block:'center'}); },50); };
+  if(msg.length<5) return note(false,tx('Please write a few words so we can understand.','يرجى كتابة بضع كلمات حتى نفهم.'));
+  if(!sb) return note(false,tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
+  note(true,tx('Sending...','جارٍ الإرسال...'));
+  try{
+    const {data,error}=await sb.functions.invoke('send-feedback',{body:{category:f.fbCat||'suggestion',message:msg.slice(0,2000)}});
+    if(error||(data&&data.error)){
+      console.error('send-feedback failed:',error||data);
+      let why=(data&&data.error)||(error&&error.message)||'';
+      return note(false,tx('Could not send. ','تعذّر الإرسال. ')+why);
+    }
+    UI.f.fbMsg='';
+    return note(true,tx('Thank you. Your feedback was sent.','شكراً. تم إرسال ملاحظاتك.'));
+  }catch(e){
+    console.error('send-feedback error:',e);
+    return note(false,tx('Could not send. Check your connection and try again.','تعذّر الإرسال. تحقق من الاتصال وحاول مرة أخرى.'));
+  }
 }
+
 function sheetHTML(){
   const s=UI.sheet;if(!s) return '';
   const u=me();
