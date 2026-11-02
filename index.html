@@ -1271,6 +1271,40 @@ function custUseMine(){
   if(!customComplete(c)){ return fail(tx('Add at least one exercise to every day of every week before you use this program.','أضف تمريناً واحداً على الأقل لكل يوم في كل أسبوع قبل استخدام هذا البرنامج.')); }
   const u=me(); u.profile.planMode='custom'; saveDB(); UI.ok=tx('Your own program is now your plan.','أصبح برنامجك الخاص هو خطتك.'); go('program');
 }
+async function submitProgram(){
+  save(); const f=UI.f, u=me(), c=custC();
+  if(!customComplete(c)) return fail(tx('Add at least one exercise to every day of every week before you send it.','أضف تمريناً واحداً على الأقل لكل يوم في كل أسبوع قبل الإرسال.'));
+  const title=(f.progTitle||'').trim(), author=(f.progAuthor||'').trim(), desc=(f.progDesc||'').trim();
+  if(title.length<3) return fail(tx('Give the program a title (at least 3 letters).','أعطِ البرنامج عنواناً (3 أحرف على الأقل).'));
+  if(author.length<2) return fail(tx('Enter the name that should show with the program.','أدخل الاسم الذي سيظهر مع البرنامج.'));
+  if(!sb) return fail(tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
+  const {error}=await sb.from('community_programs').insert({author_id:u.id,author_name:author.slice(0,80),title:title.slice(0,120),
+    description:desc.slice(0,500),dpw:c.dpw,weeks:c.weeks,program:{data:c.data},status:'pending'});
+  if(error) return fail(tx('Could not send. Try again.','تعذّر الإرسال. حاول مرة أخرى.'));
+  UI.f.progTitle=''; UI.f.progDesc='';
+  UI.ok=tx('Sent. We will review it, and it will appear under your name once approved.','تم الإرسال. سنراجعه، وسيظهر باسمك بعد الموافقة.'); render();
+}
+let LIBRARY=[];
+async function loadLibrary(){
+  if(!sb) return;
+  const {data,error}=await sb.from('community_programs').select('id,author_name,title,description,dpw,weeks,program').eq('status','approved').order('submitted_at',{ascending:false});
+  if(error||!data) return;
+  LIBRARY=data; render();
+}
+async function useLibraryProgram(id){
+  const row=LIBRARY.find(x=>x.id===id); if(!row) return;
+  const u=me(); if(!u) return;
+  u.profile.customPlan={dpw:row.dpw,weeks:row.weeks,data:JSON.parse(JSON.stringify(row.program.data)),source:{id:row.id,title:row.title,author:row.author_name}};
+  u.profile.planMode='custom'; saveDB();
+  UI.ok=tx('Program added. You can edit it at any time.','تمت إضافة البرنامج. يمكنك تعديله في أي وقت.'); go('program');
+}
+function libraryHTML(){
+  if(!LIBRARY.length) return '';
+  return `<h2>${tx('Programs by trainers','برامج من المدربين')}</h2>${LIBRARY.map(r=>`<div class="card"><b>${esc(r.title)}</b>
+    <div class="muted" style="font-size:12px">${tx('By','بواسطة')} ${esc(r.author_name)} · ${r.dpw} ${tx('days a week','أيام في الأسبوع')} · ${r.weeks} ${tx('weeks','أسبوع')}</div>
+    ${r.description?`<p style="font-size:13px;margin:8px 0">${esc(r.description)}</p>`:''}
+    <button class="btn sm dark" onclick="useLibraryProgram('${esc(r.id)}')">${tx('Use this program','استخدم هذا البرنامج')}</button></div>`).join('')}`;
+}
 function custUseThugfit(){ const u=me(); u.profile.planMode='program'; saveDB(); UI.ok=tx('You are following the THUGFIT program.','أنت تتبع برنامج THUGFIT.'); go('program'); }
 function custReset(){ if(!confirm(tx('Delete your own program? This cannot be undone.','حذف برنامجك الخاص؟ لا يمكن التراجع عن ذلك.'))) return; const u=me(); u.profile.customPlan=null; u.profile.planMode='program'; saveDB(); render(); }
 const REP_PRESETS=['3-5','5-8','6-8','8-12','10-12','12-15','15-20','20-30'];
@@ -1311,6 +1345,14 @@ SCREENS.custom=()=>{
   </div>
   <p class="muted" style="font-size:12px;margin-top:10px">${emptyDays?tx(emptyDays+' day(s) still have no exercises.',emptyDays+' يوم بلا تمارين بعد.'):tx('Every day has exercises.','كل يوم فيه تمارين.')}</p>
   <button class="btn" onclick="custUseMine()">${tx('Use my program','استخدم برنامجي')}</button>
+  <div class="card" style="margin-top:16px">
+    <h3 style="margin:0 0 6px">${tx('Share with other members','شارك مع الأعضاء الآخرين')}</h3>
+    <p class="muted" style="font-size:12px;margin:0 0 8px">${tx('If you are a trainer, you can share this program. Our team reviews it first. Once approved, it appears under your name for other members to use.','إذا كنت مدرباً، يمكنك مشاركة هذا البرنامج. يراجعه فريقنا أولاً. بعد الموافقة يظهر باسمك ليستخدمه الأعضاء الآخرون.')}</p>
+    <label>${tx('Program title','عنوان البرنامج')}<input data-k="progTitle" value="${esc(UI.f.progTitle||'')}"></label>
+    <label>${tx('Your name as it will show','اسمك كما سيظهر')}<input data-k="progAuthor" value="${esc(UI.f.progAuthor||u.name||'')}"></label>
+    <label>${tx('Short description (goal, who it is for)','وصف مختصر (الهدف، لمن هو)')}<textarea data-k="progDesc" rows="3" maxlength="500" style="width:100%">${esc(UI.f.progDesc||'')}</textarea></label>
+    <button class="btn sm" onclick="submitProgram()">${tx('Send for approval','إرسال للموافقة')}</button>
+  </div>
   <button class="btn ghost" style="margin-top:8px" onclick="custUseThugfit()">${tx('Use the THUGFIT program instead','استخدم برنامج THUGFIT بدلاً من ذلك')}</button>
   <button class="link" style="margin-top:12px" onclick="custReset()">${tx('Delete my program','حذف برنامجي')}</button>
   ${navHTML()}`;
@@ -1322,6 +1364,7 @@ SCREENS.program=()=>{
   <p>${plan.days} ${tx('training days','أيام تدريب')} · ${plan.weeks} ${tx('weeks','أسبوع')} · ${p.mode==='gym'?tx('Gym','صالة'):tx('Home','منزل')}${p.mode==='gym'?' · '+esc(p.bodyType):''}${p.mode==='home'?' · '+(p.equip==='light'?tx('light equipment','معدات خفيفة'):tx('bodyweight','وزن الجسم')):''}</p>
   <div class="card" style="font-size:13px"><span class="pill red">${tx('Weights are estimates until you log your first session.','الأوزان تقديرية حتى تسجل جلستك الأولى.')}</span></div>
   <div class="card"><button class="btn" onclick="go('custom')">${tx('Create your own program','أنشئ برنامجك الخاص')}</button>${p.planMode==='custom'?'<p class="muted" style="font-size:12px;margin:8px 0 0">'+tx('You are following your own program.','أنت تتبع برنامجك الخاص.')+'</p>':''}</div>
+  ${libraryHTML()}
   ${plan.templates.map(t=>`<div class="card"><h3>${esc(t.name)}</h3>${t.items.map(it=>{const ex=EXID[it.ex];return `<div class="ex">${exThumb(ex,sex)}<div class="main" onclick="UI.sheet={type:'ex',id:'${ex.id}'};render()" style="cursor:pointer"><div class="title">${L(ex.n)}</div><div class="plan">${it.sets} × ${it.reps} · ${tx('rest','راحة')} ${it.rest}</div></div></div>`;}).join('')}</div>`).join('')}
   <h2>${tx('Change my goal or schedule','تغيير الهدف أو الجدول')}</h2>
   <div class="card">
@@ -1811,7 +1854,7 @@ async function restoreSession(){
 
 setInterval(updateTimers,1000);
 render();
-restoreSession(); loadPromos();
+restoreSession(); loadPromos(); loadLibrary();
 </script>
 </body>
 </html>

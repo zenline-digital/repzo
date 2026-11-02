@@ -64,7 +64,7 @@ const SUPABASE_URL="https://rabzuknmzpsvsyxvghis.supabase.co";
 const SUPABASE_KEY="sb_publishable_rusFDtWKie2C72tX2EYjdQ_5EL8_hui";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const TABS=[['dash','Dashboard'],['members','Members'],['activity','Activity'],['feedback','Feedback'],['promos','Promotions'],['audit','Audit log']];
+const TABS=[['dash','Dashboard'],['members','Members'],['activity','Activity'],['feedback','Feedback'],['programs','Programs'],['promos','Promotions'],['audit','Audit log']];
 let CUR='dash', DATA=null;
 const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=d=>d?new Date(d).toLocaleString('en-GB',{timeZone:'Asia/Dubai',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
@@ -116,6 +116,8 @@ async function loadAll(){
   DATA={members:members.data||[],logins:logins.data||[],clicks:clicks.data||[],sessions:sessions.data||[],
         weights:weights.data||[],consents:consents.data||[],profiles:profiles.data||[],promos:promos.data||[],audit:audit.data||[]};
   const err=[members,logins,clicks,sessions,weights,consents,profiles,promos,audit].find(r=>r.error);
+  const pg=await sb.from('community_programs').select('*').order('submitted_at',{ascending:false});
+  DATA.programs=pg.data||[];
   const fb=await sb.from('feedback').select('*').order('created_at',{ascending:false}).limit(1000);
   DATA.feedback=fb.data||[];
   if(err) console.warn('Some data could not be loaded:',err.error.message);
@@ -134,6 +136,7 @@ function show(k){
   if(k==='activity') v.innerHTML=activity();
   if(k==='promos') v.innerHTML=promos();
   if(k==='feedback') v.innerHTML=feedbackTab();
+  if(k==='programs') v.innerHTML=programsTab();
   if(k==='audit') v.innerHTML=audit();
 }
 
@@ -357,6 +360,37 @@ async function setFbStatus(id,status){
   const {error}=await sb.from('feedback').update({status}).eq('id',id);
   if(error){ alert('Could not update: '+error.message); return; }
   await loadAll(); show('feedback');
+}
+
+
+/* ---------- Member-created programs: review ---------- */
+const EX_NAMES={"bench": "Barbell bench press", "ohp": "Overhead press", "pushdown": "Triceps pushdown", "latpull": "Lat pulldown", "row": "Seated cable row", "curl": "Barbell curl", "squat": "Back squat", "rdl": "Romanian deadlift", "legpress": "Leg press", "calfgym": "Standing calf raise", "hangleg": "Hanging leg raise", "pushup": "Push-up", "pike": "Pike push-up", "dip": "Chair dip", "irow": "Inverted row (sturdy table)", "superman": "Superman back extension", "bsquat": "Bodyweight squat", "lunge": "Reverse lunge", "bridge": "Glute bridge", "calf0": "Single-leg calf raise", "plank": "Plank", "deadbug": "Dead bug", "dbfloor": "Dumbbell floor press", "dbshoulder": "Dumbbell shoulder press", "dbrow": "Dumbbell row", "dbcurl": "Dumbbell curl", "goblet": "Goblet squat", "dbrdl": "Dumbbell Romanian deadlift", "dblunge": "Dumbbell reverse lunge", "band": "Resistance band pull-apart"};
+const PG_STATUS={pending:'Waiting for review',approved:'Approved',rejected:'Rejected'};
+function programsTab(){
+  const list=DATA.programs||[];
+  if(!list.length) return '<p class="muted">No programs have been sent for review yet.</p>';
+  const order={pending:0,approved:1,rejected:2};
+  return list.slice().sort((x,y)=>order[x.status]-order[y.status]).map(p=>{
+    const weeks=(p.program&&p.program.data)||[];
+    const body=weeks.map((wk,w)=>`<div style="margin-top:8px"><b>Week ${w+1}</b>${wk.map((d,k)=>`<div style="margin:4px 0 0 10px"><b>Day ${k+1}</b>${d.name?' · '+esc(d.name):''}${(d.items||[]).map(it=>`<div class="muted" style="margin-left:12px">${esc(EX_NAMES[it.ex]||it.ex)} — ${esc(it.sets)} × ${esc(it.reps)}, rest ${esc(it.rest)} s</div>`).join('')}</div>`).join('')}</div>`).join('');
+    return `<div class="panel">
+      <div class="row" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><h3 style="margin:0">${esc(p.title)}</h3><span class="pill">${PG_STATUS[p.status]||p.status}</span></div>
+      <div class="muted" style="font-size:12px">By ${esc(p.author_name)} · ${p.dpw} days a week × ${p.weeks} weeks · sent ${fmt(p.submitted_at)}</div>
+      ${p.description?`<p style="font-size:13px">${esc(p.description)}</p>`:''}
+      ${p.reject_reason?`<p class="muted" style="font-size:12px">Reason: ${esc(p.reject_reason)}</p>`:''}
+      <details style="margin-top:8px"><summary>Show the program</summary>${body}</details>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        ${p.status!=='approved'?`<button class="tab" onclick="reviewProgram('${esc(p.id)}','approved')">Approve (show under the author's name)</button>`:''}
+        ${p.status!=='rejected'?`<button class="tab" style="border-color:#6b2222;color:#ffb4b0" onclick="reviewProgram('${esc(p.id)}','rejected')">Reject</button>`:''}
+      </div></div>`;
+  }).join('');
+}
+async function reviewProgram(id,status){
+  let reason='';
+  if(status==='rejected'){ reason=prompt('Reason (shown to the author):')||''; if(!reason.trim()) return; }
+  const {data:res,error}=await sb.functions.invoke('admin-actions',{body:{action:'program_review',data:{id,status,reason}}});
+  if(error||(res&&res.error)){ alert('Not saved: '+((res&&res.error)||(error&&error.message))); return; }
+  await loadAll(); show('programs');
 }
 
 function promos(){
