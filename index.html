@@ -153,6 +153,7 @@ async function syncUserData(u){
       const {error}=await sb.from('workout_sessions').upsert(rows,{onConflict:'member_id,local_id'});
       if(error) console.warn('sessions not saved:',error.message);
     }
+    // Saving never deletes server records. Workouts are only deleted when you delete them yourself.
   }catch(e){ console.warn('sync failed:',e&&e.message); }
 }
 
@@ -1733,7 +1734,7 @@ async function loadUserData(u){
   (w.data||[]).forEach(r=>{ byDate[r.logged_on]={date:r.logged_on,kg:Number(r.kg)}; });
   u.weights=Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date));
   const byId={}; (u.sessions||[]).forEach(e=>byId[String(e.id)]=e);
-  (x.data||[]).forEach(r=>{ if(r.data) byId[String(r.data.id||r.local_id)]=r.data; });
+  (x.data||[]).forEach(r=>{ if(r.data&&r.data.id) byId[String(r.data.id)]=r.data; });
   u.sessions=Object.values(byId).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
   saveDB();
   return true;
