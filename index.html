@@ -653,6 +653,7 @@ const NAV=[['home',tx('Today','اليوم')],['program',tx('Program','البرن
 const navHTML=()=>`<nav class="nav">${NAV.map(([k,l])=>`<button class="${UI.screen===k||(UI.screen==='workout'&&k==='home')?'on':''}" onclick="go('${k}')"><span class="dot"></span>${l}</button>`).join('')}</nav>`;
 
 function exThumb(ex,sex){
+  if(!EX_PHOTO(ex,sex,'pos1')) return `<div class="ph"></div>`;
   return `<img class="thumb" src="${EX_PHOTO(ex,sex,'pos1')}" alt="" onerror="this.outerHTML='<div class=&quot;ph&quot;>${tx('photo soon','قريباً')}</div>'">`;
 }
 
@@ -1062,7 +1063,8 @@ function instrHTML(id,ex){
 /* Library exercise IDs that have a different photo file name */
 const EX_PHOTO_ID={"pushdown": "triceps_pushdown", "latpull": "lat_pulldown", "row": "seated_cable_row", "deadbug": "dead_bug", "goblet": "goblet_squat", "dbrow": "dumbbell_row", "dbshoulder": "dumbbell_shoulder_press", "dbrdl": "dumbbell_rdl", "legpress": "leg_press", "bsquat": "bodyweight_squat", "bridge": "glute_bridge", "band": "band_pull_apart", "calfgym": "calf_raise", "pushup": "pushup", "plank": "plank"};
 function photoId(id){return EX_PHOTO_ID[id]||id;}
-function exImg(id,sex,pos){return `images/exercises/${photoId(id)}_${sex}_${pos}.webp`;}
+const NO_PHOTO=['chair_squat','cardio'];
+function exImg(id,sex,pos){ if(NO_PHOTO.includes(id)) return ''; return `images/exercises/${photoId(id)}_${sex}_${pos}.webp`;}
 function photoBox(src,label){
   return `<div><div style="position:relative;border-radius:12px;overflow:hidden;background:#fff"><img src="${src}" alt="" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentElement.style.display='none';this.parentElement.nextElementSibling.style.display='flex'" style="width:100%;height:auto;object-fit:contain;background:#fff;display:block;user-select:none;-webkit-user-select:none;pointer-events:none"></div><div class="ph" style="display:none;width:100%;height:120px;font-size:12px">${tx('Photo coming soon','الصورة قريباً')}</div><div class="muted" style="font-size:11px;text-align:center;margin-top:4px">${label}</div></div>`;
 }
@@ -1125,7 +1127,8 @@ const MUSCLE_GROUP={
   dbcurl:'biceps',
   dblunge:'legs_quad_glute_hamstring',
 };
-function MUSCLE_IMG(id,sex){const g=MUSCLE_GROUP[photoId(id)];return g?`images/muscles/${g}_${sex}.webp`:'';}
+function MUSCLE_IMG(id,sex){ if(NO_PHOTO.includes(id)) return ''; return MUSCLE_IMG_BASE(id,sex); }
+function MUSCLE_IMG_BASE(id,sex){const g=MUSCLE_GROUP[photoId(id)];return g?`images/muscles/${g}_${sex}.webp`:'';}
 function howToHTML(i,ex,it){
   const sex=(me().profile.sex)||'male';
   return `<div class="step">${tx('Step 1 · How to do it','الخطوة 1 · طريقة الأداء')}</div>
