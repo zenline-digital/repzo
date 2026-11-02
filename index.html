@@ -454,10 +454,17 @@ async function legacy_doLogin(){
   go(u.profile.setupDone?'home':'onboard');
 }
 function legacy_logout(){DB.sess=null;saveDB();UI.f={};go('welcome');}
-function deleteAccount(){
-  const u=me();if(!u) return;
+async function deleteAccount(){
+  const u=me(); if(!u) return;
   if(!confirm(tx('Delete your account and all your data? This cannot be undone.','حذف حسابك وكل بياناتك؟ لا يمكن التراجع عن ذلك.'))) return;
-  DB.users=DB.users.filter(x=>x.id!==u.id);DB.sess=null;saveDB();go('welcome');
+  if(sb){
+    const {data,error}=await sb.functions.invoke('delete-account',{body:{}});
+    if(error||(data&&data.error)){ return fail(tx('Could not delete your account. Try again or contact hello@thugfit.ae.','تعذّر حذف حسابك. حاول مرة أخرى أو راسل hello@thugfit.ae.')); }
+    await sb.auth.signOut();
+  }
+  DB.users=DB.users.filter(x=>x.id!==u.id); DB.sess=null; saveDB(); UI.f={};
+  UI.ok=tx('Your account and data were deleted.','تم حذف حسابك وبياناتك.');
+  go('welcome');
 }
 
 /* =====================================================================
@@ -558,7 +565,7 @@ function addWeight(){
   u.weights.sort((a,b)=>a.date.localeCompare(b.date));
   UI.f={};saveDB();UI.ok=tx('Weight saved.','تم حفظ الوزن.');render();
 }
-function setPhotoConsent(){save();const u=me();if(!UI.f.photoConsent) return fail(tx('Please tick the privacy statement first.','يرجى تحديد بيان الخصوصية أولاً.'));u.consent.photos=todayStr();saveDB();UI.f={};render();}
+function setPhotoConsent(){save();const u=me();if(!UI.f.photoConsent) return fail(tx('Please tick the privacy statement first.','يرجى تحديد بيان الخصوصية أولاً.'));u.consent.photos=todayStr();saveDB();if(sb) sb.from('consents').insert({member_id:u.id,consent_type:'photos',granted:true,granted_at:new Date().toISOString()}).then(()=>{}); UI.f={};render();}
 function compressImg(file){
   return new Promise((res,rej)=>{
     const r=new FileReader();
@@ -614,10 +621,10 @@ function lineChart(points){
 /* ===== APP SETTINGS (edit here) ===== */
 const APP_NAME='Repzo';
 const BRAND_NAME='THUGFIT';   /* the brand that owns the app; change if the official spelling differs */
-const PROMOS=[
+let PROMOS=[
   {title:{en:'THUGFIT activewear',ar:'ملابس THUGFIT الرياضية'},text:{en:'See the latest range from the THUGFIT store.',ar:'تعرّف على أحدث تشكيلة من متجر THUGFIT.'},url:'https://thugfit.ae'}
 ];
-const promoHTML=()=>PROMOS.map(p=>`<a href="${p.url}" target="_blank" rel="noopener" style="display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;background:var(--card,#141414);border:1px solid #2a2a2a;border-radius:12px;padding:8px 12px;margin:8px 0;color:inherit"><span><b style="font-size:13px">${L(p.title)}</b><br><span style="font-size:11px;opacity:.75">${L(p.text)}</span></span><span style="font-size:11px;opacity:.7">${tx('Visit','زيارة')} ›</span></a>`).join('');
+const promoHTML=()=>PROMOS.map((p,pi)=>`<a href="${p.url}" target="_blank" rel="noopener" onclick="logPromoClick(${pi})" style="display:flex;justify-content:space-between;align-items:center;gap:8px;text-decoration:none;background:var(--card,#141414);border:1px solid #2a2a2a;border-radius:12px;padding:8px 12px;margin:8px 0;color:inherit"><span><b style="font-size:13px">${L(p.title)}</b><br><span style="font-size:11px;opacity:.75">${L(p.text)}</span></span><span style="font-size:11px;opacity:.7">${tx('Visit','زيارة')} ›</span></a>`).join('');
 const brandHTML=()=>`<div class="brand" style="flex-direction:column;align-items:center;gap:4px"><img src="images/brand/thugfit-logo.png" alt="THUGFIT" onerror="this.style.display='none'" style="height:34px;width:auto"><span style="font-size:11px;font-weight:800;letter-spacing:7px;padding-inline-start:7px">${APP_NAME.toUpperCase().split('').join(' ')}</span></div>`;
 const topHTML=(back)=>`<div class="hdr">${back?`<button class="back" onclick="go('${back}')">${tx('‹ Back','رجوع')}</button>`:brandHTML()}<div class="lang"><button class="${UI.lang==='en'?'on':''}" onclick="setLang('en')">EN</button> <button class="${UI.lang==='ar'?'on':''}" onclick="setLang('ar')">عربي</button></div></div>${promoHTML()}`;
 const msgHTML=()=>(UI.err?`<div class="err">${UI.err}</div>`:'')+(UI.ok?`<div class="ok">${UI.ok}</div>`:'');
@@ -1304,6 +1311,7 @@ SCREENS.progress=()=>{
     <div class="stat"><span>${tx('Minutes','دقائق')}</span><b>${totalMin}</b></div>
     <div class="stat"><span>${tx('This week','هذا الأسبوع')}</span><b>${thisWeek}${planned?'/'+planned:''}</b></div>
   </div>
+  ${weightListHTML(u)}
   ${calendarHTML(u)}
   <div class="card">
     <div class="row" style="align-items:center"><div style="flex:1"><h3>${tx('Program','البرنامج')}</h3><p style="margin:0">${n}/${total||'—'} ${tx('sessions completed','جلسة مكتملة')}</p></div><b style="font-size:24px;color:var(--red2)">${pct}%</b></div>
@@ -1364,12 +1372,25 @@ SCREENS.profile=()=>{
     ${(UI.fbFiles&&UI.fbFiles.length)?`<p class="muted" style="font-size:12px">${UI.fbFiles.map(x=>esc(x.name)).join(', ')}</p>`:''}
     <button class="btn" onclick="doFeedback()">${tx('Send feedback','إرسال الملاحظات')}</button>
   </div>
+  <button class="btn ghost" onclick="downloadMyData()">${tx('Download my data','تنزيل بياناتي')}</button>
   <button class="btn ghost" onclick="logout()">${tx('Log out','تسجيل الخروج')}</button>
   <div style="text-align:center"><button class="link" onclick="deleteAccount()">${tx('Delete my account and data','حذف حسابي وبياناتي')}</button></div>
   ${navHTML()}`;
 };
 
 /* ---- Sheets (exercise info, finish) ---- */
+function weightListHTML(u){
+  const rows=u.weights.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);
+  if(!rows.length) return '';
+  return `<div class="card"><h3>${tx('Weight entries','إدخالات الوزن')}</h3>${rows.map(w=>`<div class="sessionrow"><span>${fdate(w.date)} · ${w.kg} kg</span><button class="btn sm danger" style="padding:4px 8px;font-size:11px" onclick="deleteWeight('${w.date}')">✕</button></div>`).join('')}</div>`;
+}
+async function deleteWeight(date){
+  const u=me(); if(!u) return;
+  if(!confirm(tx('Delete this weight entry?','حذف إدخال الوزن هذا؟'))) return;
+  u.weights=u.weights.filter(w=>w.date!==date); saveDB();
+  if(sb) await sb.from('weight_logs').delete().eq('member_id',u.id).eq('local_id','w-'+date);
+  render();
+}
 function calShift(d){ UI.calOff=(UI.calOff||0)+d; render(); }
 function calendarHTML(u){
   const off=UI.calOff||0, now=new Date();
@@ -1576,6 +1597,30 @@ async function loadUserData(u){
   saveDB();
   return true;
 }
+async function loadPromos(){
+  if(!sb) return;
+  const {data,error}=await sb.from('promotions').select('*').eq('active',true).order('sort_order');
+  if(error||!data||!data.length) return;
+  PROMOS=data.map(r=>({title:{en:r.title_en,ar:r.title_ar||r.title_en},text:{en:r.text_en||'',ar:r.text_ar||r.text_en||''},url:r.url,id:r.id,name:r.title_en}));
+  render();
+}
+async function logPromoClick(i){
+  if(!sb) return;
+  const p=PROMOS[i]; if(!p) return;
+  try{ await sb.from('promo_clicks').insert({promo_title:p.name||p.title.en,member_id:DB.sess||null}); }catch(e){}
+}
+async function downloadMyData(){
+  const u=me(); if(!u||!sb) return fail(tx('Sign in to download your data.','سجّل الدخول لتنزيل بياناتك.'));
+  const q=(t,c)=>sb.from(t).select('*').eq(c,u.id);
+  const [m,tp,co,wl,ws,fb,lg]=await Promise.all([
+    sb.from('members').select('*').eq('id',u.id).maybeSingle(),q('training_profiles','member_id'),q('consents','member_id'),
+    q('weight_logs','member_id'),q('workout_sessions','member_id'),q('feedback','member_id'),q('member_logins','member_id')]);
+  const out={exported_at:new Date().toISOString(),account:m.data,training_profile:tp.data,consents:co.data,
+    weights:wl.data,workouts:ws.data,feedback:fb.data,logins:lg.data,
+    note:'Progress photos are stored only on your device and are not included.'};
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='repzo-my-data-'+todayStr()+'.json'; a.click();
+}
 async function loadTrainingProfile(u){
   if(!sb||!u||u.profile.setupDone) return false;
   const {data,error}=await sb.from('training_profiles').select('setup_done,profile_json').eq('member_id',u.id).maybeSingle();
@@ -1654,7 +1699,7 @@ async function restoreSession(){
 
 setInterval(updateTimers,1000);
 render();
-restoreSession();
+restoreSession(); loadPromos();
 </script>
 </body>
 </html>

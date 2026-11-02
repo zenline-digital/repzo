@@ -255,13 +255,23 @@ function detail(id){
       <dt>Workouts logged</dt><dd>${nS}</dd>
       <dt>Consents</dt><dd>${cons}</dd>
     </dl>
-    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-      <button class="act" disabled>Edit</button>
-      <button class="act" disabled>Reset password</button>
-      <button class="act" disabled>Suspend</button>
-      <button class="act" disabled>Delete</button>
-    </div>
-    <div class="muted" style="margin-top:8px">Edit, reset password, suspend and delete are switched on in the next update, because they run on the secure server. Progress photos and passwords are never shown here.</div>
+    <h3 style="margin:18px 0 8px">Edit details</h3>
+      <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+        <div><label class="muted" style="font-size:12px">Full name</label><input id="ed_full_name" value="${esc(m.full_name||'')}"></div>
+        <div><label class="muted" style="font-size:12px">Email</label><input id="ed_email" value="${esc(m.email||'')}"></div>
+        <div><label class="muted" style="font-size:12px">Mobile</label><input id="ed_phone" value="${esc(m.phone||'')}"></div>
+        <div><label class="muted" style="font-size:12px">Date of birth</label><input id="ed_date_of_birth" type="date" value="${esc(m.date_of_birth||'')}"></div>
+        <div><label class="muted" style="font-size:12px">Country</label><input id="ed_country" value="${esc(m.country||'')}"></div>
+        <div><label class="muted" style="font-size:12px">Region or emirate</label><input id="ed_region" value="${esc(m.region||'')}"></div>
+        <div><label class="muted" style="font-size:12px">Other country name</label><input id="ed_country_other" value="${esc(m.country_other||'')}"></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="tab" onclick="saveMember('${esc(m.id)}')">Save changes</button>
+        <button class="tab" onclick="adminAct('reset_password','${esc(m.id)}')">Send password reset email</button>
+        <button class="tab" onclick="adminAct('${m.status==='suspended'?'reactivate':'suspend'}','${esc(m.id)}')">${m.status==='suspended'?'Reactivate account':'Suspend account'}</button>
+        <button class="tab" style="border-color:#6b2222;color:#ffb4b0" onclick="deleteMember('${esc(m.id)}')">Delete member and all data</button>
+      </div>
+      <div class="muted" style="margin-top:8px;font-size:12px">Passwords are never shown. A reset sends an email to the member. Every action is recorded in the Audit log.</div>
   </div>`;
 }
 
@@ -307,6 +317,28 @@ async function openFbFiles(id){
     window.open(data.signedUrl,'_blank');
   }
 }
+
+/* ---------- Admin actions (run on the secure server) ---------- */
+async function adminAct(action,id,data){
+  const {data:res,error}=await sb.functions.invoke('admin-actions',{body:{action,member_id:id,data:data||{}}});
+  if(error||(res&&res.error)){ alert('Not done: '+((res&&res.error)||(error&&error.message))); return false; }
+  await loadAll();
+  const done={reset_password:'Password reset email sent to the member.',suspend:'Account suspended.',reactivate:'Account reactivated.'};
+  if(done[action]) alert(done[action]);
+  return true;
+}
+async function saveMember(id){
+  const g=x=>document.getElementById('ed_'+x).value.trim();
+  const data={full_name:g('full_name'),email:g('email'),phone:g('phone'),date_of_birth:g('date_of_birth'),
+    country:g('country'),region:g('region'),country_other:g('country_other')};
+  if(await adminAct('edit',id,data)){ alert('Saved.'); show('members'); detail(id); }
+}
+async function deleteMember(id){
+  const typed=prompt('This permanently deletes the member and all their data. Type DELETE to confirm.');
+  if(typed!=='DELETE') return;
+  if(await adminAct('delete',id,{confirm:'DELETE'})){ alert('Member deleted.'); show('members'); }
+}
+
 async function setFbStatus(id,status){
   const {error}=await sb.from('feedback').update({status}).eq('id',id);
   if(error){ alert('Could not update: '+error.message); return; }
@@ -314,9 +346,42 @@ async function setFbStatus(id,status){
 }
 
 function promos(){
-  const rows=DATA.promos.map(p=>`<tr><td>${esc(p.title_en)}</td><td>${esc(p.title_ar)}</td><td>${esc(p.url)}</td><td>${p.active?'<span class="ok">On</span>':'Off'}</td><td>${p.sort_order}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">No promotions yet.</td></tr>';
-  return `<table><thead><tr><th>Title (EN)</th><th>Title (AR)</th><th>Link</th><th>Status</th><th>Order</th></tr></thead><tbody>${rows}</tbody></table>
-  <div class="muted" style="margin-top:10px">Adding and editing promotions is switched on in the next update.</div>`;
+  const e=(window.PROMO_EDIT&&DATA.promos.find(p=>p.id===window.PROMO_EDIT))||{};
+  const rows=DATA.promos.map(p=>`<tr><td>${esc(p.title_en)}</td><td>${esc(p.title_ar)}</td><td>${esc(p.url)}</td><td>${p.active?'<span class="ok">On</span>':'Off'}</td><td>${p.sort_order}</td>
+    <td><button class="tab" onclick="promoEdit('${esc(p.id)}')">Edit</button> <button class="tab" onclick="promoToggle('${esc(p.id)}',${!p.active})">${p.active?'Turn off':'Turn on'}</button> <button class="tab" onclick="promoDelete('${esc(p.id)}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="muted">No promotions yet.</td></tr>';
+  return `<table><thead><tr><th>Title (EN)</th><th>Title (AR)</th><th>Link</th><th>Status</th><th>Order</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+  <h3 style="margin:18px 0 8px">${window.PROMO_EDIT?'Edit promotion':'Add promotion'}</h3>
+  <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+    <div><label class="muted" style="font-size:12px">Title (English)</label><input id="pr_title_en" value="${esc(e.title_en||'')}"></div>
+    <div><label class="muted" style="font-size:12px">Title (Arabic)</label><input id="pr_title_ar" value="${esc(e.title_ar||'')}"></div>
+    <div><label class="muted" style="font-size:12px">Text (English)</label><input id="pr_text_en" value="${esc(e.text_en||'')}"></div>
+    <div><label class="muted" style="font-size:12px">Text (Arabic)</label><input id="pr_text_ar" value="${esc(e.text_ar||'')}"></div>
+    <div><label class="muted" style="font-size:12px">Link (https://…)</label><input id="pr_url" value="${esc(e.url||'https://thugfit.ae')}"></div>
+    <div><label class="muted" style="font-size:12px">Order (smallest first)</label><input id="pr_sort_order" type="number" value="${esc(e.sort_order??1)}"></div>
+    <div><label class="muted" style="font-size:12px"><input id="pr_active" type="checkbox" ${(e.active??true)?'checked':''} style="width:auto"> Show in the app</label></div>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:8px"><button class="tab" onclick="promoSave()">${window.PROMO_EDIT?'Save promotion':'Add promotion'}</button>${window.PROMO_EDIT?'<button class="tab" onclick="window.PROMO_EDIT=null;show(\'promos\')">Cancel</button>':''}</div>`;
+}
+function promoEdit(id){ window.PROMO_EDIT=id; show('promos'); }
+async function promoSave(){
+  const g=x=>document.getElementById('pr_'+x).value.trim();
+  const data={id:window.PROMO_EDIT||null,title_en:g('title_en'),title_ar:g('title_ar'),text_en:g('text_en'),text_ar:g('text_ar'),
+    url:g('url'),sort_order:g('sort_order'),active:document.getElementById('pr_active').checked};
+  const {data:res,error}=await sb.functions.invoke('admin-actions',{body:{action:'promo_save',data}});
+  if(error||(res&&res.error)){ alert('Not saved: '+((res&&res.error)||(error&&error.message))); return; }
+  window.PROMO_EDIT=null; await loadAll(); show('promos');
+}
+async function promoToggle(id,on){
+  const p=DATA.promos.find(x=>x.id===id); if(!p) return;
+  const {data:res,error}=await sb.functions.invoke('admin-actions',{body:{action:'promo_save',data:{id,title_en:p.title_en,title_ar:p.title_ar,text_en:p.text_en,text_ar:p.text_ar,url:p.url,sort_order:p.sort_order,active:on}}});
+  if(error||(res&&res.error)){ alert('Not changed: '+((res&&res.error)||(error&&error.message))); return; }
+  await loadAll(); show('promos');
+}
+async function promoDelete(id){
+  if(!confirm('Delete this promotion?')) return;
+  const {data:res,error}=await sb.functions.invoke('admin-actions',{body:{action:'promo_delete',data:{id}}});
+  if(error||(res&&res.error)){ alert('Not deleted: '+((res&&res.error)||(error&&error.message))); return; }
+  await loadAll(); show('promos');
 }
 
 function audit(){
