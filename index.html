@@ -1394,6 +1394,7 @@ function calendarHTML(u){
   </div>`;
 }
 function pickFbFiles(el){
+  save();  // keep what has been typed before the screen is redrawn
   const list=Array.from(el.files||[]);
   const bad=list.find(f=>f.size>5*1024*1024);
   if(bad){ UI.fbNote={ok:false,text:tx('That file is larger than 5 MB: ','هذا الملف أكبر من 5 ميغابايت: ')+bad.name}; UI.fbFiles=[]; render(); return; }
