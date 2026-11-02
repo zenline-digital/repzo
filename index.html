@@ -1374,6 +1374,7 @@ SCREENS.subscribe=()=>{
     <button class="btn" onclick="redeemCode()">${tx('Use my code','استخدم الرمز')}</button>
   </div>
   <div class="card"><h3>${tx('Not a customer yet? Pay for 1 year','لست عميلاً بعد؟ ادفع لسنة')}</h3><span class="pill green" style="margin-bottom:6px">${tx('Limited-time offer','عرض لفترة محدودة')}</span><p style="font-size:22px;font-weight:800;margin:4px 0">AED 53.10 <span class="muted" style="font-size:13px;font-weight:400">${tx('for 1 year','لمدة سنة')}</span></p><p class="muted" style="font-size:12px;line-height:1.5">${tx('This is the AED 50 plan price plus the card processing fee added at checkout (AED 3.10).','هذا هو سعر الخطة 50 درهماً مع رسوم معالجة البطاقة المضافة عند الدفع (3.10 درهم).')}</p><p style="font-size:13px;line-height:1.5"><b>${tx('New payment plans are coming soon. Grab this offer before the new plan arrives.','خطط دفع جديدة قريباً. استفد من هذا العرض قبل وصول الخطة الجديدة.')}</b></p><p class="muted" style="font-size:11px;line-height:1.5">${tx('Conditions: this price is available for a limited time and may end without notice. Your year runs for 12 months from the day payment is confirmed and does not renew automatically. Plan changes will be announced in the app before they take effect.','الشروط: هذا السعر متاح لفترة محدودة وقد ينتهي دون إشعار. تبدأ سنتك 12 شهراً من يوم تأكيد الدفع ولا تتجدد تلقائياً. ستُعلن تغييرات الخطة داخل التطبيق قبل سريانها.')}</p><button class="btn ghost" onclick="payNow()">${tx('Pay AED 53.10 for 1 year','ادفع 53.10 درهم لمدة سنة')}</button></div>
+  <button class="link" onclick="loadSub()">${tx('Already paid? Tap to refresh','دفعت بالفعل؟ اضغط للتحديث')}</button><br>
   <button class="link" onclick="logout()">${tx('Log out','تسجيل الخروج')}</button>`;
 
 };
@@ -1895,12 +1896,20 @@ async function logout(){
   if(sb) await sb.auth.signOut();
   DB.sess=null; saveDB(); UI.f={}; UI.pendingEmail=null; go('welcome');
 }
+const PAID_RETURN=location.search.indexOf('paid=1')>-1;
+const PAID_SESSION=(new URLSearchParams(location.search)).get('session_id');
+async function confirmPayment(sessionId){
+  if(!sb||!sessionId) return;
+  const {data,error}=await sb.functions.invoke('confirm-payment',{body:{session_id:sessionId}});
+  if(!error&&data&&data.ok){ await loadSub(); UI.ok=tx('Payment confirmed. Welcome!','تم تأكيد الدفع. أهلاً بك!'); render(); }
+}
 async function restoreSession(){
   if(!sb) return;
   const {data}=await sb.auth.getSession();
   if(data&&data.session&&data.session.user){
     if(await blockIfSuspended(data.session.user.id)) return;
-    const u=ensureLocal(data.session.user); await loadTrainingProfile(u); await loadUserData(u); await loadSub(u.id); DB.sess=u.id; saveDB(); recordLogin(u.id);
+    const u=ensureLocal(data.session.user); await loadTrainingProfile(u); await loadUserData(u); await loadSub(u.id);
+    if(PAID_RETURN&&PAID_SESSION){ await confirmPayment(PAID_SESSION); } DB.sess=u.id; saveDB(); recordLogin(u.id);
     if(UI.screen==='welcome'||UI.screen==='login'||UI.screen==='signup') UI.screen=u.profile.setupDone?'home':'onboard';
     render();
   }
@@ -1908,7 +1917,7 @@ async function restoreSession(){
 
 setInterval(updateTimers,1000);
 render();
-restoreSession(); loadPromos(); loadLibrary(); if(location.search.indexOf('paid=1')>-1){ UI.ok=tx('Thank you. Your payment is being confirmed.','شكراً. يتم تأكيد الدفع.'); history.replaceState(null,'','/'); pollSub(0); }
+restoreSession(); loadPromos(); loadLibrary(); if(PAID_RETURN){ UI.ok=tx('Thank you. Your payment is being confirmed.','شكراً. يتم تأكيد الدفع.'); history.replaceState(null,'','/'); pollSub(0); }
 </script>
 </body>
 </html>
