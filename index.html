@@ -266,7 +266,7 @@ const EXID=Object.fromEntries(EX_LIB.map(e=>[e.id,e]));
     equipment:['bodyweight'],easier:null,harder:null,time:0};
 })();
 const MUSCLE_NAME={obliques:{en:'Obliques',ar:'الجانبي للبطن'},chest:{en:'Chest',ar:'الصدر'},shoulders:{en:'Shoulders',ar:'الكتفان'},biceps:{en:'Biceps',ar:'البايسبس'},triceps:{en:'Triceps',ar:'الترايسبس'},back:{en:'Back',ar:'الظهر'},core:{en:'Core',ar:'البطن'},quads:{en:'Quads',ar:'الفخذ الأمامي'},hamstrings:{en:'Hamstrings',ar:'الفخذ الخلفي'},glutes:{en:'Glutes',ar:'الأرداف'},calves:{en:'Calves',ar:'الربلة'}};
-const EX_PHOTO=(ex,sex,pos)=>`images/exercises/${ex.id}_${sex}_${pos}.webp`;
+const EX_PHOTO=(ex,sex,pos)=>exImg(ex.id,sex,pos);
 
 /* =====================================================================
    PROGRAM GENERATION
@@ -1334,7 +1334,7 @@ SCREENS.progress=()=>{
 
 /* ---- Account ---- */
 SCREENS.profile=()=>{
-  const u=me(),p=u.profile;
+  const u=me(),p=u.profile,f=UI.f||{};
   const mOn=!u.consent.marketingOptOut;
   return `${topHTML()}
   <h1>${tx('Account','الحساب')}</h1>
