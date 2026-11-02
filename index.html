@@ -111,7 +111,7 @@ table.t tr:hover td{background:#17171c;cursor:pointer}
 .chips-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
 .chip-btn{background:#17171c;border:1px solid var(--line);color:var(--text);border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer}
 .chip-btn.on{border-color:var(--red);background:#2a0f0f;color:#fff}
-.wel-hero{position:relative;border-radius:18px;overflow:hidden;margin:6px 0 16px;background:#0b0b0c}.wel-hero img{width:100%;height:auto;display:block}.wel-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,12,0) 45%,rgba(11,11,12,.85) 100%)}.wel-copy{position:absolute;left:0;right:0;bottom:16px;text-align:center;padding:0 14px;z-index:2}.wel-copy h1{font-size:30px;line-height:1.1;margin:0;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6)}.wel-copy p{font-size:15px;color:#f2f2f3;margin:6px 0 0;text-shadow:0 2px 8px rgba(0,0,0,.6)}.btn.wel-google{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;font-weight:600}.link-btn{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px}.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.cal-d{aspect-ratio:1;border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;position:relative}.cal-d .tick{color:var(--green);font-size:16px;font-weight:800;line-height:1}.cal-d .half{width:6px;height:6px;border-radius:50%;background:#f5b33d;display:block;margin-top:3px}.cal-d.today{border-color:var(--red)}.cal-hd{font-size:10px;color:var(--muted);text-align:center}</style>
+.wel-hero{position:relative;border-radius:18px;overflow:hidden;margin:6px 0 16px;background:#0b0b0c}.wel-hero img{width:100%;height:auto;display:block}.wel-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,12,0) 45%,rgba(11,11,12,.85) 100%)}.wel-copy{position:absolute;left:0;right:0;bottom:16px;text-align:center;padding:0 14px;z-index:2}.wel-copy h1{font-size:30px;line-height:1.1;margin:0;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6)}.wel-copy p{font-size:15px;color:#f2f2f3;margin:6px 0 0;text-shadow:0 2px 8px rgba(0,0,0,.6)}.btn.wel-google{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;font-weight:600}.link-btn{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font-size:12px}.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.cal-d{aspect-ratio:1;border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;position:relative}.cal-d .tick{color:var(--green);font-size:16px;font-weight:800;line-height:1}.cal-d .half{width:6px;height:6px;border-radius:50%;background:#f5b33d;display:block;margin-top:3px}.cal-d.today{border-color:var(--red)}.cal-d.done{background:rgba(61,220,132,.14);border-color:var(--green)}.cal-d.part{background:rgba(245,179,61,.12);border-color:#f5b33d}.cal-d small.lbl{font-size:8px;font-weight:700;line-height:1;margin-top:2px}.cal-d.done small.lbl{color:var(--green)}.cal-d.part small.lbl{color:#f5b33d}.cal-hd{font-size:10px;color:var(--muted);text-align:center}</style>
 </head>
 <body>
 <div id="app"></div>
@@ -1380,7 +1380,9 @@ function calendarHTML(u){
   for(let d=1; d<=days; d++){
     const key=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
     const st=done[key], today=key===todayStr();
-    cells.push('<div class="cal-d'+(today?' today':'')+'"><span>'+d+'</span>'+(st==='all'?'<b class="tick">✓</b>':st==='partly'?'<i class="half"></i>':'')+'</div>');
+    const cls='cal-d'+(today?' today':'')+(st==='all'?' done':st==='partly'?' part':'');
+    const mark=st==='all'?'<b class="tick">✓</b><small class="lbl">'+tx('Done','تم')+'</small>':st==='partly'?'<small class="lbl">'+tx('Part','جزئي')+'</small>':'';
+    cells.push('<div class="'+cls+'"><span>'+d+'</span>'+mark+'</div>');
   }
   const title=first.toLocaleDateString(UI.lang==='ar'?'ar':'en',{month:'long',year:'numeric'});
   return `<div class="card">
@@ -1390,7 +1392,7 @@ function calendarHTML(u){
       <button class="btn sm dark" onclick="calShift(1)">›</button>
     </div>
     <div class="cal-grid" style="margin-top:10px">${hd.map(h=>`<div class="cal-hd">${tx(h[0],h[1])}</div>`).join('')}${cells.join('')}</div>
-    <p class="muted" style="font-size:12px;margin:10px 0 0"><b class="tick">✓</b> ${tx('Trained, all exercises done','تدريب، كل التمارين منجزة')} · <i class="half" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f5b33d"></i> ${tx('Partly done','منجز جزئياً')}</p>
+    <p class="muted" style="font-size:12px;margin:10px 0 0"><b class="tick">✓</b> ${tx('Done: all exercises finished','تم: كل التمارين منجزة')} · ${tx('Part: some exercises finished','جزئي: بعض التمارين منجزة')}</p>
   </div>`;
 }
 function pickFbFiles(el){
@@ -1554,6 +1556,22 @@ async function saveTrainingProfile(u){
     height_cm:p.height||null,weight_kg:p.weight||null,body_type:p.bodyType||null,goal:p.goal||null,
     experience:p.exp||null,days_per_week:p.days||null,profile_json:p,updated_at:new Date().toISOString()});
 }
+async function loadUserData(u){
+  if(!sb||!u) return false;
+  const [w,x]=await Promise.all([
+    sb.from('weight_logs').select('logged_on,kg').eq('member_id',u.id),
+    sb.from('workout_sessions').select('local_id,data').eq('member_id',u.id)
+  ]);
+  if(w.error||x.error){ console.warn('could not load data:',(w.error||x.error).message); return false; }
+  const byDate={}; (u.weights||[]).forEach(e=>byDate[e.date]=e);
+  (w.data||[]).forEach(r=>{ byDate[r.logged_on]={date:r.logged_on,kg:Number(r.kg)}; });
+  u.weights=Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date));
+  const byId={}; (u.sessions||[]).forEach(e=>byId[String(e.id)]=e);
+  (x.data||[]).forEach(r=>{ if(r.data) byId[String(r.data.id||r.local_id)]=r.data; });
+  u.sessions=Object.values(byId).sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  saveDB();
+  return true;
+}
 async function loadTrainingProfile(u){
   if(!sb||!u||u.profile.setupDone) return false;
   const {data,error}=await sb.from('training_profiles').select('setup_done,profile_json').eq('member_id',u.id).maybeSingle();
@@ -1561,7 +1579,7 @@ async function loadTrainingProfile(u){
   Object.assign(u.profile,data.profile_json); saveDB(); return true;
 }
 async function afterSignIn(au){
-  const u=ensureLocal(au); await loadTrainingProfile(u); DB.sess=u.id; saveDB(); UI.f={}; UI.pendingEmail=null; recordLogin(u.id); syncMemberProfile(u);
+  const u=ensureLocal(au); await loadTrainingProfile(u); await loadUserData(u); DB.sess=u.id; saveDB(); UI.f={}; UI.pendingEmail=null; recordLogin(u.id); syncMemberProfile(u);
   go(u.profile.setupDone?'home':'onboard');
 }
 async function doSignup(){
@@ -1624,7 +1642,7 @@ async function restoreSession(){
   if(!sb) return;
   const {data}=await sb.auth.getSession();
   if(data&&data.session&&data.session.user){
-    const u=ensureLocal(data.session.user); await loadTrainingProfile(u); DB.sess=u.id; saveDB(); recordLogin(u.id);
+    const u=ensureLocal(data.session.user); await loadTrainingProfile(u); await loadUserData(u); DB.sess=u.id; saveDB(); recordLogin(u.id);
     if(UI.screen==='welcome'||UI.screen==='login'||UI.screen==='signup') UI.screen=u.profile.setupDone?'home':'onboard';
     render();
   }
