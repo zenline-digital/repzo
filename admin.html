@@ -57,6 +57,7 @@ dd{margin:0}
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const SUPABASE_URL="https://rabzuknmzpsvsyxvghis.supabase.co";
 const SUPABASE_KEY="sb_publishable_rusFDtWKie2C72tX2EYjdQ_5EL8_hui";
@@ -97,7 +98,7 @@ async function boot(){
 
 async function loadAll(){
   const [members,logins,clicks,sessions,weights,consents,profiles,promos,audit]=await Promise.all([
-    sb.from('members').select('id,full_name,email,phone,country,emirate,status,created_at'),
+    sb.from('members').select('*'),
     sb.from('member_logins').select('member_id,logged_at').order('logged_at',{ascending:false}).limit(5000),
     sb.from('promo_clicks').select('id,clicked_at,promo_title').order('clicked_at',{ascending:false}).limit(5000),
     sb.from('workout_sessions').select('member_id,session_date'),
@@ -150,13 +151,73 @@ function dash(){
 }
 
 function members(){
-  return `<input id="q" placeholder="Search name, email, country" oninput="filterMembers()" style="margin-bottom:12px">
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+  <input id="q" placeholder="Search name, email, country" oninput="filterMembers()" style="max-width:340px">
+  <button class="tab" onclick="exportCSV()">Download CSV</button>
+  <button class="tab" onclick="exportXLSX()">Download Excel</button>
+  <button class="tab" onclick="printMembers()">Print / PDF</button>
+  <span class="muted">${DATA.members.length} members</span></div>
   <table><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Status</th><th>Joined</th><th>Last login</th></tr></thead>
   <tbody id="mrows">${memberRows(DATA.members)}</tbody></table>
   <div id="detail"></div>`;
 }
 function memberRows(list){
   return list.map(m=>`<tr class="click" onclick="detail('${esc(m.id)}')"><td>${esc(m.full_name)}</td><td>${esc(m.email)}</td><td>${esc(m.country)}</td><td><span class="pill">${esc(m.status)}</span></td><td>${fmt(m.created_at)}</td><td>${fmt(lastLogin(m.id))}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">No members yet.</td></tr>';
+}
+
+/* ---------- Member export: every detail, one row per member ---------- */
+const EXPORT_COLS=['Member ID','Full name','Email','Mobile','Date of birth','Age','Country','Region or emirate','Other country name',
+  'Marketing accepted','Marketing date','Status','Joined','Last login','Total logins','Setup finished','Sex','Height (cm)','Weight (kg)',
+  'Body type','Goal','Experience','Equipment','Days per week','Session minutes','Program start','Weight entries','Workouts logged',
+  'Terms','Privacy','Health disclaimer','Marketing consent'];
+function ageOf(d){ if(!d) return ''; const b=new Date(d+'T00:00:00'), n=new Date(); let a=n.getFullYear()-b.getFullYear(); const m=n.getMonth()-b.getMonth(); if(m<0||(m===0&&n.getDate()<b.getDate())) a--; return a; }
+function exportRows(){
+  return DATA.members.map(m=>{
+    const p=DATA.profiles.find(x=>x.member_id===m.id)||{};
+    const cs=DATA.consents.filter(x=>x.member_id===m.id);
+    const cons=t=>{ const c=cs.filter(x=>x.consent_type===t).sort((a,b)=>new Date(b.granted_at)-new Date(a.granted_at))[0];
+      return c?(c.granted?'Yes':'No')+' ('+String(c.granted_at).slice(0,10)+')':''; };
+    return {
+      'Member ID':m.id,'Full name':m.full_name||'','Email':m.email||'','Mobile':m.phone||'',
+      'Date of birth':m.date_of_birth||'','Age':ageOf(m.date_of_birth),'Country':m.country||'',
+      'Region or emirate':m.region||'','Other country name':m.country_other||'',
+      'Marketing accepted':m.marketing_accepted?'Yes':'No','Marketing date':m.marketing_accepted_at?String(m.marketing_accepted_at).slice(0,10):'',
+      'Status':m.status||'','Joined':m.created_at?String(m.created_at).slice(0,10):'',
+      'Last login':lastLogin(m.id)?String(lastLogin(m.id)).slice(0,16).replace('T',' '):'',
+      'Total logins':DATA.logins.filter(x=>x.member_id===m.id).length,
+      'Setup finished':p.setup_done?'Yes':'No','Sex':p.sex||'','Height (cm)':p.height_cm||'','Weight (kg)':p.weight_kg||'',
+      'Body type':p.body_type||'','Goal':p.goal||'','Experience':p.experience||'',
+      'Equipment':Array.isArray(p.equipment)?p.equipment.join(', '):(p.equipment||''),
+      'Days per week':p.days_per_week||'','Session minutes':p.session_minutes||'',
+      'Program start':p.program_started_on||'',
+      'Weight entries':DATA.weights.filter(x=>x.member_id===m.id).length,
+      'Workouts logged':DATA.sessions.filter(x=>x.member_id===m.id).length,
+      'Terms':cons('terms'),'Privacy':cons('privacy'),'Health disclaimer':cons('health'),'Marketing consent':cons('marketing')
+    };
+  });
+}
+function exportCSV(){
+  const rows=exportRows();
+  const esc2=v=>{ const t=String(v==null?'':v); return /[",\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t; };
+  const lines=[EXPORT_COLS.join(',')].concat(rows.map(r=>EXPORT_COLS.map(c=>esc2(r[c])).join(',')));
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='repzo-members-'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+}
+function exportXLSX(){
+  if(typeof XLSX==='undefined'){ alert('The Excel library did not load. Check your internet connection and try again, or use CSV.'); return; }
+  const rows=exportRows();
+  const ws=XLSX.utils.json_to_sheet(rows,{header:EXPORT_COLS});
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Members');
+  XLSX.writeFile(wb,'repzo-members-'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+function printMembers(){
+  const rows=exportRows();
+  const head='<tr>'+EXPORT_COLS.map(c=>'<th>'+c+'</th>').join('')+'</tr>';
+  const body=rows.map(r=>'<tr>'+EXPORT_COLS.map(c=>'<td>'+String(r[c]==null?'':r[c]).replace(/</g,'&lt;')+'</td>').join('')+'</tr>').join('');
+  const w=window.open('','_blank');
+  w.document.write('<html><head><title>REPZO members</title><style>@page{size:landscape;margin:10mm}body{font-family:Arial,sans-serif;font-size:9px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:3px;vertical-align:top}th{background:#eee}h2{font-size:14px}</style></head><body>'
+    +'<h2>REPZO members ('+rows.length+') · '+new Date().toLocaleString()+'</h2><table>'+head+body+'</table></body></html>');
+  w.document.close(); w.focus(); setTimeout(()=>w.print(),300);
 }
 function filterMembers(){
   const q=(document.getElementById('q').value||'').toLowerCase();
