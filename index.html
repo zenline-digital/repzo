@@ -115,7 +115,7 @@ table.t tr:hover td{background:#17171c;cursor:pointer}
 </head>
 <body>
 <div id="app"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
 <script>
 /* REPZO backend connection (public values only) */
 const SUPABASE_URL="https://rabzuknmzpsvsyxvghis.supabase.co";
@@ -341,6 +341,14 @@ function jsonPlan(p){
   });
   return {templates,days:templates.length,weeks:(+p.months||1)*4,source:'json'};
 }
+function activePlan(p){
+  const c=p.customPlan;
+  if(p.planMode==='custom'&&c&&c.templates){
+    const tpls=c.templates.filter(t=>t.items&&t.items.length);
+    if(tpls.length) return {templates:tpls,days:tpls.length,weeks:12,source:'custom'};
+  }
+  return buildPlan(p);
+}
 function buildPlan(p){
   if(p.sex==='female'){const j=jsonPlan(p); if(j) return j;}
   return buildPlanGeneric(p);
@@ -516,7 +524,7 @@ function finishSetup(){
    WORKOUT
    ===================================================================== */
 function startWorkout(){
-  const u=me(),p=u.profile,plan=buildPlan(p),n=u.sessions.filter(x=>!x.custom).length,tpl=plan.templates[n%plan.days];
+  const u=me(),p=u.profile,plan=activePlan(p),n=u.sessions.filter(x=>!x.custom).length,tpl=plan.templates[n%plan.days];
   u.active={idx:n,week:Math.floor(n/plan.days)+1,day:tpl.name,startedAt:Date.now(),
     items:tpl.items.map(it=>({ex:it.ex,sets:it.sets,reps:it.reps,rest:it.rest,note:it.note||'',status:'pending',pain:false,logged:[]}))};
   UI.pi=null;UI.rest=null;UI.hold=null;saveDB();go('workout');
@@ -557,8 +565,14 @@ function abandonWorkout(){const u=me();if(!confirm(tx('Discard this workout? Not
 /* =====================================================================
    PROGRESS
    ===================================================================== */
+function unitOf(){ const u=me(); return (u&&u.profile.unit==='lb')?'lb':'kg'; }
+function unitLabel(){ return unitOf(); }
+function toUnit(kg){ return unitOf()==='lb' ? kg/0.45359237 : kg; }
+function fromUnit(v){ return unitOf()==='lb' ? v*0.45359237 : v; }
+function fmtW(kg){ return (Math.round(toUnit(kg)*10)/10)+' '+unitLabel(); }
+function setUnit(x){ const u=me(); if(!u) return; u.profile.unit=x; saveDB(); render(); }
 function addWeight(){
-  save();const u=me(),kg=num(UI.f.w_new);
+  save();const u=me(),kg=fromUnit(num(UI.f.w_new));
   if(!(kg>=30&&kg<=250)) return fail(tx('Enter a weight between 30 and 250 kg.','أدخل وزناً بين 30 و250 كغ.'));
   const i=u.weights.findIndex(w=>w.date===todayStr());
   if(i>=0) u.weights[i].kg=kg; else u.weights.push({date:todayStr(),kg});
@@ -640,7 +654,7 @@ function exThumb(ex,sex){
    ===================================================================== */
 const SCREENS={};
 
-const LEGAL={"terms": {"title": {"en": "Terms of Use", "ar": "شروط الاستخدام"}, "body": {"en": ["Repzo is a free fitness app by THUGFIT, operated by ZenLine FZ-LLC (RAKEZ, Ras Al Khaimah, UAE). Last updated: 30 October 2026.", "Eligibility: you must be 18 or older to create an account.", "Accurate information: give correct details and keep your password private. You are responsible for activity on your account.", "Guidance only: the app gives general fitness guidance. It is not medical advice and does not replace a doctor, physiotherapist or qualified coach.", "Marketing: by creating an account you agree that THUGFIT may send offers to your email and phone. You can stop this at any time from Account.", "Free access: the app is free. If we add paid features later, we will tell you clearly before any charge.", "Promotions: the app may show offers for THUGFIT products and partners. These are marked as promotions.", "Acceptable use: do not misuse the app, attempt to access other users' data, or copy or resell the programs.", "Ownership: programs, text, photos and muscle diagrams belong to THUGFIT. You may use them for your own training only.", "Ending use: you can stop using the app and delete your account at any time from the Account screen.", "Liability: the app is provided as it is, to the extent allowed by UAE law.", "Governing law: these terms are governed by the laws of the United Arab Emirates."], "ar": ["ريبزو تطبيق لياقة مجاني من THUGFIT، ويديره ZenLine FZ-LLC (RAKEZ، رأس الخيمة، الإمارات). آخر تحديث: 30 أكتوبر 2026.", "الأهلية: يجب أن يكون عمرك 18 عاماً أو أكثر لإنشاء حساب.", "معلومات دقيقة: قدّم بيانات صحيحة واحتفظ بكلمة المرور سرية. أنت مسؤول عن النشاط في حسابك.", "إرشادات عامة فقط: يقدم التطبيق إرشادات لياقة عامة. وهو ليس نصيحة طبية ولا يحل محل الطبيب أو أخصائي العلاج الطبيعي أو المدرب المؤهل.", "التسويق: بإنشاء حسابك توافق على أن ترسل THUGFIT عروضها إلى بريدك الإلكتروني وهاتفك. يمكنك إيقاف ذلك في أي وقت من شاشة الحساب.", "الاستخدام المجاني: التطبيق مجاني. إذا أضفنا ميزات مدفوعة لاحقاً، سنخبرك بوضوح قبل أي رسوم.", "العروض: قد يعرض التطبيق عروضاً لمنتجات THUGFIT وشركائها، وستكون موضحة كعروض ترويجية.", "الاستخدام المقبول: لا تسيء استخدام التطبيق، ولا تحاول الوصول إلى بيانات مستخدمين آخرين، ولا تنسخ البرامج أو تعيد بيعها.", "الملكية: البرامج والنصوص والصور ورسوم العضلات مملوكة لـ THUGFIT. يمكنك استخدامها لتدريبك الشخصي فقط.", "إنهاء الاستخدام: يمكنك التوقف عن استخدام التطبيق وحذف حسابك في أي وقت من شاشة الحساب.", "المسؤولية: يُقدَّم التطبيق كما هو، وبالقدر الذي يسمح به القانون الإماراتي.", "القانون الحاكم: تخضع هذه الشروط لقوانين دولة الإمارات العربية المتحدة."]}}, "privacy": {"title": {"en": "Privacy Policy", "ar": "سياسة الخصوصية"}, "body": {"en": ["Who we are: ZenLine FZ-LLC (RAKEZ, UAE), which operates Repzo for THUGFIT. Contact: hello@thugfit.ae.", "What we collect: name, email, phone number, country and emirate, and a password stored only as a secure hash. Your training profile (goals, experience, equipment, schedule), body measurements, weight, workout logs, and any health information you choose to enter.", "Why we use it: to create your account, build your program, track your progress, send verification and password-reset emails, and provide the service.", "Health information: we treat health details as sensitive. We use them only to adjust your program. Do not enter medical details you do not want to share.", "Who can see it: you, and THUGFIT staff who need it to run the service. Access is limited and recorded. Hosting, database and email providers process data for us under contract.", "Marketing: your email address and phone number are used to send THUGFIT offers and updates. This is accepted automatically when you create your account. You can stop these messages at any time from the Account screen.", "Security: passwords are hashed, data is sent over encrypted connections, and access is restricted.", "Keeping data: we keep your data while your account is active. When you delete your account, we delete your personal data within 30 days, except records the law requires us to keep.", "Your rights: you can ask to see, correct, or download your data, withdraw consent, or delete your account. Email hello@thugfit.ae.", "Children: the app is not for anyone under 18.", "Law: this policy follows the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021). We will tell you in the app when it changes."], "ar": ["من نحن: ZenLine FZ-LLC (RAKEZ، الإمارات)، التي تدير ريبزو لصالح THUGFIT. للتواصل: hello@thugfit.ae.", "ما نجمعه: الاسم، والبريد الإلكتروني، ورقم الهاتف، والدولة والإمارة، وكلمة المرور مخزنة فقط بشكل مشفّر. ملفك التدريبي (الأهداف، والخبرة، والمعدات، والجدول)، والقياسات، والوزن، وسجلات التمرين، وأي معلومات صحية تختار إدخالها.", "سبب الاستخدام: لإنشاء حسابك، وإعداد برنامجك، ومتابعة تقدمك، وإرسال رسائل التحقق وإعادة تعيين كلمة المرور، وتقديم الخدمة.", "المعلومات الصحية: نعامل التفاصيل الصحية كمعلومات حساسة، ونستخدمها فقط لتعديل برنامجك. لا تُدخل تفاصيل طبية لا تريد مشاركتها.", "من يمكنه الاطلاع: أنت، وموظفو THUGFIT الذين يحتاجونها لتشغيل الخدمة. الوصول محدود ومسجل. مزودو الاستضافة وقاعدة البيانات والبريد الإلكتروني يعالجون البيانات لصالحنا بموجب عقود.", "التسويق: يُستخدم بريدك الإلكتروني ورقم هاتفك لإرسال عروض THUGFIT وتحديثاتها. يتم قبول ذلك تلقائياً عند إنشاء حسابك، ويمكنك إيقاف هذه الرسائل في أي وقت من شاشة الحساب.", "الأمان: كلمات المرور مشفّرة، والبيانات تُنقل عبر اتصالات مشفّرة، والوصول مقيّد.", "الاحتفاظ بالبيانات: نحتفظ ببياناتك طالما حسابك نشط. عند حذف حسابك نحذف بياناتك الشخصية خلال 30 يوماً، باستثناء السجلات التي يتطلب القانون الاحتفاظ بها.", "حقوقك: يمكنك طلب الاطلاع على بياناتك أو تصحيحها أو تنزيلها، وسحب موافقتك، أو حذف حسابك. راسل hello@thugfit.ae.", "الأطفال: التطبيق ليس لمن هم دون 18 عاماً.", "القانون: تتبع هذه السياسة قانون حماية البيانات الشخصية الإماراتي (المرسوم بقانون اتحادي رقم 45 لسنة 2021). سنخبرك في التطبيق عند تغييرها."]}}, "health": {"title": {"en": "Health Disclaimer", "ar": "إخلاء المسؤولية الصحية"}, "body": {"en": ["This app gives general fitness guidance only. It is not medical advice, diagnosis or treatment.", "See a doctor before you start, especially if you have a heart, blood pressure, joint, back, or breathing condition, diabetes, pregnancy, a recent injury, or a recent surgery.", "Stop immediately and seek medical help if you feel chest pain, dizziness, shortness of breath, faintness, or sharp pain.", "Use good form. Reduce the weight or skip the exercise if your form breaks down or the exercise causes pain.", "Results differ from person to person. We do not guarantee any result.", "This app is not for emergencies."], "ar": ["يقدم هذا التطبيق إرشادات لياقة عامة فقط. وليس نصيحة طبية أو تشخيصاً أو علاجاً.", "استشر طبيباً قبل البدء، خاصة إذا كان لديك مرض في القلب أو ضغط الدم أو المفاصل أو الظهر أو التنفس، أو السكري، أو الحمل، أو إصابة حديثة، أو عملية جراحية حديثة.", "توقف فوراً واطلب المساعدة الطبية إذا شعرت بألم في الصدر، أو دوخة، أو ضيق تنفس، أو إغماء، أو ألم حاد.", "حافظ على الوضعية الصحيحة. خفّف الوزن أو تخطَّ التمرين إذا اختلت وضعيتك أو سبب لك ألماً.", "تختلف النتائج من شخص لآخر، ولا نضمن أي نتيجة.", "هذا التطبيق ليس للحالات الطارئة."]}}};
+const LEGAL={"terms": {"title": {"en": "Terms of Use", "ar": "شروط الاستخدام"}, "body": {"en": ["Repzo is a free fitness app by THUGFIT, operated by ZenLine FZ-LLC (RAKEZ, Ras Al Khaimah, UAE). Last updated: 30 October 2026.", "Eligibility: you must be 18 or older to create an account.", "Accurate information: give correct details and keep your password private. You are responsible for activity on your account.", "Guidance only: the app gives general fitness guidance. It is not medical advice and does not replace a doctor, physiotherapist or qualified coach.", "Marketing: by creating an account you agree that THUGFIT may send offers to your email and phone. You can stop this at any time from Account.", "Free access: the app is free. If we add paid features later, we will tell you clearly before any charge.", "Promotions: the app may show offers for THUGFIT products and partners. These are marked as promotions.", "Acceptable use: do not misuse the app, attempt to access other users' data, or copy or resell the programs.", "Ownership: programs, text, photos and muscle diagrams belong to THUGFIT. You may use them for your own training only.", "Ending use: you can stop using the app and delete your account at any time from the Account screen.", "Liability: the app is provided as it is, to the extent allowed by UAE law.", "Governing law: these terms are governed by the laws of the United Arab Emirates.", "Payments: the app is free at the moment. If paid plans are introduced, prices, taxes and cancellation terms will be shown before you pay.", "Liability: to the extent allowed by UAE law, THUGFIT is not responsible for injuries caused by training. Read the Health disclaimer before you start.", "Changes: we may update these terms. We will show the new terms in the app, and important changes will be explained before they take effect.", "Disputes: these terms are governed by UAE law, and disputes are subject to the competent courts of the Emirate of Ras Al Khaimah, where ZenLine FZ-LLC is registered."], "ar": ["ريبزو تطبيق لياقة مجاني من THUGFIT، ويديره ZenLine FZ-LLC (RAKEZ، رأس الخيمة، الإمارات). آخر تحديث: 30 أكتوبر 2026.", "الأهلية: يجب أن يكون عمرك 18 عاماً أو أكثر لإنشاء حساب.", "معلومات دقيقة: قدّم بيانات صحيحة واحتفظ بكلمة المرور سرية. أنت مسؤول عن النشاط في حسابك.", "إرشادات عامة فقط: يقدم التطبيق إرشادات لياقة عامة. وهو ليس نصيحة طبية ولا يحل محل الطبيب أو أخصائي العلاج الطبيعي أو المدرب المؤهل.", "التسويق: بإنشاء حسابك توافق على أن ترسل THUGFIT عروضها إلى بريدك الإلكتروني وهاتفك. يمكنك إيقاف ذلك في أي وقت من شاشة الحساب.", "الاستخدام المجاني: التطبيق مجاني. إذا أضفنا ميزات مدفوعة لاحقاً، سنخبرك بوضوح قبل أي رسوم.", "العروض: قد يعرض التطبيق عروضاً لمنتجات THUGFIT وشركائها، وستكون موضحة كعروض ترويجية.", "الاستخدام المقبول: لا تسيء استخدام التطبيق، ولا تحاول الوصول إلى بيانات مستخدمين آخرين، ولا تنسخ البرامج أو تعيد بيعها.", "الملكية: البرامج والنصوص والصور ورسوم العضلات مملوكة لـ THUGFIT. يمكنك استخدامها لتدريبك الشخصي فقط.", "إنهاء الاستخدام: يمكنك التوقف عن استخدام التطبيق وحذف حسابك في أي وقت من شاشة الحساب.", "المسؤولية: يُقدَّم التطبيق كما هو، وبالقدر الذي يسمح به القانون الإماراتي.", "القانون الحاكم: تخضع هذه الشروط لقوانين دولة الإمارات العربية المتحدة.", "الدفع: التطبيق مجاني حالياً. إذا أُطلقت باقات مدفوعة، ستُعرض الأسعار والضرائب وشروط الإلغاء قبل الدفع.", "المسؤولية: بالقدر الذي يسمح به القانون الإماراتي، لا تتحمل THUGFIT مسؤولية الإصابات الناتجة عن التدريب. اقرأ إخلاء المسؤولية الصحي قبل البدء.", "التغييرات: قد نحدّث هذه الشروط. ستظهر الشروط الجديدة في التطبيق، وستُشرح التغييرات المهمة قبل سريانها.", "النزاعات: تخضع هذه الشروط لقانون دولة الإمارات، وتختص بالنزاعات المحاكم المختصة في إمارة رأس الخيمة، حيث تم تسجيل ZenLine FZ-LLC."]}}, "privacy": {"title": {"en": "Privacy Policy", "ar": "سياسة الخصوصية"}, "body": {"en": ["Who we are: ZenLine FZ-LLC (RAKEZ, UAE), which operates Repzo for THUGFIT. Contact: hello@thugfit.ae.", "What we collect: name, email, phone number, country and emirate, and a password stored only as a secure hash. Your training profile (goals, experience, equipment, schedule), body measurements, weight, workout logs, and any health information you choose to enter.", "Why we use it: to create your account, build your program, track your progress, send verification and password-reset emails, and provide the service.", "Health information: we treat health details as sensitive. We use them only to adjust your program. Do not enter medical details you do not want to share.", "Who can see it: you, and THUGFIT staff who need it to run the service. Access is limited and recorded. Hosting, database and email providers process data for us under contract.", "Marketing: your email address and phone number are used to send THUGFIT offers and updates. This is accepted automatically when you create your account. You can stop these messages at any time from the Account screen.", "Security: passwords are hashed, data is sent over encrypted connections, and access is restricted.", "Keeping data: we keep your data while your account is active. When you delete your account, we delete your personal data within 30 days, except records the law requires us to keep.", "Your rights: you can ask to see, correct, or download your data, withdraw consent, or delete your account. Email hello@thugfit.ae.", "Children: the app is not for anyone under 18.", "Law: this policy follows the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021). We will tell you in the app when it changes.", "Who processes your data: our database and sign-in service (Supabase), email service (Resend), website hosting (Vercel) and company email (Zoho Mail) handle data on our behalf under written agreements. Data may be stored in data centres outside the UAE, and we only use providers that apply appropriate safeguards.", "Health information: health details are used only to build and adjust your training program, and are shown only to the people who run the service.", "Automated decisions: your training plan is produced automatically from your answers. You can ask a coach to review it by writing to hello@thugfit.ae.", "Breaches: if your personal data is exposed in a way that could harm your rights, we will tell you and the UAE Data Office without undue delay, as the law requires.", "Complaints: if you are not satisfied with how we handle your data, you can complain to the UAE Data Office.", "Deletion: deleting your account removes your login, profile, consents, weights, workouts, feedback and attachments from our systems within 30 days. Records the law requires us to keep are kept only for the period the law requires."], "ar": ["من نحن: ZenLine FZ-LLC (RAKEZ، الإمارات)، التي تدير ريبزو لصالح THUGFIT. للتواصل: hello@thugfit.ae.", "ما نجمعه: الاسم، والبريد الإلكتروني، ورقم الهاتف، والدولة والإمارة، وكلمة المرور مخزنة فقط بشكل مشفّر. ملفك التدريبي (الأهداف، والخبرة، والمعدات، والجدول)، والقياسات، والوزن، وسجلات التمرين، وأي معلومات صحية تختار إدخالها.", "سبب الاستخدام: لإنشاء حسابك، وإعداد برنامجك، ومتابعة تقدمك، وإرسال رسائل التحقق وإعادة تعيين كلمة المرور، وتقديم الخدمة.", "المعلومات الصحية: نعامل التفاصيل الصحية كمعلومات حساسة، ونستخدمها فقط لتعديل برنامجك. لا تُدخل تفاصيل طبية لا تريد مشاركتها.", "من يمكنه الاطلاع: أنت، وموظفو THUGFIT الذين يحتاجونها لتشغيل الخدمة. الوصول محدود ومسجل. مزودو الاستضافة وقاعدة البيانات والبريد الإلكتروني يعالجون البيانات لصالحنا بموجب عقود.", "التسويق: يُستخدم بريدك الإلكتروني ورقم هاتفك لإرسال عروض THUGFIT وتحديثاتها. يتم قبول ذلك تلقائياً عند إنشاء حسابك، ويمكنك إيقاف هذه الرسائل في أي وقت من شاشة الحساب.", "الأمان: كلمات المرور مشفّرة، والبيانات تُنقل عبر اتصالات مشفّرة، والوصول مقيّد.", "الاحتفاظ بالبيانات: نحتفظ ببياناتك طالما حسابك نشط. عند حذف حسابك نحذف بياناتك الشخصية خلال 30 يوماً، باستثناء السجلات التي يتطلب القانون الاحتفاظ بها.", "حقوقك: يمكنك طلب الاطلاع على بياناتك أو تصحيحها أو تنزيلها، وسحب موافقتك، أو حذف حسابك. راسل hello@thugfit.ae.", "الأطفال: التطبيق ليس لمن هم دون 18 عاماً.", "القانون: تتبع هذه السياسة قانون حماية البيانات الشخصية الإماراتي (المرسوم بقانون اتحادي رقم 45 لسنة 2021). سنخبرك في التطبيق عند تغييرها.", "من يعالج بياناتك: خدمة قاعدة البيانات وتسجيل الدخول (Supabase)، وخدمة البريد الإلكتروني (Resend)، واستضافة الموقع (Vercel)، وبريد الشركة (Zoho Mail) تعالج البيانات نيابةً عنا بموجب اتفاقيات مكتوبة. قد تُحفظ البيانات في مراكز بيانات خارج الإمارات، ولا نستخدم إلا مزودين يطبّقون ضمانات مناسبة.", "المعلومات الصحية: تُستخدم التفاصيل الصحية فقط لإعداد برنامج تدريبك وتعديله، ولا تُعرض إلا على من يُشرف على الخدمة.", "القرارات الآلية: يُنشأ برنامج تدريبك تلقائياً من إجاباتك. يمكنك طلب مراجعة مدرب لبرنامجك بالكتابة إلى hello@thugfit.ae.", "الخروقات: إذا تعرّضت بياناتك الشخصية للكشف بطريقة قد تضر بحقوقك، سنخبرك ومكتب حماية البيانات في الإمارات دون تأخير لا مبرر له، كما يقتضي القانون.", "الشكاوى: إذا لم تكن راضياً عن طريقة معالجة بياناتك، يمكنك تقديم شكوى إلى مكتب حماية البيانات في الإمارات.", "الحذف: عند حذف حسابك تُزال بيانات تسجيل الدخول والملف الشخصي والموافقات والأوزان والتمارين والملاحظات والمرفقات من أنظمتنا خلال 30 يوماً. السجلات التي يطلب القانون الاحتفاظ بها تُحفظ للمدة التي يحددها القانون فقط."]}}, "health": {"title": {"en": "Health Disclaimer", "ar": "إخلاء المسؤولية الصحية"}, "body": {"en": ["This app gives general fitness guidance only. It is not medical advice, diagnosis or treatment.", "See a doctor before you start, especially if you have a heart, blood pressure, joint, back, or breathing condition, diabetes, pregnancy, a recent injury, or a recent surgery.", "Stop immediately and seek medical help if you feel chest pain, dizziness, shortness of breath, faintness, or sharp pain.", "Use good form. Reduce the weight or skip the exercise if your form breaks down or the exercise causes pain.", "Results differ from person to person. We do not guarantee any result.", "This app is not for emergencies."], "ar": ["يقدم هذا التطبيق إرشادات لياقة عامة فقط. وليس نصيحة طبية أو تشخيصاً أو علاجاً.", "استشر طبيباً قبل البدء، خاصة إذا كان لديك مرض في القلب أو ضغط الدم أو المفاصل أو الظهر أو التنفس، أو السكري، أو الحمل، أو إصابة حديثة، أو عملية جراحية حديثة.", "توقف فوراً واطلب المساعدة الطبية إذا شعرت بألم في الصدر، أو دوخة، أو ضيق تنفس، أو إغماء، أو ألم حاد.", "حافظ على الوضعية الصحيحة. خفّف الوزن أو تخطَّ التمرين إذا اختلت وضعيتك أو سبب لك ألماً.", "تختلف النتائج من شخص لآخر، ولا نضمن أي نتيجة.", "هذا التطبيق ليس للحالات الطارئة."]}}};
 function openLegal(from,tab){UI.legalFrom=from;UI.legalTab=tab||'terms';go('legal');}
 SCREENS.legal=()=>{
   const tab=UI.legalTab||'terms', d=LEGAL[tab];
@@ -819,7 +833,7 @@ SCREENS.onboard=()=>{
     <button class="btn" onclick="obContinue(8)">${tx('Continue','متابعة')}</button>`;
   }
   else {
-    const plan=buildPlan(p);
+    const plan=activePlan(p);
     body=`<h1>${tx('Your program is ready','برنامجك جاهز')}</h1>
     <div class="card hot"><h3>${tx('Summary','الملخص')}</h3><div class="kv">
       <div><span>${tx('Training','التدريب')}</span><b>${p.mode==='gym'?tx('Gym','صالة'):tx('Home','منزل')}</b></div>
@@ -845,7 +859,7 @@ function p0(){const u=me();u.profile.screen='ok';u.profile.setupDone=false;UI.ob
 
 /* ---- Dashboard ---- */
 SCREENS.home=()=>{
-  const u=me(),p=u.profile,plan=buildPlan(p),total=plan.days*plan.weeks,n=u.sessions.filter(x=>!x.custom).length;
+  const u=me(),p=u.profile,plan=activePlan(p),total=plan.days*plan.weeks,n=u.sessions.filter(x=>!x.custom).length;
   const finished=n>=total;
   const tpl=plan.templates[n%plan.days],week=Math.floor(n/plan.days)+1;
   const weekDone=u.sessions.filter(s=>daysAgo(s.date)<7&&s.status!=='none').length;
@@ -873,10 +887,10 @@ SCREENS.home=()=>{
     <div class="stat"><span>${tx('Sessions','الجلسات')}</span><b>${n}</b></div>
     <div class="stat"><span>${tx('Weight','الوزن')}</span><b>${latest?latest.kg:'—'}</b></div>
   </div>
-  ${change!=null?`<p style="margin-top:4px">${tx('Since start','منذ البداية')}: <b style="color:${change<=0?'var(--green)':'var(--red2)'}">${change>0?'+':''}${change.toFixed(1)} kg</b></p>`:''}
+  ${change!=null?`<p style="margin-top:4px">${tx('Since start','منذ البداية')}: <b style="color:${change<=0?'var(--green)':'var(--red2)'}">${change>0?'+':''}${toUnit(change).toFixed(1)} ${unitLabel()}</b></p>`:''}
   ${photoCard}
   <h2>${tx('Log today’s weight','سجّل وزن اليوم')}</h2>
-  <div class="row"><input type="text" inputmode="decimal" data-k="w_new" placeholder="${tx('kg','كغ')}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
+  <div class="row"><input type="text" inputmode="decimal" data-k="w_new" placeholder="${unitLabel()}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
   ${navHTML()}`;
 };
 
@@ -1232,12 +1246,51 @@ SCREENS.workout=()=>{
 };
 
 /* ---- Program ---- */
+function setPlanMode(m){ const u=me(); if(!u) return; u.profile.planMode=m; saveDB(); render(); }
+function custPlan(){ const u=me(); if(!u.profile.customPlan) u.profile.customPlan={templates:[]}; return u.profile.customPlan; }
+function custAddDay(){ const c=custPlan(); c.templates.push({name:tx('Day','يوم')+' '+(c.templates.length+1),items:[]}); saveDB(); render(); }
+function custDelDay(i){ if(!confirm(tx('Delete this day and its exercises?','حذف هذا اليوم وتمارينه؟'))) return; custPlan().templates.splice(i,1); saveDB(); render(); }
+function custRenameDay(i,v){ custPlan().templates[i].name=(v||'').trim()||(tx('Day','يوم')+' '+(i+1)); saveDB(); }
+function custAddItem(i){ const c=custPlan(); c.templates[i].items.push({ex:EX_LIB[0].id,sets:3,reps:'8-12',rest:75,note:''}); saveDB(); render(); }
+function custDelItem(i,j){ custPlan().templates[i].items.splice(j,1); saveDB(); render(); }
+function custMoveItem(i,j,d){ const it=custPlan().templates[i].items; const k=j+d; if(k<0||k>=it.length) return; [it[j],it[k]]=[it[k],it[j]]; saveDB(); render(); }
+function custSetItem(i,j,f,v){ const it=custPlan().templates[i].items[j]; if(f==='sets'||f==='rest') it[f]=Math.max(1,parseInt(v,10)||1); else it[f]=String(v||'').trim(); saveDB(); }
+SCREENS.custom=()=>{
+  const u=me(), p=u.profile, c=custPlan(), mode=p.planMode==='custom'?'custom':'program';
+  const exOpts=selected=>EX_LIB.map(e=>`<option value="${e.id}" ${e.id===selected?'selected':''}>${L(e.n)}</option>`).join('');
+  const days=c.templates.map((t,i)=>`<div class="card">
+      <div class="row" style="align-items:center;gap:8px"><input style="flex:1" value="${esc(t.name)}" onchange="custRenameDay(${i},this.value)"><button class="btn sm danger" style="padding:4px 8px;font-size:11px" onclick="custDelDay(${i})">✕</button></div>
+      ${t.items.map((it,j)=>`<div class="card" style="margin:8px 0;padding:10px">
+          <select onchange="custSetItem(${i},${j},'ex',this.value)" style="width:100%">${exOpts(it.ex)}</select>
+          <div class="row" style="gap:6px;margin-top:6px">
+            <label style="flex:1;font-size:12px">${tx('Sets','المجموعات')}<input type="number" min="1" value="${it.sets}" onchange="custSetItem(${i},${j},'sets',this.value)"></label>
+            <label style="flex:1;font-size:12px">${tx('Reps','التكرارات')}<input value="${esc(it.reps)}" onchange="custSetItem(${i},${j},'reps',this.value)"></label>
+            <label style="flex:1;font-size:12px">${tx('Rest (s)','الراحة (ث)')}<input type="number" min="0" value="${it.rest}" onchange="custSetItem(${i},${j},'rest',this.value)"></label>
+          </div>
+          <div class="row" style="gap:6px;margin-top:6px"><button class="btn sm dark" onclick="custMoveItem(${i},${j},-1)">↑</button><button class="btn sm dark" onclick="custMoveItem(${i},${j},1)">↓</button><button class="btn sm danger" onclick="custDelItem(${i},${j})">${tx('Remove','إزالة')}</button></div>
+        </div>`).join('')}
+      <button class="btn sm dark" onclick="custAddItem(${i})">+ ${tx('Add exercise','إضافة تمرين')}</button>
+    </div>`).join('');
+  return `${topHTML()}
+  <h1>${tx('My workout plan','خطتي التدريبية')}</h1>
+  <p class="muted" style="font-size:13px">${tx('Choose which plan the app uses. You can build your own days and exercises, and change them at any time.','اختر الخطة التي يستخدمها التطبيق. يمكنك إنشاء أيامك وتمارينك وتغييرها في أي وقت.')}</p>
+  ${msgHTML()}
+  <div class="row" style="gap:8px">
+    <button class="btn ${mode==='program'?'':'ghost'}" onclick="setPlanMode('program')">${tx('Our program','برنامجنا')}</button>
+    <button class="btn ${mode==='custom'?'':'ghost'}" onclick="setPlanMode('custom')">${tx('My own plan','خطتي الخاصة')}</button>
+  </div>
+  <h2>${tx('Build my plan','إنشاء خطتي')}</h2>
+  ${days||`<p class="muted">${tx('No days yet. Add your first training day.','لا توجد أيام بعد. أضف أول يوم تدريب.')}</p>`}
+  <button class="btn" onclick="custAddDay()">+ ${tx('Add a training day','إضافة يوم تدريب')}</button>
+  ${navHTML()}`;
+};
 SCREENS.program=()=>{
-  const u=me(),p=u.profile,plan=buildPlan(p),sex=p.sex||'male';
+  const u=me(),p=u.profile,plan=activePlan(p),sex=p.sex||'male';
   return `${topHTML()}
   <h1>${tx('Your program','برنامجك')}</h1>
   <p>${plan.days} ${tx('training days','أيام تدريب')} · ${plan.weeks} ${tx('weeks','أسبوع')} · ${p.mode==='gym'?tx('Gym','صالة'):tx('Home','منزل')}${p.mode==='gym'?' · '+esc(p.bodyType):''}${p.mode==='home'?' · '+(p.equip==='light'?tx('light equipment','معدات خفيفة'):tx('bodyweight','وزن الجسم')):''}</p>
   <div class="card" style="font-size:13px"><span class="pill red">${tx('Weights are estimates until you log your first session.','الأوزان تقديرية حتى تسجل جلستك الأولى.')}</span></div>
+  <div class="card"><b>${tx('Which plan do you follow?','أي خطة تتبع؟')}</b><div class="row" style="gap:8px;margin-top:8px"><button class="btn sm ${(p.planMode!=='custom')?'':'ghost'}" onclick="setPlanMode('program')">${tx('Our program','برنامجنا')}</button><button class="btn sm ${(p.planMode==='custom')?'':'ghost'}" onclick="setPlanMode('custom')">${tx('My own plan','خطتي الخاصة')}</button></div><button class="btn sm dark" style="margin-top:8px" onclick="go('custom')">${tx('Build or edit my plan','إنشاء خطتي أو تعديلها')}</button></div>
   ${plan.templates.map(t=>`<div class="card"><h3>${esc(t.name)}</h3>${t.items.map(it=>{const ex=EXID[it.ex];return `<div class="ex">${exThumb(ex,sex)}<div class="main" onclick="UI.sheet={type:'ex',id:'${ex.id}'};render()" style="cursor:pointer"><div class="title">${L(ex.n)}</div><div class="plan">${it.sets} × ${it.reps} · ${tx('rest','راحة')} ${it.rest}</div></div></div>`;}).join('')}</div>`).join('')}
   <h2>${tx('Change my goal or schedule','تغيير الهدف أو الجدول')}</h2>
   <div class="card">
@@ -1284,7 +1337,7 @@ SCREENS.progress=()=>{
   const u=me(),p=u.profile,f=UI.f;
   const sortedW=u.weights.slice().sort((a,b)=>a.date.localeCompare(b.date));
   const hasConsent=!!u.consent.photos;
-  const plan=p.setupDone?buildPlan(p):null;
+  const plan=p.setupDone?activePlan(p):null;
   const planned=plan?plan.days:0,total=plan?plan.days*plan.weeks:0,n=u.sessions.length;
   const totalMin=u.sessions.reduce((s,x)=>s+(x.minutes||0),0);
   const thisWeek=u.sessions.filter(s=>daysAgo(s.date)<7&&s.status!=='none').length;
@@ -1312,6 +1365,7 @@ SCREENS.progress=()=>{
     <div class="stat"><span>${tx('This week','هذا الأسبوع')}</span><b>${thisWeek}${planned?'/'+planned:''}</b></div>
   </div>
   ${weightListHTML(u)}
+  ${historyHTML(u)}
   ${calendarHTML(u)}
   <div class="card">
     <div class="row" style="align-items:center"><div style="flex:1"><h3>${tx('Program','البرنامج')}</h3><p style="margin:0">${n}/${total||'—'} ${tx('sessions completed','جلسة مكتملة')}</p></div><b style="font-size:24px;color:var(--red2)">${pct}%</b></div>
@@ -1322,8 +1376,8 @@ SCREENS.progress=()=>{
     <select data-k="strEx" onchange="setStrEx()">${exIds.map(id=>`<option value="${id}" ${id===sel?'selected':''}>${esc(L(EXID[id].n))}</option>`).join('')}</select>
     <p class="muted" style="font-size:12px;margin:6px 0 0">${tx('Heaviest weight used in each session (kg)','أثقل وزن مستخدم في كل جلسة (كغ)')}</p>${lineChart(strPts)}`
     :`<p class="muted">${tx('Your lifts will appear here after your first logged session.','ستظهر تمارينك هنا بعد أول جلسة مسجلة.')}</p>`}</div>
-  <div class="card"><h3>${tx('Weight trend','اتجاه الوزن')}</h3>${lineChart(sortedW)}
-    <div class="row" style="margin-top:12px"><input type="text" inputmode="decimal" data-k="w_new" placeholder="${tx('Today’s weight (kg)','وزن اليوم (كغ)')}" value="${f.w_new||''}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
+  <div class="card"><h3>${tx('Weight trend','اتجاه الوزن')}</h3>${lineChart(sortedW.map(w=>({...w,kg:toUnit(w.kg)})))}
+    <div class="row" style="margin-top:12px"><input type="text" inputmode="decimal" data-k="w_new" placeholder="${tx('Today’s weight','وزن اليوم')} (${unitLabel()})" value="${f.w_new||''}"><button class="btn sm" style="margin-top:0;width:auto;padding:0 18px" onclick="addWeight()">${tx('Save','حفظ')}</button></div>
   </div>
   <h2>${tx('Recent sessions','الجلسات الأخيرة')}</h2>
   <div class="card">${recent||`<p class="muted">${tx('Your sessions will appear here.','ستظهر جلساتك هنا.')}</p>`}</div>
@@ -1362,6 +1416,7 @@ SCREENS.profile=()=>{
   <div class="card" style="font-size:13px"><b>${tx('Privacy','الخصوصية')}</b>
     <p>${tx('Your progress photos are private to you. Coaches see your weight, measurements, sessions and goal so they can support your training. Your photos are not shared unless you choose to share a specific photo.','صور تقدمك خاصة بك. يرى المدرب وزنك وقياساتك وجلساتك وهدفك ليدعم تدريبك. لا تُشارك صورك إلا إذا اخترت مشاركة صورة معينة.')}</p>
   </div>
+  <div class="card"><h3>${tx('Units','الوحدات')}</h3><div class="row" style="gap:8px"><button class="btn sm ${p.unit==='lb'?'ghost':''}" onclick="setUnit('kg')">kg</button><button class="btn sm ${p.unit==='lb'?'':'ghost'}" onclick="setUnit('lb')">lb</button></div></div>
   <div class="card" id="fbcard"><h3>${tx('Feedback and ideas','ملاحظات وأفكار')}</h3>
     ${UI.fbNote?`<div class="${UI.fbNote.ok?'pill green':'pill red'}" style="display:block;margin-bottom:8px;white-space:normal">${esc(UI.fbNote.text)}</div>`:''}
     <p class="muted" style="font-size:13px">${tx('Tell us what to improve, what is missing, or what you would like to see.','أخبرنا بما يحتاج إلى تحسين، أو ما ينقص، أو ما تود رؤيته.')}</p>
@@ -1379,10 +1434,22 @@ SCREENS.profile=()=>{
 };
 
 /* ---- Sheets (exercise info, finish) ---- */
+function historyHTML(u){
+  const rows=u.sessions.map((x,idx)=>({x,idx})).slice().reverse().slice(0,20);
+  if(!rows.length) return '';
+  return `<div class="card"><h3>${tx('Workout history','سجل التمارين')}</h3>${rows.map(({x,idx})=>`<div class="sessionrow"><span>${fdate(x.date)} · ${esc(x.day||'')}${x.minutes?' · '+x.minutes+' min':''}</span><span><span class="pill ${x.status==='all'?'green':''}">${x.status==='all'?tx('all done','كل التمارين'):x.status==='partly'?tx('partly','جزئياً'):tx('not trained','لم يتم التدريب')}</span> <button class="btn sm danger" style="padding:4px 8px;font-size:11px" onclick="deleteWorkout(${idx})">✕</button></span></div>`).join('')}</div>`;
+}
+async function deleteWorkout(idx){
+  const u=me(); if(!u||!u.sessions[idx]) return;
+  if(!confirm(tx('Delete this workout from your history?','حذف هذا التمرين من سجلك؟'))) return;
+  const x=u.sessions.splice(idx,1)[0]; saveDB();
+  if(sb&&x&&x.id) await sb.from('workout_sessions').delete().eq('member_id',u.id).eq('local_id',String(x.id));
+  render();
+}
 function weightListHTML(u){
   const rows=u.weights.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,12);
   if(!rows.length) return '';
-  return `<div class="card"><h3>${tx('Weight entries','إدخالات الوزن')}</h3>${rows.map(w=>`<div class="sessionrow"><span>${fdate(w.date)} · ${w.kg} kg</span><button class="btn sm danger" style="padding:4px 8px;font-size:11px" onclick="deleteWeight('${w.date}')">✕</button></div>`).join('')}</div>`;
+  return `<div class="card"><h3>${tx('Weight entries','إدخالات الوزن')}</h3>${rows.map(w=>`<div class="sessionrow"><span>${fdate(w.date)} · ${fmtW(w.kg)}</span><button class="btn sm danger" style="padding:4px 8px;font-size:11px" onclick="deleteWeight('${w.date}')">✕</button></div>`).join('')}</div>`;
 }
 async function deleteWeight(date){
   const u=me(); if(!u) return;
@@ -1508,7 +1575,7 @@ function sheetHTML(){
    ROUTING + RENDER
    ===================================================================== */
 const PUBLIC=['welcome','signup','verify','login'];
-const APP=['home','program','progress','profile','workout','onboard','stop','parts','finish'];
+const APP=['home','program','progress','profile','workout','onboard','stop','parts','finish','custom'];
 function route(){
   if(UI.screen==='legal') return;
   const u=me();
@@ -1628,6 +1695,7 @@ async function loadTrainingProfile(u){
   Object.assign(u.profile,data.profile_json); saveDB(); return true;
 }
 async function afterSignIn(au){
+  if(await blockIfSuspended(au.id)) return;
   const u=ensureLocal(au); await loadTrainingProfile(u); await loadUserData(u); DB.sess=u.id; saveDB(); UI.f={}; UI.pendingEmail=null; recordLogin(u.id); syncMemberProfile(u);
   go(u.profile.setupDone?'home':'onboard');
 }
@@ -1665,6 +1733,17 @@ async function resendCode(){
   if(error) return fail(authErr(error));
   UI.ok=tx('A new code was sent to your email.','تم إرسال رمز جديد إلى بريدك الإلكتروني.'); render();
 }
+const SUSPENDED_MSG_EN="Your account is suspended. Contact hello@thugfit.ae.";
+const SUSPENDED_MSG_AR="تم إيقاف حسابك. تواصل مع hello@thugfit.ae.";
+async function blockIfSuspended(id){
+  if(!sb||!id) return false;
+  const {data}=await sb.from('members').select('status').eq('id',id).maybeSingle();
+  if(data&&data.status==='suspended'){
+    await sb.auth.signOut(); DB.sess=null; saveDB(); UI.f={}; UI.screen='login';
+    UI.err=tx(SUSPENDED_MSG_EN,SUSPENDED_MSG_AR); render(); return true;
+  }
+  return false;
+}
 async function doLogin(){
   save(); const f=UI.f; const email=(f.email||'').trim().toLowerCase();
   if(!sb) return fail(tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
@@ -1674,6 +1753,7 @@ async function doLogin(){
       UI.pendingEmail=email; UI.f={email}; await sb.auth.resend({type:'signup',email});
       UI.ok=tx('Verify your email first. A code was sent.','يجب تأكيد بريدك أولاً. تم إرسال رمز.'); return go('verify',true);
     }
+    if(/banned|suspend/i.test(error.message||'')) return fail(tx(SUSPENDED_MSG_EN,SUSPENDED_MSG_AR));
     return fail(tx('Wrong email or password.','البريد الإلكتروني أو كلمة المرور غير صحيحة.'));
   }
   afterSignIn(data.user);
@@ -1691,6 +1771,7 @@ async function restoreSession(){
   if(!sb) return;
   const {data}=await sb.auth.getSession();
   if(data&&data.session&&data.session.user){
+    if(await blockIfSuspended(data.session.user.id)) return;
     const u=ensureLocal(data.session.user); await loadTrainingProfile(u); await loadUserData(u); DB.sess=u.id; saveDB(); recordLogin(u.id);
     if(UI.screen==='welcome'||UI.screen==='login'||UI.screen==='signup') UI.screen=u.profile.setupDone?'home':'onboard';
     render();

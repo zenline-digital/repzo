@@ -57,7 +57,7 @@ dd{margin:0}
   <div id="denied" class="panel" style="display:none"><b>Not authorised.</b><div class="muted">This account is not on the admin list.</div></div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const SUPABASE_URL="https://rabzuknmzpsvsyxvghis.supabase.co";
@@ -137,6 +137,19 @@ function show(k){
   if(k==='audit') v.innerHTML=audit();
 }
 
+function signupChart(){
+  const days=30, now=new Date(); const counts=[];
+  for(let k=days-1;k>=0;k--){
+    const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()-k);
+    const key=d.toISOString().slice(0,10);
+    counts.push({key,n:DATA.members.filter(m=>String(m.created_at||'').slice(0,10)===key).length});
+  }
+  const max=Math.max(1,...counts.map(c=>c.n)); const w=100/days;
+  const bars=counts.map((c,i)=>{ const h=Math.round((c.n/max)*120); return `<g><rect x="${i*w+0.6}%" y="${130-h}" width="${w-1.2}%" height="${h}" fill="${c.n?'#e5322d':'#2a2a30'}"><title>${c.key}: ${c.n}</title></rect></g>`; }).join('');
+  return `<div class="panel"><h3 style="margin:0 0 8px">Sign-ups, last 30 days</h3>
+    <svg viewBox="0 0 1000 140" preserveAspectRatio="none" style="width:100%;height:160px">${bars.replace(/(\d+(\.\d+)?)%/g,(m,v)=>(Number(v)*10)+'')}</svg>
+    <div class="muted" style="font-size:12px">${counts.reduce((t,c)=>t+c.n,0)} sign-ups in this period. Hover a bar to see the day.</div></div>`;
+}
 function dash(){
   const now=Date.now();
   const active7=new Set(DATA.logins.filter(l=>now-new Date(l.logged_at)<7*DAY).map(l=>l.member_id)).size;
@@ -155,6 +168,7 @@ function dash(){
     ['Workouts logged',workouts]
   ];
   return `<div class="cards">${cards.map(([l,n])=>`<div class="card"><div class="n">${esc(n)}</div><div class="l">${esc(l)}</div></div>`).join('')}</div>
+  ${signupChart()}
   <div class="muted">Times are shown in UAE time. Counts update when you reload this page.</div>`;
 }
 
