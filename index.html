@@ -131,12 +131,16 @@ let DB=null;
 try{DB=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){DB=null;}
 if(!DB||!Array.isArray(DB.users)) DB={users:[],sess:null};
 function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){alert(tx('Storage is full. Delete some progress photos.','التخزين ممتلئ. احذف بعض صور التقدم.'));} queueSync();}
+function newRecId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,9); }
 let _syncTimer=null;
 function queueSync(){ clearTimeout(_syncTimer); _syncTimer=setTimeout(()=>{ const u=DB.sess?DB.users.find(x=>x.id===DB.sess):null; if(u) syncUserData(u); },1200); }
 async function syncUserData(u){
   if(!sb||!u) return;
   const {data:{session}}=await sb.auth.getSession();
   if(!session||session.user.id!==u.id) return;
+  let fixed=false;
+  (u.sessions||[]).forEach(x=>{ if(!x.id){ x.id=newRecId(); fixed=true; } });
+  if(fixed){ try{ localStorage.setItem(KEY,JSON.stringify(DB)); }catch(e){} }
   try{
     await saveTrainingProfile(u);
     if(u.weights.length){
@@ -535,7 +539,7 @@ function finishWorkout(){
   const allDone=a.items.every(i=>i.status==='done'||i.status==='adjusted');
   let res=UI.f.res||(allDone?'all':'partly');
   if(!loggedAny&&res!=='none') res='none';
-  const rec={idx:a.idx,week:a.week,day:a.day,custom:!!a.custom,date:todayStr(),minutes:Math.max(1,Math.round((Date.now()-a.startedAt)/60000)),status:res,notes:(UI.f.notes||'').trim(),
+  const rec={id:newRecId(),idx:a.idx,week:a.week,day:a.day,custom:!!a.custom,date:todayStr(),minutes:Math.max(1,Math.round((Date.now()-a.startedAt)/60000)),status:res,notes:(UI.f.notes||'').trim(),
     items:a.items.map(i=>({ex:i.ex,status:i.status,pain:!!i.pain,sets:i.logged||[]}))};
   u.sessions.push(rec);u.active=null;UI.f={};UI.pi=null;UI.rest=null;UI.hold=null;saveDB();
   UI.ok=tx('Workout saved. Well done.','تم حفظ التمرين. أحسنت.');
