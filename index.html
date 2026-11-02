@@ -419,7 +419,7 @@ async function legacy_doSignup(){
   save();const f=UI.f;
   if(!f.name||!f.name.trim()) return fail(tx('Enter your full name.','أدخل اسمك الكامل.'));
   if(!/^\S+@\S+\.\S+$/.test(f.email||'')) return fail(tx('Enter a valid email address.','أدخل بريداً إلكترونياً صحيحاً.'));
-  const phoneOk=/^\+\d{8,15}$/.test((f.phone||'').replace(/[\s-]/g,''));
+  const phoneOk=/^\+\d{8,15}$/.test(fullPhone(f));
   if(!phoneOk) return fail(tx('Enter your mobile number with the country code, for example +971 50 123 4567.','أدخل رقم جوالك مع رمز الدولة، مثال +971 50 123 4567.'));
   if(!f.country) return fail(tx('Choose your country.','اختر الدولة.'));
   if(f.country==='OTHER'&&!(f.countryOther||'').trim()) return fail(tx('Type your country name.','اكتب اسم دولتك.'));
@@ -681,11 +681,12 @@ SCREENS.signup=()=>{
   ${msgHTML()}
   <label>${tx('Full name','الاسم الكامل')}</label><input data-k="name" value="${esc(f.name||'')}">
   <label>${tx('Email','البريد الإلكتروني')}</label><input type="email" data-k="email" value="${esc(f.email||'')}">
-  <label>${tx('Phone number','رقم الهاتف')}</label><input type="tel" data-k="phone" value="${esc(f.phone||'')}" placeholder="+971 50 123 4567">
-  <label>${tx('Country','الدولة')}</label> <select data-k="country" onchange="save();UI.f.region='';render()"> <option value="">${tx('Choose a country','اختر الدولة')}</option> ${COUNTRIES.map(([k,v])=>`<option value="${k}" ${f.country===k?'selected':''}>${L(v)}</option>`).join('')} </select>
+  
+  <label>${tx('Country','الدولة')}</label> <select data-k="country" onchange="save();UI.f.region='';UI.f.phoneCode=DIAL[this.value]||'';render()"> <option value="">${tx('Choose a country','اختر الدولة')}</option> ${COUNTRIES.map(([k,v])=>`<option value="${k}" ${f.country===k?'selected':''}>${L(v)}</option>`).join('')} </select>
   ${f.country==='OTHER'?`<label>${tx('Country name','اسم الدولة')}</label><input data-k="countryOther" value="${esc(f.countryOther||'')}">`:''}
   ${needsRegion(f.country)?`<label>${L(REGION_LABEL[f.country])}</label> <select data-k="region"><option value="">${tx('Choose','اختر')}</option> ${regionsFor(f.country).map(r=>`<option value="${esc(r.en)}" ${f.region===r.en?'selected':''}>${L(r)}</option>`).join('')} </select>`:''}
   <label>${tx('Date of birth','تاريخ الميلاد')}</label><input type="date" data-k="dob" value="${esc(f.dob||'')}">
+  ${phoneBlock(f)}
   <label>${tx('Password (at least 8 characters)','كلمة المرور (8 أحرف على الأقل)')}</label><input type="password" data-k="pw" autocomplete="new-password">
   <label>${tx('Confirm password','تأكيد كلمة المرور')}</label><input type="password" data-k="pw2" autocomplete="new-password">
   <label class="chk"><input type="checkbox" data-k="c1" ${f.c1?'checked':''}><span>${tx('I accept the Terms of Use.','أوافق على شروط الاستخدام.')}</span></label>
@@ -705,11 +706,12 @@ SCREENS.finish=()=>{
   <p>${tx('We need these details once, to set up your account and program.','نحتاج هذه التفاصيل مرة واحدة لإعداد حسابك وبرنامجك.')}</p>
   ${msgHTML()}
   <label>${tx('Full name','الاسم الكامل')}</label><input data-k="name" value="${esc(f.name||'')}">
-  <label>${tx('Mobile number (with country code)','رقم الجوال (مع رمز الدولة)')}</label><input type="tel" data-k="phone" value="${esc(f.phone||'')}" placeholder="+971 50 123 4567">
-  <label>${tx('Country','الدولة')}</label> <select data-k="country" onchange="save();UI.f.region='';render()"> <option value="">${tx('Choose a country','اختر الدولة')}</option> ${COUNTRIES.map(([k,v])=>`<option value="${k}" ${f.country===k?'selected':''}>${L(v)}</option>`).join('')} </select>
+  
+  <label>${tx('Country','الدولة')}</label> <select data-k="country" onchange="save();UI.f.region='';UI.f.phoneCode=DIAL[this.value]||'';render()"> <option value="">${tx('Choose a country','اختر الدولة')}</option> ${COUNTRIES.map(([k,v])=>`<option value="${k}" ${f.country===k?'selected':''}>${L(v)}</option>`).join('')} </select>
   ${f.country==='OTHER'?`<label>${tx('Country name','اسم الدولة')}</label><input data-k="countryOther" value="${esc(f.countryOther||'')}">`:''}
   ${needsRegion(f.country)?`<label>${L(REGION_LABEL[f.country])}</label> <select data-k="region"><option value="">${tx('Choose','اختر')}</option> ${regionsFor(f.country).map(r=>`<option value="${esc(r.en)}" ${f.region===r.en?'selected':''}>${L(r)}</option>`).join('')} </select>`:''}
   <label>${tx('Date of birth','تاريخ الميلاد')}</label><input type="date" data-k="dob" value="${esc(f.dob||'')}">
+  ${phoneBlock(f)}
   <label class="chk"><input type="checkbox" data-k="c1" ${f.c1?'checked':''}><span>${tx('I accept the Terms of Use.','أوافق على شروط الاستخدام.')}</span></label>
   <label class="chk"><input type="checkbox" data-k="c2" ${f.c2?'checked':''}><span>${tx('I have read the Privacy Policy. My data is used to build my program.','قرأت سياسة الخصوصية. تُستخدم بياناتي لإعداد برنامجي.')}</span></label>
   <label class="chk"><input type="checkbox" data-k="c3" ${f.c3?'checked':''}><span>${tx('I understand this app gives general fitness guidance, not medical advice.','أفهم أن هذا التطبيق يقدم إرشادات لياقة عامة وليس نصيحة طبية.')}</span></label>
@@ -719,7 +721,7 @@ SCREENS.finish=()=>{
 async function doFinish(){
   save(); const f=UI.f, u=me(); if(!u) return;
   if(!(f.name||'').trim()) return fail(tx('Enter your full name.','أدخل اسمك الكامل.'));
-  const phone=(f.phone||'').replace(/[\s-]/g,'');
+  const phone=fullPhone(f);
   if(!/^\+\d{8,15}$/.test(phone)) return fail(tx('Enter your mobile number with the country code, for example +971 50 123 4567.','أدخل رقم جوالك مع رمز الدولة، مثال +971 50 123 4567.'));
   if(!f.country) return fail(tx('Choose your country.','اختر الدولة.'));
   if(f.country==='OTHER'&&!(f.countryOther||'').trim()) return fail(tx('Type your country name.','اكتب اسم دولتك.'));
@@ -886,6 +888,7 @@ SCREENS.home=()=>{
   const photoCard=due
     ?`<div class="card"><div class="row" style="align-items:center"><div><h3>${due==='start'?tx('Add your starting photo','أضف صورة البداية'):tx('Monthly photo is due','حان موعد الصورة الشهرية')}</h3><p style="margin:0">${tx('Only you can see it.','يراها أنت فقط.')}</p></div><button class="btn sm" onclick="go('progress')">${tx('Open','فتح')}</button></div></div>`:'';
   return `${topHTML()}
+  ${UI.sub&&UI.sub.active?'<div class="pill green" style="margin-bottom:8px">'+tx('Active Member','عضو نشط')+'</div>':''}
   <h1>${tx('Hi','أهلاً')} ${esc(name)}</h1>
   ${msgHTML()}
   ${heroCard}
@@ -1362,19 +1365,20 @@ SCREENS.custom=()=>{
 SCREENS.subscribe=()=>{
   const f=UI.f;
   return `${topHTML()}
-  <h1>${tx('One last step','خطوة أخيرة')}</h1>
-  <p class="muted" style="font-size:13px">${tx('Enter your thank-you card code, or pay to open the app.','أدخل رمز بطاقة الشكر، أو ادفع لفتح التطبيق.')}</p>
+  <h1>${tx('Are you a THUGFIT customer?','هل أنت عميل THUGFIT؟')}</h1>
+  <p style="font-size:14px;line-height:1.5">${tx('Buy from THUGFIT and you will receive a code. Enter it here to get 1 year of the app free.','اشترِ من THUGFIT وستستلم رمزاً. أدخله هنا لتحصل على سنة من التطبيق مجاناً.')}</p>
+  <p><a href="https://thugfit.ae" target="_blank" rel="noopener" style="color:#ff8a80">${tx('Shop at thugfit.ae','تسوّق من thugfit.ae')} ›</a></p>
   ${msgHTML()}
-  <div class="card"><h3>${tx('Have a thank-you card?','لديك بطاقة شكر؟')}</h3>
-    <p class="muted" style="font-size:13px">${tx('Type the code on your card to get 1 year free.','اكتب الرمز الموجود على بطاقتك لتحصل على سنة مجانية.')}</p>
+  <div class="card"><h3>${tx('Enter your code','أدخل الرمز')}</h3>
     <input data-k="cardCode" placeholder="REPZO-XXXX-XXXX" value="${esc(f.cardCode||'')}" style="text-transform:uppercase">
     <button class="btn" onclick="redeemCode()">${tx('Use my code','استخدم الرمز')}</button>
   </div>
-  <div class="card"><h3>${tx('No code? Pay for 1 year','لا يوجد رمز؟ ادفع لسنة')}</h3>
+  <div class="card"><h3>${tx('Not a customer yet? Pay for 1 year','لست عميلاً بعد؟ ادفع لسنة')}</h3>
     <p style="font-size:22px;font-weight:800;margin:4px 0">AED 50 <span class="muted" style="font-size:13px;font-weight:400">${tx('for 1 year','لمدة سنة')}</span></p>
     <button class="btn ghost" onclick="payNow()">${tx('Pay AED 50 for 1 year','ادفع 50 درهم لمدة سنة')}</button>
   </div>
   <button class="link" onclick="logout()">${tx('Log out','تسجيل الخروج')}</button>`;
+
 };
 SCREENS.program=()=>{
   const u=me(),p=u.profile,plan=activePlan(p),sex=p.sex||'male';
@@ -1509,7 +1513,7 @@ SCREENS.profile=()=>{
   <div class="card" style="font-size:13px"><b>${tx('Privacy','الخصوصية')}</b>
     <p>${tx('Your progress photos are private to you. Coaches see your weight, measurements, sessions and goal so they can support your training. Your photos are not shared unless you choose to share a specific photo.','صور تقدمك خاصة بك. يرى المدرب وزنك وقياساتك وجلساتك وهدفك ليدعم تدريبك. لا تُشارك صورك إلا إذا اخترت مشاركة صورة معينة.')}</p>
   </div>
-  <div class="card"><h3>${tx('My subscription','اشتراكي')}</h3>${UI.sub&&UI.sub.active?`<p>${tx('Active until','نشط حتى')} <b>${subUntil()}</b></p>`:`<p class="muted">${tx('No active subscription.','لا يوجد اشتراك نشط.')}</p><button class="btn sm" onclick="go('subscribe')">${tx('Subscribe or use a code','اشترك أو استخدم رمزاً')}</button>`}</div>
+  <div class="card"><h3>${tx('My subscription','اشتراكي')}</h3>${UI.sub&&UI.sub.active?`<p><span class="pill green">${tx('Active Member','عضو نشط')}</span> ${tx('until','حتى')} <b>${subUntil()}</b></p>`:`<p class="muted">${tx('No active subscription.','لا يوجد اشتراك نشط.')}</p><button class="btn sm" onclick="go('subscribe')">${tx('Subscribe or use a code','اشترك أو استخدم رمزاً')}</button>`}</div>
   <div class="card"><h3>${tx('Units','الوحدات')}</h3><div class="row" style="gap:8px"><button class="btn sm ${p.unit==='lb'?'ghost':''}" onclick="setUnit('kg')">kg</button><button class="btn sm ${p.unit==='lb'?'':'ghost'}" onclick="setUnit('lb')">lb</button></div></div>
   <div class="card" id="fbcard"><h3>${tx('Feedback and ideas','ملاحظات وأفكار')}</h3>
     ${UI.fbNote?`<div class="${UI.fbNote.ok?'pill green':'pill red'}" style="display:block;margin-bottom:8px;white-space:normal">${esc(UI.fbNote.text)}</div>`:''}
@@ -1678,10 +1682,11 @@ function route(){
   if(!u.verified){ UI.screen='verify'; UI.pendingId=u.id; return; }
   if(u.profile.screen==='stop'&&UI.screen!=='stop'){ UI.screen='stop'; return; }
   if(!u.profile.profileDone){
-    if(UI.screen!=='finish'){ UI.screen='finish'; UI.f={name:u.name,email:u.email,phone:u.phone,country:u.country,region:u.region,countryOther:u.countryOther,dob:u.dob}; }
+    if(UI.screen!=='finish'){ UI.screen='finish'; UI.f={...splitPhone(u.phone),name:u.name,email:u.email,country:u.country,region:u.region,countryOther:u.countryOther,dob:u.dob}; }
     return;
   }
   if(!u.profile.setupDone){ if(UI.screen!=='onboard'&&UI.screen!=='stop') UI.screen='onboard'; return; }
+  if(UI.subLoaded&&UI.sub&&UI.sub.active&&UI.screen==='subscribe'){ UI.screen='home'; }
   if(UI.subLoaded&&!(UI.sub&&UI.sub.active)&&!['subscribe','profile','legal','finish'].includes(UI.screen)){ UI.screen='subscribe'; }
   if(PUBLIC.includes(UI.screen)||UI.screen==='onboard'||UI.screen==='stop'){ if(UI.screen!=='stop') UI.screen='home'; }
   if(!APP.includes(UI.screen)) UI.screen='home';
@@ -1700,6 +1705,10 @@ function render(){
    AUTH (Supabase Auth): sign-up, email code, login, Google, session
    ===================================================================== */
 function ageFromDob(d){ if(!d) return null; const b=new Date(d+'T00:00:00'), n=new Date(); let a=n.getFullYear()-b.getFullYear(); const m=n.getMonth()-b.getMonth(); if(m<0||(m===0&&n.getDate()<b.getDate())) a--; return a; }
+const DIAL={AE:'+971',SA:'+966',QA:'+974',KW:'+965',BH:'+973',OM:'+968',IN:'+91'};
+function fullPhone(f){ return ((f.phoneCode||'')+(f.phoneNum||'')).replace(/[\s-]/g,''); }
+function splitPhone(p){ const v=String(p||'').replace(/[\s-]/g,''); const codes=Object.values(DIAL).sort((a,b)=>b.length-a.length); const c=codes.find(x=>v.startsWith(x)); return c?{phoneCode:c,phoneNum:v.slice(c.length)}:{phoneCode:'',phoneNum:v}; }
+function phoneBlock(f){ return `<label>${tx('Mobile number','رقم الجوال')}</label><div class="row" style="gap:6px"><input data-k="phoneCode" value="${esc(f.phoneCode||'')}" placeholder="+971" style="width:34%"><input data-k="phoneNum" inputmode="tel" value="${esc(f.phoneNum||'')}" placeholder="50 123 4567" style="flex:1"></div>`; }
 function validAdultDob(d){ const a=ageFromDob(d); return a!==null && a>=18 && a<=110; }
 function authErr(e){ return (e&&e.message)||tx('Something went wrong. Try again.','حدث خطأ. حاول مرة أخرى.'); }
 function ensureLocal(au){
@@ -1794,6 +1803,7 @@ async function loadSub(id){
   render();
 }
 function subUntil(){ return UI.sub&&UI.sub.expires?new Date(UI.sub.expires).toLocaleDateString(UI.lang==='ar'?'ar-AE':'en-GB',{day:'numeric',month:'long',year:'numeric'}):''; }
+function pollSub(n){ loadSub(); if(n<30 && !(UI.sub&&UI.sub.active)) setTimeout(()=>pollSub(n+1),3000); }
 async function redeemCode(){
   save(); const code=(UI.f.cardCode||'').trim();
   if(!code) return fail(tx('Type the code from your thank-you card.','اكتب الرمز الموجود على بطاقة الشكر.'));
@@ -1833,7 +1843,7 @@ async function doSignup(){
   if(!f.c1||!f.c2||!f.c3) return fail(tx('Please accept the terms, privacy policy and health disclaimer.','يرجى قبول الشروط وسياسة الخصوصية وإخلاء المسؤولية الصحي.'));
   const email=f.email.trim().toLowerCase();
   const {data,error}=await sb.auth.signUp({email,password:f.pw,options:{data:{
-    full_name:f.name.trim(),phone:f.phone.replace(/[\s-]/g,''),country:f.country,region:needsRegion(f.country)?f.region:null,country_other:f.country==='OTHER'?f.countryOther.trim():null,dob:f.dob,marketing_accepted:true,
+    full_name:f.name.trim(),phone:fullPhone(f),country:f.country,region:needsRegion(f.country)?f.region:null,country_other:f.country==='OTHER'?f.countryOther.trim():null,dob:f.dob,marketing_accepted:true,
     consent_terms:todayStr(),consent_privacy:todayStr(),consent_health:todayStr(),consent_marketing:todayStr()}}});
   if(error) return fail(authErr(error));
   if(data.user&&Array.isArray(data.user.identities)&&data.user.identities.length===0)
@@ -1901,7 +1911,7 @@ async function restoreSession(){
 
 setInterval(updateTimers,1000);
 render();
-restoreSession(); loadPromos(); loadLibrary(); if(location.search.indexOf('paid=1')>-1){ UI.ok=tx('Thank you. Your payment is being confirmed.','شكراً. يتم تأكيد الدفع.'); history.replaceState(null,'','/'); setTimeout(loadSub,3000); }
+restoreSession(); loadPromos(); loadLibrary(); if(location.search.indexOf('paid=1')>-1){ UI.ok=tx('Thank you. Your payment is being confirmed.','شكراً. يتم تأكيد الدفع.'); history.replaceState(null,'','/'); pollSub(0); }
 </script>
 </body>
 </html>
