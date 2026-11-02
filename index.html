@@ -341,14 +341,19 @@ function jsonPlan(p){
   });
   return {templates,days:templates.length,weeks:(+p.months||1)*4,source:'json'};
 }
+function customComplete(c){
+  return !!(c&&c.data&&c.data.length&&c.data.every(wk=>wk.length&&wk.every(d=>d.items&&d.items.length)));
+}
 function activePlan(p){
   const c=p.customPlan;
-  if(p.planMode==='custom'&&c&&c.templates){
-    const tpls=c.templates.filter(t=>t.items&&t.items.length);
-    if(tpls.length) return {templates:tpls,days:tpls.length,weeks:12,source:'custom'};
+  if(p.planMode==='custom'&&customComplete(c)){
+    const templates=[];
+    c.data.forEach((wk,w)=>wk.forEach((d,k)=>templates.push({name:'W'+(w+1)+' D'+(k+1)+(d.name?' · '+d.name:''),items:d.items})));
+    return {templates,days:c.dpw,weeks:c.weeks,source:'custom'};
   }
   return buildPlan(p);
 }
+function planTotal(plan){ return plan.source==='custom'?plan.templates.length:plan.days*plan.weeks; }
 function buildPlan(p){
   if(p.sex==='female'){const j=jsonPlan(p); if(j) return j;}
   return buildPlanGeneric(p);
@@ -524,7 +529,7 @@ function finishSetup(){
    WORKOUT
    ===================================================================== */
 function startWorkout(){
-  const u=me(),p=u.profile,plan=activePlan(p),n=u.sessions.filter(x=>!x.custom).length,tpl=plan.templates[n%plan.days];
+  const u=me(),p=u.profile,plan=activePlan(p),n=u.sessions.filter(x=>!x.custom).length,tpl=plan.templates[n%plan.templates.length];
   u.active={idx:n,week:Math.floor(n/plan.days)+1,day:tpl.name,startedAt:Date.now(),
     items:tpl.items.map(it=>({ex:it.ex,sets:it.sets,reps:it.reps,rest:it.rest,note:it.note||'',status:'pending',pain:false,logged:[]}))};
   UI.pi=null;UI.rest=null;UI.hold=null;saveDB();go('workout');
@@ -859,9 +864,9 @@ function p0(){const u=me();u.profile.screen='ok';u.profile.setupDone=false;UI.ob
 
 /* ---- Dashboard ---- */
 SCREENS.home=()=>{
-  const u=me(),p=u.profile,plan=activePlan(p),total=plan.days*plan.weeks,n=u.sessions.filter(x=>!x.custom).length;
+  const u=me(),p=u.profile,plan=activePlan(p),total=planTotal(plan),n=u.sessions.filter(x=>!x.custom).length;
   const finished=n>=total;
-  const tpl=plan.templates[n%plan.days],week=Math.floor(n/plan.days)+1;
+  const tpl=plan.templates[n%plan.templates.length],week=Math.floor(n/plan.days)+1;
   const weekDone=u.sessions.filter(s=>daysAgo(s.date)<7&&s.status!=='none').length;
   const latest=u.weights.length?u.weights[u.weights.length-1]:null,first=u.weights[0];
   const change=latest&&first&&u.weights.length>1?(latest.kg-first.kg):null;
@@ -1247,41 +1252,67 @@ SCREENS.workout=()=>{
 
 /* ---- Program ---- */
 function setPlanMode(m){ const u=me(); if(!u) return; u.profile.planMode=m; saveDB(); render(); }
-function custPlan(){ const u=me(); if(!u.profile.customPlan) u.profile.customPlan={templates:[]}; return u.profile.customPlan; }
-function custAddDay(){ const c=custPlan(); c.templates.push({name:tx('Day','يوم')+' '+(c.templates.length+1),items:[]}); saveDB(); render(); }
-function custDelDay(i){ if(!confirm(tx('Delete this day and its exercises?','حذف هذا اليوم وتمارينه؟'))) return; custPlan().templates.splice(i,1); saveDB(); render(); }
-function custRenameDay(i,v){ custPlan().templates[i].name=(v||'').trim()||(tx('Day','يوم')+' '+(i+1)); saveDB(); }
-function custAddItem(i){ const c=custPlan(); c.templates[i].items.push({ex:EX_LIB[0].id,sets:3,reps:'8-12',rest:75,note:''}); saveDB(); render(); }
-function custDelItem(i,j){ custPlan().templates[i].items.splice(j,1); saveDB(); render(); }
-function custMoveItem(i,j,d){ const it=custPlan().templates[i].items; const k=j+d; if(k<0||k>=it.length) return; [it[j],it[k]]=[it[k],it[j]]; saveDB(); render(); }
-function custSetItem(i,j,f,v){ const it=custPlan().templates[i].items[j]; if(f==='sets'||f==='rest') it[f]=Math.max(1,parseInt(v,10)||1); else it[f]=String(v||'').trim(); saveDB(); }
+function custC(){ const u=me(); const p=u.profile; if(!p.customPlan) p.customPlan={dpw:3,weeks:4,data:[]}; const c=p.customPlan; ensureCustShape(c); return c; }
+function ensureCustShape(c){
+  c.dpw=Math.min(7,Math.max(1,parseInt(c.dpw,10)||3)); c.weeks=Math.min(12,Math.max(1,parseInt(c.weeks,10)||4));
+  c.data=c.data||[];
+  for(let w=0;w<c.weeks;w++){ c.data[w]=c.data[w]||[]; for(let d=0;d<c.dpw;d++){ c.data[w][d]=c.data[w][d]||{name:'',items:[]}; } c.data[w].length=c.dpw; }
+  c.data.length=c.weeks;
+}
+function custSetup(field,v){ const c=custC(); c[field]=parseInt(v,10); ensureCustShape(c); if(UI.cw>=c.weeks) UI.cw=0; if(UI.cd>=c.dpw) UI.cd=0; saveDB(); render(); }
+function custCopyWeek(){ const c=custC(); const src=JSON.parse(JSON.stringify(c.data[UI.cw]||[])); c.data=c.data.map(()=>JSON.parse(JSON.stringify(src))); saveDB(); UI.ok=tx('This week is copied to all weeks.','تم نسخ هذا الأسبوع إلى كل الأسابيع.'); render(); }
+function custDayName(v){ const c=custC(); c.data[UI.cw][UI.cd].name=String(v||'').trim(); saveDB(); }
+function custAddItem(){ const c=custC(); c.data[UI.cw][UI.cd].items.push({ex:EX_LIB[0].id,sets:3,reps:'8-12',rest:75}); saveDB(); render(); }
+function custDelItem(j){ custC().data[UI.cw][UI.cd].items.splice(j,1); saveDB(); render(); }
+function custMoveItem(j,d){ const it=custC().data[UI.cw][UI.cd].items; const k=j+d; if(k<0||k>=it.length) return; [it[j],it[k]]=[it[k],it[j]]; saveDB(); render(); }
+function custSetItem(j,f,v){ const it=custC().data[UI.cw][UI.cd].items[j]; if(f==='sets'||f==='rest') it[f]=Math.max(1,parseInt(v,10)||1); else it[f]=String(v||'').trim(); saveDB(); if(f==='ex') render(); }
+function custUseMine(){
+  const c=custC();
+  if(!customComplete(c)){ return fail(tx('Add at least one exercise to every day of every week before you use this program.','أضف تمريناً واحداً على الأقل لكل يوم في كل أسبوع قبل استخدام هذا البرنامج.')); }
+  const u=me(); u.profile.planMode='custom'; saveDB(); UI.ok=tx('Your own program is now your plan.','أصبح برنامجك الخاص هو خطتك.'); go('program');
+}
+function custUseThugfit(){ const u=me(); u.profile.planMode='program'; saveDB(); UI.ok=tx('You are following the THUGFIT program.','أنت تتبع برنامج THUGFIT.'); go('program'); }
+function custReset(){ if(!confirm(tx('Delete your own program? This cannot be undone.','حذف برنامجك الخاص؟ لا يمكن التراجع عن ذلك.'))) return; const u=me(); u.profile.customPlan=null; u.profile.planMode='program'; saveDB(); render(); }
+const REP_PRESETS=['3-5','5-8','6-8','8-12','10-12','12-15','15-20','20-30'];
 SCREENS.custom=()=>{
-  const u=me(), p=u.profile, c=custPlan(), mode=p.planMode==='custom'?'custom':'program';
-  const exOpts=selected=>EX_LIB.map(e=>`<option value="${e.id}" ${e.id===selected?'selected':''}>${L(e.n)}</option>`).join('');
-  const days=c.templates.map((t,i)=>`<div class="card">
-      <div class="row" style="align-items:center;gap:8px"><input style="flex:1" value="${esc(t.name)}" onchange="custRenameDay(${i},this.value)"><button class="btn sm danger" style="padding:4px 8px;font-size:11px" onclick="custDelDay(${i})">✕</button></div>
-      ${t.items.map((it,j)=>`<div class="card" style="margin:8px 0;padding:10px">
-          <select onchange="custSetItem(${i},${j},'ex',this.value)" style="width:100%">${exOpts(it.ex)}</select>
-          <div class="row" style="gap:6px;margin-top:6px">
-            <label style="flex:1;font-size:12px">${tx('Sets','المجموعات')}<input type="number" min="1" value="${it.sets}" onchange="custSetItem(${i},${j},'sets',this.value)"></label>
-            <label style="flex:1;font-size:12px">${tx('Reps','التكرارات')}<input value="${esc(it.reps)}" onchange="custSetItem(${i},${j},'reps',this.value)"></label>
-            <label style="flex:1;font-size:12px">${tx('Rest (s)','الراحة (ث)')}<input type="number" min="0" value="${it.rest}" onchange="custSetItem(${i},${j},'rest',this.value)"></label>
-          </div>
-          <div class="row" style="gap:6px;margin-top:6px"><button class="btn sm dark" onclick="custMoveItem(${i},${j},-1)">↑</button><button class="btn sm dark" onclick="custMoveItem(${i},${j},1)">↓</button><button class="btn sm danger" onclick="custDelItem(${i},${j})">${tx('Remove','إزالة')}</button></div>
-        </div>`).join('')}
-      <button class="btn sm dark" onclick="custAddItem(${i})">+ ${tx('Add exercise','إضافة تمرين')}</button>
+  const u=me(), p=u.profile, c=custC();
+  UI.cw=Math.min(UI.cw||0,c.weeks-1); UI.cd=Math.min(UI.cd||0,c.dpw-1);
+  const day=c.data[UI.cw][UI.cd];
+  const exOpts=sel=>EX_LIB.map(e=>`<option value="${e.id}" ${e.id===sel?'selected':''}>${L(e.n)}</option>`).join('');
+  const repOpts=sel=>{ const list=REP_PRESETS.includes(sel)?REP_PRESETS:[sel,...REP_PRESETS]; return list.map(r=>`<option value="${r}" ${r===sel?'selected':''}>${r}</option>`).join(''); };
+  const weekTabs=Array.from({length:c.weeks},(_,w)=>`<button class="tab ${w===UI.cw?'on':''}" onclick="UI.cw=${w};render()">${tx('Week','أسبوع')} ${w+1}</button>`).join('');
+  const dayTabs=Array.from({length:c.dpw},(_,d)=>`<button class="tab ${d===UI.cd?'on':''}" onclick="UI.cd=${d};render()">${tx('Day','يوم')} ${d+1}</button>`).join('');
+  const items=day.items.map((it,j)=>`<div class="card" style="margin:8px 0;padding:10px">
+      <select onchange="custSetItem(${j},'ex',this.value)" style="width:100%">${exOpts(it.ex)}</select>
+      <div class="row" style="gap:6px;margin-top:6px">
+        <label style="flex:1;font-size:12px">${tx('Sets','المجموعات')}<input type="number" min="1" value="${it.sets}" onchange="custSetItem(${j},'sets',this.value)"></label>
+        <label style="flex:1;font-size:12px">${tx('Reps','التكرارات')}<select onchange="custSetItem(${j},'reps',this.value)">${repOpts(it.reps)}</select></label>
+        <label style="flex:1;font-size:12px">${tx('Rest (s)','الراحة (ث)')}<input type="number" min="0" value="${it.rest}" onchange="custSetItem(${j},'rest',this.value)"></label>
+      </div>
+      <div class="row" style="gap:6px;margin-top:6px"><button class="btn sm dark" onclick="custMoveItem(${j},-1)">↑</button><button class="btn sm dark" onclick="custMoveItem(${j},1)">↓</button><button class="btn sm danger" onclick="custDelItem(${j})">${tx('Remove','إزالة')}</button></div>
     </div>`).join('');
+  const emptyDays=c.data.reduce((t,wk)=>t+wk.filter(d=>!d.items.length).length,0);
   return `${topHTML()}
-  <h1>${tx('My workout plan','خطتي التدريبية')}</h1>
-  <p class="muted" style="font-size:13px">${tx('Choose which plan the app uses. You can build your own days and exercises, and change them at any time.','اختر الخطة التي يستخدمها التطبيق. يمكنك إنشاء أيامك وتمارينك وتغييرها في أي وقت.')}</p>
+  <h1>${tx('Create your own program','أنشئ برنامجك الخاص')}</h1>
+  <p class="muted" style="font-size:13px">${tx('Choose how many days a week and how many weeks. Then add the exercises, sets and reps for each day.','اختر عدد الأيام في الأسبوع وعدد الأسابيع. ثم أضف التمارين والمجموعات والتكرارات لكل يوم.')}</p>
   ${msgHTML()}
   <div class="row" style="gap:8px">
-    <button class="btn ${mode==='program'?'':'ghost'}" onclick="setPlanMode('program')">${tx('Our program','برنامجنا')}</button>
-    <button class="btn ${mode==='custom'?'':'ghost'}" onclick="setPlanMode('custom')">${tx('My own plan','خطتي الخاصة')}</button>
+    <label style="flex:1">${tx('Days per week','أيام في الأسبوع')}<select onchange="custSetup('dpw',this.value)">${[1,2,3,4,5,6,7].map(n=>`<option value="${n}" ${n===c.dpw?'selected':''}>${n}</option>`).join('')}</select></label>
+    <label style="flex:1">${tx('Number of weeks','عدد الأسابيع')}<select onchange="custSetup('weeks',this.value)">${Array.from({length:12},(_,k)=>k+1).map(n=>`<option value="${n}" ${n===c.weeks?'selected':''}>${n}</option>`).join('')}</select></label>
   </div>
-  <h2>${tx('Build my plan','إنشاء خطتي')}</h2>
-  ${days||`<p class="muted">${tx('No days yet. Add your first training day.','لا توجد أيام بعد. أضف أول يوم تدريب.')}</p>`}
-  <button class="btn" onclick="custAddDay()">+ ${tx('Add a training day','إضافة يوم تدريب')}</button>
+  <div class="row" style="gap:6px;margin-top:12px;flex-wrap:wrap">${weekTabs}</div>
+  <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">${dayTabs}</div>
+  <div class="card" style="margin-top:12px">
+    <h3 style="margin:0 0 8px">${tx('Week','أسبوع')} ${UI.cw+1} · ${tx('Day','يوم')} ${UI.cd+1}</h3>
+    <label>${tx('Day name (optional)','اسم اليوم (اختياري)')}<input value="${esc(day.name||'')}" onchange="custDayName(this.value)"></label>
+    ${items||`<p class="muted">${tx('No exercises yet for this day.','لا توجد تمارين لهذا اليوم بعد.')}</p>`}
+    <button class="btn sm dark" onclick="custAddItem()">+ ${tx('Add exercise','إضافة تمرين')}</button>
+    <button class="btn sm dark" style="margin-top:8px" onclick="custCopyWeek()">${tx('Use this week for all weeks','استخدم هذا الأسبوع لكل الأسابيع')}</button>
+  </div>
+  <p class="muted" style="font-size:12px;margin-top:10px">${emptyDays?tx(emptyDays+' day(s) still have no exercises.',emptyDays+' يوم بلا تمارين بعد.'):tx('Every day has exercises.','كل يوم فيه تمارين.')}</p>
+  <button class="btn" onclick="custUseMine()">${tx('Use my program','استخدم برنامجي')}</button>
+  <button class="btn ghost" style="margin-top:8px" onclick="custUseThugfit()">${tx('Use the THUGFIT program instead','استخدم برنامج THUGFIT بدلاً من ذلك')}</button>
+  <button class="link" style="margin-top:12px" onclick="custReset()">${tx('Delete my program','حذف برنامجي')}</button>
   ${navHTML()}`;
 };
 SCREENS.program=()=>{
@@ -1290,7 +1321,7 @@ SCREENS.program=()=>{
   <h1>${tx('Your program','برنامجك')}</h1>
   <p>${plan.days} ${tx('training days','أيام تدريب')} · ${plan.weeks} ${tx('weeks','أسبوع')} · ${p.mode==='gym'?tx('Gym','صالة'):tx('Home','منزل')}${p.mode==='gym'?' · '+esc(p.bodyType):''}${p.mode==='home'?' · '+(p.equip==='light'?tx('light equipment','معدات خفيفة'):tx('bodyweight','وزن الجسم')):''}</p>
   <div class="card" style="font-size:13px"><span class="pill red">${tx('Weights are estimates until you log your first session.','الأوزان تقديرية حتى تسجل جلستك الأولى.')}</span></div>
-  <div class="card"><b>${tx('Which plan do you follow?','أي خطة تتبع؟')}</b><div class="row" style="gap:8px;margin-top:8px"><button class="btn sm ${(p.planMode!=='custom')?'':'ghost'}" onclick="setPlanMode('program')">${tx('Our program','برنامجنا')}</button><button class="btn sm ${(p.planMode==='custom')?'':'ghost'}" onclick="setPlanMode('custom')">${tx('My own plan','خطتي الخاصة')}</button></div><button class="btn sm dark" style="margin-top:8px" onclick="go('custom')">${tx('Build or edit my plan','إنشاء خطتي أو تعديلها')}</button></div>
+  <div class="card"><button class="btn" onclick="go('custom')">${tx('Create your own program','أنشئ برنامجك الخاص')}</button>${p.planMode==='custom'?'<p class="muted" style="font-size:12px;margin:8px 0 0">'+tx('You are following your own program.','أنت تتبع برنامجك الخاص.')+'</p>':''}</div>
   ${plan.templates.map(t=>`<div class="card"><h3>${esc(t.name)}</h3>${t.items.map(it=>{const ex=EXID[it.ex];return `<div class="ex">${exThumb(ex,sex)}<div class="main" onclick="UI.sheet={type:'ex',id:'${ex.id}'};render()" style="cursor:pointer"><div class="title">${L(ex.n)}</div><div class="plan">${it.sets} × ${it.reps} · ${tx('rest','راحة')} ${it.rest}</div></div></div>`;}).join('')}</div>`).join('')}
   <h2>${tx('Change my goal or schedule','تغيير الهدف أو الجدول')}</h2>
   <div class="card">
@@ -1338,7 +1369,7 @@ SCREENS.progress=()=>{
   const sortedW=u.weights.slice().sort((a,b)=>a.date.localeCompare(b.date));
   const hasConsent=!!u.consent.photos;
   const plan=p.setupDone?activePlan(p):null;
-  const planned=plan?plan.days:0,total=plan?plan.days*plan.weeks:0,n=u.sessions.length;
+  const planned=plan?plan.days:0,total=plan?planTotal(plan):0,n=u.sessions.length;
   const totalMin=u.sessions.reduce((s,x)=>s+(x.minutes||0),0);
   const thisWeek=u.sessions.filter(s=>daysAgo(s.date)<7&&s.status!=='none').length;
   const pct=total?Math.min(100,Math.round(n/total*100)):0;
