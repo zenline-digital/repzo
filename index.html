@@ -130,7 +130,27 @@ const KEY='thugfit_app_v1';
 let DB=null;
 try{DB=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){DB=null;}
 if(!DB||!Array.isArray(DB.users)) DB={users:[],sess:null};
-function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){alert(tx('Storage is full. Delete some progress photos.','التخزين ممتلئ. احذف بعض صور التقدم.'));}}
+function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){alert(tx('Storage is full. Delete some progress photos.','التخزين ممتلئ. احذف بعض صور التقدم.'));} queueSync();}
+let _syncTimer=null;
+function queueSync(){ clearTimeout(_syncTimer); _syncTimer=setTimeout(()=>{ const u=DB.sess?DB.users.find(x=>x.id===DB.sess):null; if(u) syncUserData(u); },1200); }
+async function syncUserData(u){
+  if(!sb||!u) return;
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session||session.user.id!==u.id) return;
+  try{
+    await saveTrainingProfile(u);
+    if(u.weights.length){
+      const rows=u.weights.map(w=>({member_id:u.id,local_id:'w-'+w.date,logged_on:w.date,kg:w.kg}));
+      const {error}=await sb.from('weight_logs').upsert(rows,{onConflict:'member_id,local_id'});
+      if(error) console.warn('weights not saved:',error.message);
+    }
+    if(u.sessions.length){
+      const rows=u.sessions.map(x=>({member_id:u.id,local_id:String(x.id),session_date:x.date,day_label:x.day||null,status:x.status||null,minutes:x.minutes||null,data:x}));
+      const {error}=await sb.from('workout_sessions').upsert(rows,{onConflict:'member_id,local_id'});
+      if(error) console.warn('sessions not saved:',error.message);
+    }
+  }catch(e){ console.warn('sync failed:',e&&e.message); }
+}
 
 /* =====================================================================
    UI STATE + HELPERS
@@ -1330,6 +1350,12 @@ SCREENS.profile=()=>{
   <div class="card" style="font-size:13px"><b>${tx('Privacy','الخصوصية')}</b>
     <p>${tx('Your progress photos are private to you. Coaches see your weight, measurements, sessions and goal so they can support your training. Your photos are not shared unless you choose to share a specific photo.','صور تقدمك خاصة بك. يرى المدرب وزنك وقياساتك وجلساتك وهدفك ليدعم تدريبك. لا تُشارك صورك إلا إذا اخترت مشاركة صورة معينة.')}</p>
   </div>
+  <div class="card"><h3>${tx('Feedback and ideas','ملاحظات وأفكار')}</h3>
+    <p class="muted" style="font-size:13px">${tx('Tell us what to improve, what is missing, or what you would like to see.','أخبرنا بما يحتاج إلى تحسين، أو ما ينقص، أو ما تود رؤيته.')}</p>
+    <label>${tx('Type','النوع')}</label> <select data-k="fbCat"><option value="suggestion" ${f.fbCat==='suggestion'?'selected':''}>${tx('Suggestion','اقتراح')}</option><option value="problem" ${f.fbCat==='problem'?'selected':''}>${tx('Something is not working','شيء لا يعمل')}</option><option value="feature" ${f.fbCat==='feature'?'selected':''}>${tx('New feature','ميزة جديدة')}</option><option value="other" ${f.fbCat==='other'?'selected':''}>${tx('Other','أخرى')}</option></select>
+    <label>${tx('Your message','رسالتك')}</label><textarea data-k="fbMsg" rows="4" maxlength="2000" style="width:100%">${esc(f.fbMsg||'')}</textarea>
+    <button class="btn" onclick="doFeedback()">${tx('Send feedback','إرسال الملاحظات')}</button>
+  </div>
   <button class="btn ghost" onclick="logout()">${tx('Log out','تسجيل الخروج')}</button>
   <div style="text-align:center"><button class="link" onclick="deleteAccount()">${tx('Delete my account and data','حذف حسابي وبياناتي')}</button></div>
   ${navHTML()}`;
@@ -1362,6 +1388,15 @@ function calendarHTML(u){
     <div class="cal-grid" style="margin-top:10px">${hd.map(h=>`<div class="cal-hd">${tx(h[0],h[1])}</div>`).join('')}${cells.join('')}</div>
     <p class="muted" style="font-size:12px;margin:10px 0 0"><b class="tick">✓</b> ${tx('Trained, all exercises done','تدريب، كل التمارين منجزة')} · <i class="half" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f5b33d"></i> ${tx('Partly done','منجز جزئياً')}</p>
   </div>`;
+}
+async function doFeedback(){
+  save(); const f=UI.f, u=me(); if(!u) return;
+  const msg=(f.fbMsg||'').trim();
+  if(msg.length<5) return fail(tx('Please write a few words so we can understand.','يرجى كتابة بضع كلمات حتى نفهم.'));
+  if(!sb) return fail(tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
+  const {data,error}=await sb.functions.invoke('send-feedback',{body:{category:f.fbCat||'suggestion',message:msg.slice(0,2000)}});
+  if(error||(data&&data.error)) return fail(tx('Could not send. Try again.','تعذّر الإرسال. حاول مرة أخرى.'));
+  UI.f.fbMsg=''; UI.ok=tx('Thank you. Your feedback was sent.','شكراً. تم إرسال ملاحظاتك.'); render();
 }
 function sheetHTML(){
   const s=UI.sheet;if(!s) return '';
