@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>REPZO admin</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+:root{--bg:#0b0b0c;--card:#141417;--card2:#1b1b20;--line:#2a2a30;--text:#f4f4f5;--muted:#9a9aa3;--red:#e5322d;--green:#3ddc84}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line)}
+header b{letter-spacing:6px;font-size:13px}
+main{max-width:1100px;margin:0 auto;padding:18px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.tab{background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px 14px;border-radius:10px;cursor:pointer}
+.tab.on{background:var(--red);border-color:var(--red);font-weight:700}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+.card .n{font-size:26px;font-weight:800}
+.card .l{color:var(--muted);font-size:12px;margin-top:4px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
+th,td{text-align:start;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px;background:var(--card2)}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--card2)}
+input,select{background:var(--card);border:1px solid var(--line);color:var(--text);padding:10px 12px;border-radius:10px;width:100%;max-width:340px}
+button.act{background:var(--card2);border:1px solid var(--line);color:var(--muted);padding:9px 12px;border-radius:10px;cursor:not-allowed}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px}
+.muted{color:var(--muted)}
+.err{background:#3a1212;border:1px solid #6b2222;color:#ffb4b0;padding:10px 12px;border-radius:10px;margin:10px 0}
+.login{max-width:360px;margin:70px auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.login h2{margin:0 0 14px}
+.login label{display:block;margin:10px 0 6px;color:var(--muted);font-size:12px}
+.btn{display:block;width:100%;margin-top:14px;background:var(--red);color:#fff;border:0;border-radius:10px;padding:12px;font-weight:700;cursor:pointer}
+.pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;border:1px solid var(--line)}
+.ok{color:var(--green)}
+dl{display:grid;grid-template-columns:160px 1fr;gap:6px 12px;margin:0}
+dt{color:var(--muted)}
+dd{margin:0}
+</style></head><body>
+<header><b>REPZO ADMIN</b><button id="signout" class="tab" style="display:none" onclick="adminSignOut()">Sign out</button></header>
+<main>
+  <div id="login" class="login" style="display:none">
+    <h2>Admin sign-in</h2>
+    <div class="muted">Use your REPZO account email and password.</div>
+    <label>Email</label><input id="em" type="email" autocomplete="username">
+    <label>Password</label><input id="pw" type="password" autocomplete="current-password">
+    <button class="btn" onclick="adminLogin()">Sign in</button>
+    <div id="loginErr"></div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="tabs" id="tabs"></div>
+    <div id="view"></div>
+  </div>
+  <div id="denied" class="panel" style="display:none"><b>Not authorised.</b><div class="muted">This account is not on the admin list.</div></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://rabzuknmzpsvsyxvghis.supabase.co";
+const SUPABASE_KEY="sb_publishable_rusFDtWKie2C72tX2EYjdQ_5EL8_hui";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const TABS=[['dash','Dashboard'],['members','Members'],['activity','Activity'],['promos','Promotions'],['audit','Audit log']];
+let CUR='dash', DATA=null;
+const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=d=>d?new Date(d).toLocaleString('en-GB',{timeZone:'Asia/Dubai',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+const DAY=86400000;
+
+async function adminLogin(){
+  const email=document.getElementById('em').value.trim();
+  const password=document.getElementById('pw').value;
+  const {error}=await sb.auth.signInWithPassword({email,password});
+  if(error){ document.getElementById('loginErr').innerHTML='<div class="err">Wrong email or password.</div>'; return; }
+  boot();
+}
+async function adminSignOut(){ await sb.auth.signOut(); location.reload(); }
+
+async function isAdmin(){
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user) return false;
+  const {data,error}=await sb.from('admins').select('email').eq('email',user.email.toLowerCase());
+  return !error && data && data.length===1;
+}
+
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ document.getElementById('login').style.display='block'; return; }
+  document.getElementById('login').style.display='none';
+  document.getElementById('signout').style.display='inline-block';
+  if(!(await isAdmin())){ document.getElementById('denied').style.display='block'; return; }
+  document.getElementById('app').style.display='block';
+  await loadAll();
+  renderTabs(); show(CUR);
+}
+
+async function loadAll(){
+  const [members,logins,clicks,sessions,weights,consents,profiles,promos,audit]=await Promise.all([
+    sb.from('members').select('id,full_name,email,phone,country,emirate,status,created_at'),
+    sb.from('member_logins').select('member_id,logged_at').order('logged_at',{ascending:false}).limit(5000),
+    sb.from('promo_clicks').select('id,clicked_at,promo_title').order('clicked_at',{ascending:false}).limit(5000),
+    sb.from('workout_sessions').select('member_id,session_date'),
+    sb.from('weight_logs').select('member_id'),
+    sb.from('consents').select('member_id,consent_type,granted,granted_at'),
+    sb.from('training_profiles').select('*'),
+    sb.from('promotions').select('*').order('sort_order'),
+    sb.from('admin_audit_log').select('*').order('created_at',{ascending:false}).limit(500)
+  ]);
+  DATA={members:members.data||[],logins:logins.data||[],clicks:clicks.data||[],sessions:sessions.data||[],
+        weights:weights.data||[],consents:consents.data||[],profiles:profiles.data||[],promos:promos.data||[],audit:audit.data||[]};
+  const err=[members,logins,clicks,sessions,weights,consents,profiles,promos,audit].find(r=>r.error);
+  if(err) console.warn('Some data could not be loaded:',err.error.message);
+}
+
+function lastLogin(id){ const l=DATA.logins.find(x=>x.member_id===id); return l?l.logged_at:null; }
+
+function renderTabs(){
+  document.getElementById('tabs').innerHTML=TABS.map(([k,l])=>`<button class="tab ${k===CUR?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
+}
+function go(k){ CUR=k; renderTabs(); show(k); }
+function show(k){
+  const v=document.getElementById('view');
+  if(k==='dash') v.innerHTML=dash();
+  if(k==='members') v.innerHTML=members();
+  if(k==='activity') v.innerHTML=activity();
+  if(k==='promos') v.innerHTML=promos();
+  if(k==='audit') v.innerHTML=audit();
+}
+
+function dash(){
+  const now=Date.now();
+  const active7=new Set(DATA.logins.filter(l=>now-new Date(l.logged_at)<7*DAY).map(l=>l.member_id)).size;
+  const signups7=DATA.members.filter(m=>now-new Date(m.created_at)<7*DAY).length;
+  const setupDone=DATA.profiles.filter(p=>p.setup_done).length;
+  const clicks7=DATA.clicks.filter(c=>now-new Date(c.clicked_at)<7*DAY).length;
+  const workouts=DATA.sessions.length;
+  const cards=[
+    ['Total members',DATA.members.length],
+    ['Active members (last 7 days)',active7],
+    ['Sign-ups (last 7 days)',signups7],
+    ['Total logins',DATA.logins.length],
+    ['THUGFIT link clicks (all time)',DATA.clicks.length],
+    ['THUGFIT link clicks (last 7 days)',clicks7],
+    ['Finished setup',setupDone],
+    ['Workouts logged',workouts]
+  ];
+  return `<div class="cards">${cards.map(([l,n])=>`<div class="card"><div class="n">${esc(n)}</div><div class="l">${esc(l)}</div></div>`).join('')}</div>
+  <div class="muted">Times are shown in UAE time. Counts update when you reload this page.</div>`;
+}
+
+function members(){
+  return `<input id="q" placeholder="Search name, email, country" oninput="filterMembers()" style="margin-bottom:12px">
+  <table><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Status</th><th>Joined</th><th>Last login</th></tr></thead>
+  <tbody id="mrows">${memberRows(DATA.members)}</tbody></table>
+  <div id="detail"></div>`;
+}
+function memberRows(list){
+  return list.map(m=>`<tr class="click" onclick="detail('${esc(m.id)}')"><td>${esc(m.full_name)}</td><td>${esc(m.email)}</td><td>${esc(m.country)}</td><td><span class="pill">${esc(m.status)}</span></td><td>${fmt(m.created_at)}</td><td>${fmt(lastLogin(m.id))}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">No members yet.</td></tr>';
+}
+function filterMembers(){
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  const list=DATA.members.filter(m=>[m.full_name,m.email,m.country].some(x=>(x||'').toLowerCase().includes(q)));
+  document.getElementById('mrows').innerHTML=memberRows(list);
+}
+function detail(id){
+  const m=DATA.members.find(x=>x.id===id); if(!m) return;
+  const p=DATA.profiles.find(x=>x.member_id===id)||{};
+  const c=DATA.consents.filter(x=>x.member_id===id);
+  const nW=DATA.weights.filter(x=>x.member_id===id).length;
+  const nS=DATA.sessions.filter(x=>x.member_id===id).length;
+  const nL=DATA.logins.filter(x=>x.member_id===id).length;
+  const cons=c.length?c.map(x=>`${esc(x.consent_type)}: ${x.granted?'yes':'no'} (${fmt(x.granted_at)})`).join('<br>'):'—';
+  document.getElementById('detail').innerHTML=`<div class="panel">
+    <h3 style="margin:0 0 12px">${esc(m.full_name)||'(no name)'}</h3>
+    <dl>
+      <dt>Email</dt><dd>${esc(m.email)}</dd>
+      <dt>Phone</dt><dd>${esc(m.phone)||'—'}</dd>
+      <dt>Country / emirate</dt><dd>${esc(m.country)||'—'} ${esc(m.emirate)||''}</dd>
+      <dt>Status</dt><dd>${esc(m.status)}</dd>
+      <dt>Joined</dt><dd>${fmt(m.created_at)}</dd>
+      <dt>Last login</dt><dd>${fmt(lastLogin(m.id))}</dd>
+      <dt>Logins</dt><dd>${nL}</dd>
+      <dt>Training profile</dt><dd>${p.setup_done?'Setup finished':'Not finished'}${p.goal?' · Goal: '+esc(p.goal):''}${p.experience?' · Experience: '+esc(p.experience):''}${p.days_per_week?' · Days/week: '+esc(p.days_per_week):''}</dd>
+      <dt>Weight entries</dt><dd>${nW}</dd>
+      <dt>Workouts logged</dt><dd>${nS}</dd>
+      <dt>Consents</dt><dd>${cons}</dd>
+    </dl>
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="act" disabled>Edit</button>
+      <button class="act" disabled>Reset password</button>
+      <button class="act" disabled>Suspend</button>
+      <button class="act" disabled>Delete</button>
+    </div>
+    <div class="muted" style="margin-top:8px">Edit, reset password, suspend and delete are switched on in the next update, because they run on the secure server. Progress photos and passwords are never shown here.</div>
+  </div>`;
+}
+
+function activity(){
+  const now=Date.now();
+  const ll=id=>{const l=DATA.logins.find(x=>x.member_id===id);return l?new Date(l.logged_at).getTime():0;};
+  const active=DATA.members.filter(m=>now-ll(m.id)<7*DAY && ll(m.id)>0);
+  const lapsed=DATA.members.filter(m=>ll(m.id)>0 && now-ll(m.id)>=7*DAY);
+  const never=DATA.members.filter(m=>ll(m.id)===0);
+  const block=(t,list)=>`<h3 style="margin:18px 0 8px">${t} <span class="muted">(${list.length})</span></h3>`+
+    `<table><thead><tr><th>Name</th><th>Email</th><th>Last login</th></tr></thead><tbody>${list.map(m=>`<tr><td>${esc(m.full_name)}</td><td>${esc(m.email)}</td><td>${fmt(lastLogin(m.id))}</td></tr>`).join('')||'<tr><td colspan="3" class="muted">None</td></tr>'}</tbody></table>`;
+  return `<div class="muted">Active = logged in during the last 7 days.</div>`+
+    block('Active',active)+block('Not active (last login 7+ days ago)',lapsed)+block('Never logged in',never);
+}
+
+function promos(){
+  const rows=DATA.promos.map(p=>`<tr><td>${esc(p.title_en)}</td><td>${esc(p.title_ar)}</td><td>${esc(p.url)}</td><td>${p.active?'<span class="ok">On</span>':'Off'}</td><td>${p.sort_order}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">No promotions yet.</td></tr>';
+  return `<table><thead><tr><th>Title (EN)</th><th>Title (AR)</th><th>Link</th><th>Status</th><th>Order</th></tr></thead><tbody>${rows}</tbody></table>
+  <div class="muted" style="margin-top:10px">Adding and editing promotions is switched on in the next update.</div>`;
+}
+
+function audit(){
+  const rows=DATA.audit.map(a=>`<tr><td>${fmt(a.created_at)}</td><td>${esc(a.admin_name)}</td><td>${esc(a.action)}</td><td>${esc(a.detail)}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">No admin actions recorded yet.</td></tr>';
+  return `<table><thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Detail</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+boot();
+</script>
+</body></html>

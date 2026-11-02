@@ -1315,8 +1315,15 @@ function ensureLocal(au){
   }
   u.verified=true; return u;
 }
+function recordLogin(id){
+  if(!sb||!id) return;
+  const k='repzo_login_'+id;
+  if(sessionStorage.getItem(k)) return;
+  sessionStorage.setItem(k,'1');
+  sb.from('member_logins').insert({member_id:id}).then(()=>{});
+}
 function afterSignIn(au){
-  const u=ensureLocal(au); DB.sess=u.id; saveDB(); UI.f={}; UI.pendingEmail=null;
+  const u=ensureLocal(au); DB.sess=u.id; saveDB(); UI.f={}; UI.pendingEmail=null; recordLogin(u.id);
   go(u.profile.setupDone?'home':'onboard');
 }
 async function doSignup(){
@@ -1379,7 +1386,7 @@ async function restoreSession(){
   if(!sb) return;
   const {data}=await sb.auth.getSession();
   if(data&&data.session&&data.session.user){
-    const u=ensureLocal(data.session.user); DB.sess=u.id; saveDB();
+    const u=ensureLocal(data.session.user); DB.sess=u.id; saveDB(); recordLogin(u.id);
     if(UI.screen==='welcome'||UI.screen==='login'||UI.screen==='signup') UI.screen=u.profile.setupDone?'home':'onboard';
     render();
   }
