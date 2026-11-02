@@ -1362,15 +1362,15 @@ SCREENS.custom=()=>{
 SCREENS.subscribe=()=>{
   const f=UI.f;
   return `${topHTML()}
-  <h1>${tx('Choose how to continue','اختر طريقة المتابعة')}</h1>
-  <p class="muted" style="font-size:13px">${tx('Your workouts and program are part of the yearly plan.','تمارينك وبرنامجك جزء من الخطة السنوية.')}</p>
+  <h1>${tx('One last step','خطوة أخيرة')}</h1>
+  <p class="muted" style="font-size:13px">${tx('Enter your thank-you card code, or pay to open the app.','أدخل رمز بطاقة الشكر، أو ادفع لفتح التطبيق.')}</p>
   ${msgHTML()}
   <div class="card"><h3>${tx('Have a thank-you card?','لديك بطاقة شكر؟')}</h3>
     <p class="muted" style="font-size:13px">${tx('Type the code on your card to get 1 year free.','اكتب الرمز الموجود على بطاقتك لتحصل على سنة مجانية.')}</p>
     <input data-k="cardCode" placeholder="REPZO-XXXX-XXXX" value="${esc(f.cardCode||'')}" style="text-transform:uppercase">
     <button class="btn" onclick="redeemCode()">${tx('Use my code','استخدم الرمز')}</button>
   </div>
-  <div class="card"><h3>${tx('Standard plan','الخطة العادية')}</h3>
+  <div class="card"><h3>${tx('No code? Pay for 1 year','لا يوجد رمز؟ ادفع لسنة')}</h3>
     <p style="font-size:22px;font-weight:800;margin:4px 0">AED 50 <span class="muted" style="font-size:13px;font-weight:400">${tx('for 1 year','لمدة سنة')}</span></p>
     <button class="btn ghost" onclick="payNow()">${tx('Pay AED 50 for 1 year','ادفع 50 درهم لمدة سنة')}</button>
   </div>
@@ -1673,6 +1673,7 @@ const APP=['home','program','progress','profile','workout','onboard','stop','par
 function route(){
   if(UI.screen==='legal') return;
   const u=me();
+  if(u&&u.dob&&!u.profile.dob) u.profile.dob=u.dob;
   if(!u){ if(!PUBLIC.includes(UI.screen)) UI.screen='welcome'; return; }
   if(!u.verified){ UI.screen='verify'; UI.pendingId=u.id; return; }
   if(u.profile.screen==='stop'&&UI.screen!=='stop'){ UI.screen='stop'; return; }
@@ -1783,12 +1784,11 @@ async function downloadMyData(){
   const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='repzo-my-data-'+todayStr()+'.json'; a.click();
 }
-async function loadSub(){
+async function loadSub(id){
   if(!sb) return;
-  const u=me(); if(!u){ UI.sub=null; UI.subLoaded=false; return; }
-  const {data,error}=await sb.from('subscriptions').select('plan,expires_at').eq('member_id',u.id).order('expires_at',{ascending:false}).limit(1);
-  if(error){ return; }
-  const row=data&&data[0];
+  const memberId=id||(me()&&me().id); if(!memberId) return;
+  const {data,error}=await sb.from('subscriptions').select('plan,expires_at').eq('member_id',memberId).order('expires_at',{ascending:false}).limit(1);
+  const row=!error&&data&&data[0];
   UI.sub=row?{active:new Date(row.expires_at)>new Date(),expires:row.expires_at,plan:row.plan}:{active:false,expires:null,plan:null};
   UI.subLoaded=true;
   render();
@@ -1817,7 +1817,7 @@ async function loadTrainingProfile(u){
 }
 async function afterSignIn(au){
   if(await blockIfSuspended(au.id)) return;
-  const u=ensureLocal(au); await loadTrainingProfile(u); await loadUserData(u); await loadSub(); DB.sess=u.id; saveDB(); UI.f={}; UI.pendingEmail=null; recordLogin(u.id); syncMemberProfile(u);
+  const u=ensureLocal(au); await loadTrainingProfile(u); await loadUserData(u); await loadSub(u.id); DB.sess=u.id; saveDB(); UI.f={}; UI.pendingEmail=null; recordLogin(u.id); syncMemberProfile(u);
   go(u.profile.setupDone?'home':'onboard');
 }
 async function doSignup(){
@@ -1893,7 +1893,7 @@ async function restoreSession(){
   const {data}=await sb.auth.getSession();
   if(data&&data.session&&data.session.user){
     if(await blockIfSuspended(data.session.user.id)) return;
-    const u=ensureLocal(data.session.user); await loadTrainingProfile(u); await loadUserData(u); await loadSub(); DB.sess=u.id; saveDB(); recordLogin(u.id);
+    const u=ensureLocal(data.session.user); await loadTrainingProfile(u); await loadUserData(u); await loadSub(u.id); DB.sess=u.id; saveDB(); recordLogin(u.id);
     if(UI.screen==='welcome'||UI.screen==='login'||UI.screen==='signup') UI.screen=u.profile.setupDone?'home':'onboard';
     render();
   }
