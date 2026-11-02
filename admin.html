@@ -116,6 +116,10 @@ async function loadAll(){
   DATA={members:members.data||[],logins:logins.data||[],clicks:clicks.data||[],sessions:sessions.data||[],
         weights:weights.data||[],consents:consents.data||[],profiles:profiles.data||[],promos:promos.data||[],audit:audit.data||[]};
   const err=[members,logins,clicks,sessions,weights,consents,profiles,promos,audit].find(r=>r.error);
+  const sub=await sb.from('subscriptions').select('member_id,plan,expires_at').order('expires_at',{ascending:false});
+  DATA.subs=sub.data||[];
+  const cd=await sb.from('access_codes').select('status');
+  DATA.codes=cd.data||[];
   const pg=await sb.from('community_programs').select('*').order('submitted_at',{ascending:false});
   DATA.programs=pg.data||[];
   const fb=await sb.from('feedback').select('*').order('created_at',{ascending:false}).limit(1000);
@@ -168,7 +172,9 @@ function dash(){
     ['THUGFIT link clicks (all time)',DATA.clicks.length],
     ['THUGFIT link clicks (last 7 days)',clicks7],
     ['Finished setup',setupDone],
-    ['Workouts logged',workouts]
+    ['Workouts logged',workouts],
+    ['Thank-you codes used',(DATA.codes||[]).filter(c=>c.status==='used').length+' of '+(DATA.codes||[]).length],
+    ['Active subscriptions',DATA.subs.filter(x=>new Date(x.expires_at)>new Date()).length]
   ];
   return `<div class="cards">${cards.map(([l,n])=>`<div class="card"><div class="n">${esc(n)}</div><div class="l">${esc(l)}</div></div>`).join('')}</div>
   ${signupChart()}
@@ -284,11 +290,13 @@ function detail(id){
       </div>
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="tab" onclick="saveMember('${esc(m.id)}')">Save changes</button>
+        <button class="tab" onclick="adminAct('grant_subscription','${esc(m.id)}')">Give 1 year free</button>
+        <button class="tab" onclick="adminAct('end_subscription','${esc(m.id)}')">End subscription</button>
         <button class="tab" onclick="adminAct('reset_password','${esc(m.id)}')">Send password reset email</button>
         <button class="tab" onclick="adminAct('${m.status==='suspended'?'reactivate':'suspend'}','${esc(m.id)}')">${m.status==='suspended'?'Reactivate account':'Suspend account'}</button>
         <button class="tab" style="border-color:#6b2222;color:#ffb4b0" onclick="deleteMember('${esc(m.id)}')">Delete member and all data</button>
       </div>
-      <div class="muted" style="margin-top:8px;font-size:12px">Passwords are never shown. A reset sends an email to the member. Every action is recorded in the Audit log.</div>
+      <div class="muted" style="margin-top:8px;font-size:12px">Subscription: ${(()=>{const x=(DATA.subs||[]).find(z=>z.member_id===m.id);return x&&new Date(x.expires_at)>new Date()?'active until '+fmt(x.expires_at)+' ('+esc(x.plan)+')':'none';})()}. Passwords are never shown. A reset sends an email to the member. Every action is recorded in the Audit log.</div>
   </div>`;
 }
 
