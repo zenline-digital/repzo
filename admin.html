@@ -282,7 +282,7 @@ function activity(){
 const FB_CAT={suggestion:'Suggestion',problem:'Not working',feature:'New feature',other:'Other'};
 function feedbackTab(){
   const who=id=>{ const m=DATA.members.find(x=>x.id===id); return m?(esc(m.full_name)+'<br><span class="muted">'+esc(m.email)+'</span>'):'<span class="muted">(deleted member)</span>'; };
-  const rows=(DATA.feedback||[]).map(f=>`<tr><td>${fmt(f.created_at)}</td><td>${who(f.member_id)}</td><td>${esc(FB_CAT[f.category]||f.category)}</td><td style="max-width:420px;white-space:pre-wrap">${esc(f.message)}${f.reply_text?'<div class="muted" style="margin-top:8px;border-top:1px solid var(--line);padding-top:6px">Reply sent '+fmt(f.replied_at)+':<br>'+esc(f.reply_text)+'</div>':`<div style="margin-top:8px"><textarea id="rp_${esc(f.id)}" rows="3" style="max-width:380px;width:100%" placeholder="Write your reply. It is emailed to the member."></textarea><br><button class="tab" onclick="sendReply('${esc(f.id)}')">Send reply by email</button></div>`}</td><td>
+  const rows=(DATA.feedback||[]).map(f=>`<tr><td>${fmt(f.created_at)}</td><td>${who(f.member_id)}</td><td>${esc(FB_CAT[f.category]||f.category)}</td><td style="max-width:420px;white-space:pre-wrap">${esc(f.message)}${(f.attachments&&f.attachments.length)?`<div style="margin-top:6px"><button class="tab" onclick="openFbFiles('${esc(f.id)}')">Open ${f.attachments.length} attachment(s)</button></div>`:''}${f.reply_text?'<div class="muted" style="margin-top:8px;border-top:1px solid var(--line);padding-top:6px">Reply sent '+fmt(f.replied_at)+':<br>'+esc(f.reply_text)+'</div>':`<div style="margin-top:8px"><textarea id="rp_${esc(f.id)}" rows="3" style="max-width:380px;width:100%" placeholder="Write your reply. It is emailed to the member."></textarea><br><button class="tab" onclick="sendReply('${esc(f.id)}')">Send reply by email</button></div>`}</td><td>
       <select onchange="setFbStatus('${esc(f.id)}',this.value)">
         ${['new','in_progress','done'].map(st=>`<option value="${st}" ${f.status===st?'selected':''}>${st==='new'?'New':st==='in_progress'?'In progress':'Done'}</option>`).join('')}
       </select></td></tr>`).join('');
@@ -297,6 +297,15 @@ async function sendReply(id){
   const {data,error}=await sb.functions.invoke('reply-feedback',{body:{id,reply:text}});
   if(error||(data&&data.error)){ alert('Not sent: '+((data&&data.error)||(error&&error.message))); return; }
   await loadAll(); show('feedback');
+}
+
+async function openFbFiles(id){
+  const f=(DATA.feedback||[]).find(x=>x.id===id); if(!f) return;
+  for(const att of (f.attachments||[])){
+    const {data,error}=await sb.storage.from('feedback-attachments').createSignedUrl(att.path,600);
+    if(error){ alert('Could not open '+att.name+': '+error.message); continue; }
+    window.open(data.signedUrl,'_blank');
+  }
 }
 async function setFbStatus(id,status){
   const {error}=await sb.from('feedback').update({status}).eq('id',id);

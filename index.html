@@ -1355,6 +1355,9 @@ SCREENS.profile=()=>{
     <p class="muted" style="font-size:13px">${tx('Tell us what to improve, what is missing, or what you would like to see.','أخبرنا بما يحتاج إلى تحسين، أو ما ينقص، أو ما تود رؤيته.')}</p>
     <label>${tx('Type','النوع')}</label> <select data-k="fbCat"><option value="suggestion" ${f.fbCat==='suggestion'?'selected':''}>${tx('Suggestion','اقتراح')}</option><option value="problem" ${f.fbCat==='problem'?'selected':''}>${tx('Something is not working','شيء لا يعمل')}</option><option value="feature" ${f.fbCat==='feature'?'selected':''}>${tx('New feature','ميزة جديدة')}</option><option value="other" ${f.fbCat==='other'?'selected':''}>${tx('Other','أخرى')}</option></select>
     <label>${tx('Your message','رسالتك')}</label><textarea data-k="fbMsg" rows="4" maxlength="2000" style="width:100%">${esc(f.fbMsg||'')}</textarea>
+    <label>${tx('Attach photos or screenshots (optional, up to 5 files, 5 MB each)','إرفاق صور أو لقطات شاشة (اختياري، حتى 5 ملفات، 5 ميغابايت لكل ملف)')}</label>
+    <input type="file" accept="image/*,application/pdf" multiple onchange="pickFbFiles(this)" style="width:100%">
+    ${(UI.fbFiles&&UI.fbFiles.length)?`<p class="muted" style="font-size:12px">${UI.fbFiles.map(x=>esc(x.name)).join(', ')}</p>`:''}
     <button class="btn" onclick="doFeedback()">${tx('Send feedback','إرسال الملاحظات')}</button>
   </div>
   <button class="btn ghost" onclick="logout()">${tx('Log out','تسجيل الخروج')}</button>
@@ -1390,6 +1393,14 @@ function calendarHTML(u){
     <p class="muted" style="font-size:12px;margin:10px 0 0"><b class="tick">✓</b> ${tx('Trained, all exercises done','تدريب، كل التمارين منجزة')} · <i class="half" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f5b33d"></i> ${tx('Partly done','منجز جزئياً')}</p>
   </div>`;
 }
+function pickFbFiles(el){
+  const list=Array.from(el.files||[]);
+  const bad=list.find(f=>f.size>5*1024*1024);
+  if(bad){ UI.fbNote={ok:false,text:tx('That file is larger than 5 MB: ','هذا الملف أكبر من 5 ميغابايت: ')+bad.name}; UI.fbFiles=[]; render(); return; }
+  const okType=list.find(f=>!(f.type.startsWith('image/')||f.type==='application/pdf'));
+  if(okType){ UI.fbNote={ok:false,text:tx('Only photos or PDF files can be attached.','يمكن إرفاق الصور أو ملفات PDF فقط.')}; UI.fbFiles=[]; render(); return; }
+  UI.fbFiles=list.slice(0,5); UI.fbNote=null; render();
+}
 async function doFeedback(){
   save(); const f=UI.f, u=me(); if(!u) return;
   const msg=(f.fbMsg||'').trim();
@@ -1398,13 +1409,27 @@ async function doFeedback(){
   if(!sb) return note(false,tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
   note(true,tx('Sending...','جارٍ الإرسال...'));
   try{
-    const {data,error}=await sb.functions.invoke('send-feedback',{body:{category:f.fbCat||'suggestion',message:msg.slice(0,2000)}});
+    // 1) upload any attached files into this member's own folder
+    const attachments=[];
+    for(const file of (UI.fbFiles||[])){
+      const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const path=u.id+'/'+Date.now()+'-'+safeName;
+      const {error:upErr}=await sb.storage.from('feedback-attachments').upload(path,file,{contentType:file.type,upsert:false});
+      if(upErr){ console.error('upload failed:',upErr); return note(false,tx('A file could not be uploaded: ','تعذّر رفع ملف: ')+upErr.message); }
+      attachments.push({path,name:file.name,type:file.type});
+    }
+    // 2) send the message
+    const {data,error}=await sb.functions.invoke('send-feedback',{body:{category:f.fbCat||'suggestion',message:msg.slice(0,2000),attachments}});
     if(error||(data&&data.error)){
+      let why=(data&&data.error)||'';
+      if(!why && error && error.context && typeof error.context.json==='function'){
+        try{ const b=await error.context.json(); why=b.error||JSON.stringify(b); }catch(_){ why=''; }
+      }
+      if(!why) why=(error&&error.message)||'';
       console.error('send-feedback failed:',error||data);
-      let why=(data&&data.error)||(error&&error.message)||'';
       return note(false,tx('Could not send. ','تعذّر الإرسال. ')+why);
     }
-    UI.f.fbMsg='';
+    UI.f.fbMsg=''; UI.fbFiles=[];
     return note(true,tx('Thank you. Your feedback was sent.','شكراً. تم إرسال ملاحظاتك.'));
   }catch(e){
     console.error('send-feedback error:',e);
