@@ -187,21 +187,78 @@ function codeRow(c){
   const [label,color]=CODE_STATUS[c.status]||[c.status,'var(--muted)'];
   const who=c.used_by?(DATA.members.find(m=>m.id===c.used_by)||null):null;
   const rowStyle=c.status==='used'?'background:#2a1213;color:#ffb4b0':(c.status==='retired'?'color:var(--muted)':'');
-  return `<tr style="${rowStyle}"><td>${esc(c.serial)}</td><td style="font-family:monospace;font-weight:700">${esc(c.code)}</td><td><span class="pill" style="color:${color};border-color:${color}">${label}</span></td><td>${who?esc(who.full_name||'')+'<br><span class="muted">'+esc(who.email||'')+'</span>':'<span class="muted">—</span>'}</td><td>${c.used_at?fmt(c.used_at):'<span class="muted">—</span>'}</td></tr>`;
+  const box=c.status==='unused'?`<input type="checkbox" class="codechk" data-code="${esc(c.code)}">`:'';
+  return `<tr style="${rowStyle}"><td>${box}</td><td>${esc(c.serial)}</td><td style="font-family:monospace;font-weight:700">${esc(c.code)}</td><td><span class="pill" style="color:${color};border-color:${color}">${label}</span></td><td>${who?esc(who.full_name||'')+'<br><span class="muted">'+esc(who.email||'')+'</span>':'<span class="muted">—</span>'}</td><td>${c.used_at?fmt(c.used_at):'<span class="muted">—</span>'}</td><td>${codeActions(c)}</td></tr>`;
 }
 function codesTab(){
   const all=DATA.codes||[];
   const n=st=>all.filter(c=>c.status===st).length;
   return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
   <input id="cq" placeholder="Search code or serial" oninput="filterCodes()" style="max-width:280px">
+  <button class="tab" onclick="toggleAllUnused(true)">Select all unused</button>
+  <button class="tab" onclick="toggleAllUnused(false)">Clear</button>
+  <button class="tab" onclick="printLabels(selectedCodes())">Print selected</button>
+  <button class="tab" onclick="printLabels(unusedCodes())">Print all unused</button>
+  <button class="tab" style="border-color:#6b2222;color:#ffb4b0" onclick="deleteCodes(selectedCodes(),'selected unused codes')">Delete selected</button>
+  <button class="tab" style="border-color:#6b2222;color:#ffb4b0" onclick="deleteCodes(retiredCodes(),'retired codes')">Remove all retired</button>
   <span class="muted">Total ${all.length} · <span style="color:var(--green)">Unused ${n('unused')}</span> · <span style="color:var(--red)">Used ${n('used')}</span> · Retired ${n('retired')}</span></div>
-  <table><thead><tr><th>Serial</th><th>Code</th><th>Status</th><th>Used by</th><th>Used on</th></tr></thead>
-  <tbody id="crows">${all.map(codeRow).join('')||'<tr><td colspan="5" class="muted">No codes loaded.</td></tr>'}</tbody></table>`;
+  <table><thead><tr><th></th><th>Serial</th><th>Code</th><th>Status</th><th>Used by</th><th>Used on</th><th>Actions</th></tr></thead>
+  <tbody id="crows">${all.map(codeRow).join('')||'<tr><td colspan="7" class="muted">No codes loaded.</td></tr>'}</tbody></table>`;
 }
 function filterCodes(){
   const q=(document.getElementById('cq').value||'').toLowerCase().trim();
   const list=(DATA.codes||[]).filter(c=>String(c.code).toLowerCase().includes(q)||String(c.serial).includes(q));
-  document.getElementById('crows').innerHTML=list.map(codeRow).join('')||'<tr><td colspan="5" class="muted">No match.</td></tr>';
+  document.getElementById('crows').innerHTML=list.map(codeRow).join('')||'<tr><td colspan="7" class="muted">No match.</td></tr>';
+}
+function selectedCodes(){ return [...document.querySelectorAll('.codechk:checked')].map(x=>x.dataset.code); }
+function unusedCodes(){ return (DATA.codes||[]).filter(c=>c.status==='unused').map(c=>c.code); }
+function toggleAllUnused(on){ document.querySelectorAll('.codechk').forEach(x=>x.checked=on); }
+/* Labels: 40 x 25 mm roll. Two codes per label, cut down the middle (20 mm each). */
+function printLabels(list){
+  if(!list||!list.length) return alert('No unused codes selected. Tick the codes you want to print first.');
+  const pairs=[];
+  for(let i=0;i<list.length;i+=2) pairs.push([list[i],list[i+1]||'']);
+  const half=c=>c?`<div class="half"><div class="t">REPZO</div><div class="c">${esc(c)}</div></div>`:'<div class="half"></div>';
+  const body=pairs.map(([a,b])=>`<div class="label">${half(a)}${half(b)}</div>`).join('');
+  const css=`@page{size:40mm 25mm;margin:0}
+html,body{margin:0;padding:0}
+.label{width:40mm;height:25mm;display:flex;box-sizing:border-box;page-break-after:always;break-after:page}
+.label:last-child{page-break-after:auto;break-after:auto}
+.half{width:20mm;height:25mm;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+.half:first-child{border-right:0.2mm dashed #000}
+.t{font-size:5pt;letter-spacing:0.5px;line-height:1}
+.c{font-size:9pt;font-weight:700;line-height:1.2;margin-top:1mm}`;
+  const w=window.open('','_blank');
+  if(!w) return alert('Your browser blocked the print window. Allow pop-ups for this page and try again.');
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>REPZO codes</title><style>${css}</style></head><body>${body}</body></html>`);
+  w.document.close();
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} },500);
+}
+const CODE_RE=/^[A-HJ-NP-Z]{2}[0-9]{6}$/;
+function retiredCodes(){ return (DATA.codes||[]).filter(c=>c.status==='retired').map(c=>c.code); }
+function codeActions(c){
+  const btn=(label,fn,danger)=>`<button class="tab" style="padding:4px 8px;font-size:12px${danger?';border-color:#6b2222;color:#ffb4b0':''}" onclick="${fn}">${label}</button>`;
+  if(c.status==='unused') return btn('Edit',`editCode('${esc(c.code)}')`)+' '+btn('Delete',`deleteCodes(['${esc(c.code)}'],'code')`,true);
+  if(c.status==='retired') return btn('Delete',`deleteCodes(['${esc(c.code)}'],'retired code')`,true);
+  return '<span class="muted" style="font-size:12px">Locked (used)</span>';
+}
+async function editCode(code){
+  const c=(DATA.codes||[]).find(x=>x.code===code);
+  if(!c||c.status!=='unused') return alert('Only unused codes can be edited.');
+  const next=(prompt('New code: 2 letters (no I or O) followed by 6 digits. Current: '+code,code)||'').trim().toUpperCase();
+  if(!next||next===code) return;
+  if(!CODE_RE.test(next)) return alert('That code is not in the right format. Use 2 letters (no I or O) followed by 6 digits.');
+  if((DATA.codes||[]).some(x=>x.code===next)) return alert('That code already exists.');
+  const {error}=await sb.from('access_codes').update({code:next}).eq('code',code).eq('status','unused');
+  if(error) return alert('Could not save: '+error.message);
+  await loadAll(); show('codes');
+}
+async function deleteCodes(list,label){
+  if(!list||!list.length) return alert('Nothing to delete. Tick the codes first, or check there are retired codes.');
+  if(!confirm('Delete '+list.length+' '+label+'? This cannot be undone.')) return;
+  const {error}=await sb.from('access_codes').delete().in('code',list).neq('status','used');
+  if(error) return alert('Could not delete: '+error.message);
+  await loadAll(); show('codes');
 }
 function codeCell(id){
   const c=(DATA.codes||[]).find(x=>x.used_by===id&&x.status==='used');
