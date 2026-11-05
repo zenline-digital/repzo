@@ -1838,7 +1838,9 @@ async function doSignup(){
   if(!/^\S+@\S+\.\S+$/.test(f.email||'')) return fail(tx('Enter a valid email address.','أدخل بريداً إلكترونياً صحيحاً.'));
   if(!/^\+\d{8,15}$/.test(fullPhone(f))) return fail(tx('Enter your mobile number with the country code, for example +971 50 123 4567.','أدخل رقم جوالك مع رمز الدولة، مثال +971 50 123 4567.'));
   if(!f.country) return fail(tx('Choose your country.','اختر الدولة.'));
-  if(f.country==='AE'&&!f.emirate) return fail(tx('Choose your emirate.','اختر الإمارة.'));
+  if(needsRegion(f.country)&&!f.region) return fail(tx('Choose your '+REGION_LABEL[f.country].en.toLowerCase()+'.','اختر '+REGION_LABEL[f.country].ar+'.'));
+  if(f.country==='OTHER'&&!(f.countryOther||'').trim()) return fail(tx('Type your country name.','اكتب اسم دولتك.'));
+  if(!validAdultDob(f.dob)) return fail(tx('Enter your date of birth. You must be 18 or older.','أدخل تاريخ ميلادك. يجب أن يكون عمرك 18 عاماً أو أكثر.'));
   if((f.pw||'').length<8) return fail(tx('Password must be at least 8 characters.','يجب أن تكون كلمة المرور 8 أحرف على الأقل.'));
   if(f.pw!==f.pw2) return fail(tx('The two passwords do not match.','كلمتا المرور غير متطابقتين.'));
   if(!f.c1||!f.c2||!f.c3) return fail(tx('Please accept the terms, privacy policy and health disclaimer.','يرجى قبول الشروط وسياسة الخصوصية وإخلاء المسؤولية الصحي.'));
