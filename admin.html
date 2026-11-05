@@ -219,7 +219,7 @@ function buildZPL(list){
   const pairs=[];
   for(let i=0;i<list.length;i+=2) pairs.push([list[i],list[i+1]||'']);
   const label=([top,bottom])=>
-    `^XA\n^PW305\n^LL199\n^LH0,0\n^MNY\n^CF0,40,40\n`+
+    `^XA\n^POI\n^PW305\n^LL199\n^LH0,0\n^MNY\n^CF0,40,40\n`+
     (top?`^FO0,20^FB305,1,0,C,0^FD${top}^FS\n`:'')+
     (bottom?`^FO0,139^FB305,1,0,C,0^FD${bottom}^FS\n`:'')+
     `^XZ\n`;
