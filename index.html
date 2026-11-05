@@ -1707,7 +1707,7 @@ function render(){
    ===================================================================== */
 function ageFromDob(d){ if(!d) return null; const b=new Date(d+'T00:00:00'), n=new Date(); let a=n.getFullYear()-b.getFullYear(); const m=n.getMonth()-b.getMonth(); if(m<0||(m===0&&n.getDate()<b.getDate())) a--; return a; }
 const DIAL={AE:'+971',SA:'+966',QA:'+974',KW:'+965',BH:'+973',OM:'+968',IN:'+91'};
-function fullPhone(f){ return ((f.phoneCode||'')+(f.phoneNum||'')).replace(/[\s-]/g,''); }
+function fullPhone(f){ const num=String(f.phoneNum||'').replace(/[\s-]/g,'').replace(/^0+/,''); return ((f.phoneCode||'')+num).replace(/[\s-]/g,''); }
 function splitPhone(p){ const v=String(p||'').replace(/[\s-]/g,''); const codes=Object.values(DIAL).sort((a,b)=>b.length-a.length); const c=codes.find(x=>v.startsWith(x)); return c?{phoneCode:c,phoneNum:v.slice(c.length)}:{phoneCode:'',phoneNum:v}; }
 function phoneBlock(f){ return `<label>${tx('Mobile number','رقم الجوال')}</label><div class="row" style="gap:6px"><input data-k="phoneCode" value="${esc(f.phoneCode||'')}" placeholder="+971" style="width:34%"><input data-k="phoneNum" inputmode="tel" value="${esc(f.phoneNum||'')}" placeholder="50 123 4567" style="flex:1"></div>`; }
 function validAdultDob(d){ const a=ageFromDob(d); return a!==null && a>=18 && a<=110; }
@@ -1836,7 +1836,7 @@ async function doSignup(){
   if(!sb) return fail(tx('The service is not connected. Try again later.','الخدمة غير متصلة. حاول لاحقاً.'));
   if(!f.name||!f.name.trim()) return fail(tx('Enter your full name.','أدخل اسمك الكامل.'));
   if(!/^\S+@\S+\.\S+$/.test(f.email||'')) return fail(tx('Enter a valid email address.','أدخل بريداً إلكترونياً صحيحاً.'));
-  if((f.phone||'').replace(/\D/g,'').length<8) return fail(tx('Enter a valid phone number.','أدخل رقم هاتف صحيحاً.'));
+  if(!/^\+\d{8,15}$/.test(fullPhone(f))) return fail(tx('Enter your mobile number with the country code, for example +971 50 123 4567.','أدخل رقم جوالك مع رمز الدولة، مثال +971 50 123 4567.'));
   if(!f.country) return fail(tx('Choose your country.','اختر الدولة.'));
   if(f.country==='AE'&&!f.emirate) return fail(tx('Choose your emirate.','اختر الإمارة.'));
   if((f.pw||'').length<8) return fail(tx('Password must be at least 8 characters.','يجب أن تكون كلمة المرور 8 أحرف على الأقل.'));
