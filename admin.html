@@ -64,7 +64,7 @@ const SUPABASE_URL="https://rabzuknmzpsvsyxvghis.supabase.co";
 const SUPABASE_KEY="sb_publishable_rusFDtWKie2C72tX2EYjdQ_5EL8_hui";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const TABS=[['dash','Dashboard'],['members','Members'],['activity','Activity'],['feedback','Feedback'],['programs','Programs'],['promos','Promotions'],['audit','Audit log']];
+const TABS=[['dash','Dashboard'],['members','Members'],['codes','Codes'],['activity','Activity'],['feedback','Feedback'],['programs','Programs'],['promos','Promotions'],['audit','Audit log']];
 let CUR='dash', DATA=null;
 const esc=x=>String(x==null?'':x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=d=>d?new Date(d).toLocaleString('en-GB',{timeZone:'Asia/Dubai',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
@@ -118,7 +118,7 @@ async function loadAll(){
   const err=[members,logins,clicks,sessions,weights,consents,profiles,promos,audit].find(r=>r.error);
   const sub=await sb.from('subscriptions').select('member_id,plan,expires_at').order('expires_at',{ascending:false});
   DATA.subs=sub.data||[];
-  const cd=await sb.from('access_codes').select('status');
+  const cd=await sb.from('access_codes').select('code,serial,status,used_at,used_by').order('serial');
   DATA.codes=cd.data||[];
   const pg=await sb.from('community_programs').select('*').order('submitted_at',{ascending:false});
   DATA.programs=pg.data||[];
@@ -137,6 +137,7 @@ function show(k){
   const v=document.getElementById('view');
   if(k==='dash') v.innerHTML=dash();
   if(k==='members') v.innerHTML=members();
+  if(k==='codes') v.innerHTML=codesTab();
   if(k==='activity') v.innerHTML=activity();
   if(k==='promos') v.innerHTML=promos();
   if(k==='feedback') v.innerHTML=feedbackTab();
@@ -181,6 +182,31 @@ function dash(){
   <div class="muted">Times are shown in UAE time. Counts update when you reload this page.</div>`;
 }
 
+const CODE_STATUS={unused:['Unused','var(--green)'],used:['Used','var(--red)'],retired:['Retired','var(--muted)']};
+function codeRow(c){
+  const [label,color]=CODE_STATUS[c.status]||[c.status,'var(--muted)'];
+  const who=c.used_by?(DATA.members.find(m=>m.id===c.used_by)||null):null;
+  const rowStyle=c.status==='used'?'background:#2a1213;color:#ffb4b0':(c.status==='retired'?'color:var(--muted)':'');
+  return `<tr style="${rowStyle}"><td>${esc(c.serial)}</td><td style="font-family:monospace;font-weight:700">${esc(c.code)}</td><td><span class="pill" style="color:${color};border-color:${color}">${label}</span></td><td>${who?esc(who.full_name||'')+'<br><span class="muted">'+esc(who.email||'')+'</span>':'<span class="muted">—</span>'}</td><td>${c.used_at?fmt(c.used_at):'<span class="muted">—</span>'}</td></tr>`;
+}
+function codesTab(){
+  const all=DATA.codes||[];
+  const n=st=>all.filter(c=>c.status===st).length;
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+  <input id="cq" placeholder="Search code or serial" oninput="filterCodes()" style="max-width:280px">
+  <span class="muted">Total ${all.length} · <span style="color:var(--green)">Unused ${n('unused')}</span> · <span style="color:var(--red)">Used ${n('used')}</span> · Retired ${n('retired')}</span></div>
+  <table><thead><tr><th>Serial</th><th>Code</th><th>Status</th><th>Used by</th><th>Used on</th></tr></thead>
+  <tbody id="crows">${all.map(codeRow).join('')||'<tr><td colspan="5" class="muted">No codes loaded.</td></tr>'}</tbody></table>`;
+}
+function filterCodes(){
+  const q=(document.getElementById('cq').value||'').toLowerCase().trim();
+  const list=(DATA.codes||[]).filter(c=>String(c.code).toLowerCase().includes(q)||String(c.serial).includes(q));
+  document.getElementById('crows').innerHTML=list.map(codeRow).join('')||'<tr><td colspan="5" class="muted">No match.</td></tr>';
+}
+function codeCell(id){
+  const c=(DATA.codes||[]).find(x=>x.used_by===id&&x.status==='used');
+  return c?`<span class="pill" style="color:var(--red);border-color:var(--red);font-family:monospace">${esc(c.code)}</span>`:'<span class="muted">—</span>';
+}
 function members(){
   return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
   <input id="q" placeholder="Search name, email, country" oninput="filterMembers()" style="max-width:340px">
@@ -188,12 +214,12 @@ function members(){
   <button class="tab" onclick="exportXLSX()">Download Excel</button>
   <button class="tab" onclick="printMembers()">Print / PDF</button>
   <span class="muted">${DATA.members.length} members</span></div>
-  <table><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Status</th><th>Joined</th><th>Last login</th></tr></thead>
+  <table><thead><tr><th>Name</th><th>Email</th><th>Country</th><th>Status</th><th>Joined</th><th>Last login</th><th>Code used</th></tr></thead>
   <tbody id="mrows">${memberRows(DATA.members)}</tbody></table>
   <div id="detail"></div>`;
 }
 function memberRows(list){
-  return list.map(m=>`<tr class="click" onclick="detail('${esc(m.id)}')"><td>${esc(m.full_name)}</td><td>${esc(m.email)}</td><td>${esc(m.country)}</td><td><span class="pill">${esc(m.status)}</span></td><td>${fmt(m.created_at)}</td><td>${fmt(lastLogin(m.id))}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">No members yet.</td></tr>';
+  return list.map(m=>`<tr class="click" onclick="detail('${esc(m.id)}')"><td>${esc(m.full_name)}</td><td>${esc(m.email)}</td><td>${esc(m.country)}</td><td><span class="pill">${esc(m.status)}</span></td><td>${fmt(m.created_at)}</td><td>${fmt(lastLogin(m.id))}</td><td>${codeCell(m.id)}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">No members yet.</td></tr>';
 }
 
 /* ---------- Member export: every detail, one row per member ---------- */
