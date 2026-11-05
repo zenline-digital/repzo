@@ -213,21 +213,24 @@ function filterCodes(){
 function selectedCodes(){ return [...document.querySelectorAll('.codechk:checked')].map(x=>x.dataset.code); }
 function unusedCodes(){ return (DATA.codes||[]).filter(c=>c.status==='unused').map(c=>c.code); }
 function toggleAllUnused(on){ document.querySelectorAll('.codechk').forEach(x=>x.checked=on); }
-/* Labels: 40 x 25 mm roll. Two codes per label, cut down the middle (20 mm each). */
+/* Labels: 38 x 25 mm. One code on top, one below, with a gap between them to cut through. Codes only, no REPZO text. */
 function printLabels(list){
   if(!list||!list.length) return alert('No unused codes selected. Tick the codes you want to print first.');
   const pairs=[];
   for(let i=0;i<list.length;i+=2) pairs.push([list[i],list[i+1]||'']);
-  const half=c=>c?`<div class="half"><div class="t">REPZO</div><div class="c">${esc(c)}</div></div>`:'<div class="half"></div>';
-  const body=pairs.map(([a,b])=>`<div class="label">${half(a)}${half(b)}</div>`).join('');
-  const css=`@page{size:40mm 25mm;margin:0}
+  const body=pairs.map(([top,bottom])=>`<div class="label">`+
+    (top?`<div class="code top">${esc(top)}</div>`:'')+
+    `<div class="cut"></div>`+
+    (bottom?`<div class="code bottom">${esc(bottom)}</div>`:'')+
+    `</div>`).join('');
+  const css=`@page{size:38mm 25mm;margin:0}
 html,body{margin:0;padding:0}
-.label{width:40mm;height:25mm;display:flex;box-sizing:border-box;page-break-after:always;break-after:page}
+.label{position:relative;width:38mm;height:25mm;box-sizing:border-box;overflow:hidden;page-break-after:always;break-after:page;font-family:Arial,Helvetica,sans-serif}
 .label:last-child{page-break-after:auto;break-after:auto}
-.half{width:20mm;height:25mm;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
-.half:first-child{border-right:0.2mm dashed #000}
-.t{font-size:5pt;letter-spacing:0.5px;line-height:1}
-.c{font-size:9pt;font-weight:700;line-height:1.2;margin-top:1mm}`;
+.code{position:absolute;left:0;width:38mm;text-align:center;font-size:11pt;font-weight:700;letter-spacing:0.3px;line-height:1}
+.code.top{top:3mm}
+.code.bottom{top:18mm}
+.cut{position:absolute;left:0;top:12.5mm;width:38mm;border-top:0.2mm dashed #000}`;
   const w=window.open('','_blank');
   if(!w) return alert('Your browser blocked the print window. Allow pop-ups for this page and try again.');
   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>REPZO codes</title><style>${css}</style></head><body>${body}</body></html>`);
