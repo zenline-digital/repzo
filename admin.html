@@ -247,22 +247,12 @@ function buildZPL(list){
     `^XZ\n`;
   return pairs.map(label).join('');
 }
-/* Send the labels straight to the Zebra printer through Zebra Browser Print (no file, no Terminal). */
+/* Print via Terminal: download the label file, then run the lpr command shown in the message. */
 function printLabels(list){
   if(!list||!list.length) return alert('No unused codes selected. Tick the codes you want to print first.');
-  if(typeof BrowserPrint==='undefined') return alert('Zebra Browser Print library is not loaded on this page. Use "Download file" for now.');
-  const zpl=buildZPL(list);
+  downloadLabels(list);
   const labels=Math.ceil(list.length/2);
-  BrowserPrint.getDefaultDevice('printer', function(device){
-    if(!device) return alert('No default Zebra printer found. Open Zebra Browser Print from the menu bar and set ZD220 as the default printer.');
-    device.send(zpl, function(){
-      alert('Sent '+labels+' label'+(labels===1?'':'s')+' to '+(device.name||'the Zebra printer')+'.');
-    }, function(err){
-      alert('Print failed: '+err);
-    });
-  }, function(err){
-    alert('Could not reach Zebra Browser Print. Make sure it is running (Zebra icon in the menu bar). '+err);
-  });
+  alert('Label file downloaded ('+labels+' label'+(labels===1?'':'s')+').\n\nIn Terminal, run this:\n\nlpr -P Zebra_Technologies_ZTC_ZD220_203dpi_ZPL -o raw "$(ls -t ~/Downloads/repzo-codes-*.zpl | head -1)"');
 }
 /* Backup: download the label file, to print from Terminal if needed. */
 function downloadLabels(list){
